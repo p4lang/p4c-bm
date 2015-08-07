@@ -42,6 +42,9 @@ def get_parser():
                         help='Generate PD C/C++ code for this P4 program'
                         ' in this directory. Directory must exist.',
                         required=False)
+    parser.add_argument('--pd-from-json', action='store_true',
+                        help='Generate PD from a JSON file, not a P4 file',
+                        default=False)
     parser.add_argument('--p4-prefix', type=str,
                         help='P4 name use for API function prefix',
                         default="prog", required=False)
@@ -75,21 +78,31 @@ def main():
     if args.json:
         path_json = _validate_path(args.json)
 
+    from_json = False
     if args.pd:
         path_pd = _validate_dir(args.pd)
+        if args.pd_from_json:
+            if not os.path.exists(args.source):
+                print "Invalid JSON source"
+                sys.exit(1)
+            from_json = True
 
-    h = HLIR(args.source)
-    h.add_preprocessor_args("-D__TARGET_BM__")
-    if not h.build():
-        print "Error while building HLIR"
-        sys.exit(1)
+    if from_json:
+        with open(args.source, 'r') as f:
+            json_dict = json.load(f)
+    else:
+        h = HLIR(args.source)
+        h.add_preprocessor_args("-D__TARGET_BM__")
+        if not h.build():
+            print "Error while building HLIR"
+            sys.exit(1)
 
-    json_dict = gen_json.json_dict_create(h)
+        json_dict = gen_json.json_dict_create(h)
 
-    if args.json:
-        print "Generating json output to", path_json
-        with open(path_json, 'w') as fp:
-            json.dump(json_dict, fp, indent=4, separators=(',', ': '))
+        if args.json:
+            print "Generating json output to", path_json
+            with open(path_json, 'w') as fp:
+                json.dump(json_dict, fp, indent=4, separators=(',', ': '))
 
     if args.pd:
         print "Generating PD source files in", path_pd

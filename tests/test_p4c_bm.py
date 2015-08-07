@@ -127,6 +127,12 @@ def test_main(tmpdir):
     # invalid input
     assert call_main([tmp_json[1]]) != 0
 
+    # PD from JSON
+    assert call_main([tmp_json[1], "--pd", str(tmpdir), "--pd-from-json"]) == 0
+
+    # PD from JSON with invalid input
+    assert call_main(["plop.json", "--pd", str(tmpdir), "--pd-from-json"]) != 0
+
     os.remove(tmp_json[1])
 
 
