@@ -25,6 +25,7 @@ pip-log.txt
 .coverage
 .tox
 nosetests.xml
+coverage.xml
 htmlcov
 
 # Translations
@@ -44,3 +45,6 @@ docs/_build
 docs/modules.rst
 docs/p4c_bm.rst
 docs/p4c_bm.util.rst
+
+# Emacs
+*~
