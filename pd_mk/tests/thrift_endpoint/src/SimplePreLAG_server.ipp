@@ -54,6 +54,11 @@ public:
     printf("bm_mc_node_associate\n");
   }
 
+  void bm_mc_node_dissociate(const BmMcMgrpHandle mgrp_handle, const BmMcL1Handle l1_handle) {
+    // Your implementation goes here
+    printf("bm_mc_node_dissociate\n");
+  }
+
   void bm_mc_node_destroy(const BmMcL1Handle l1_handle) {
     // Your implementation goes here
     printf("bm_mc_l1_node_destroy\n");
