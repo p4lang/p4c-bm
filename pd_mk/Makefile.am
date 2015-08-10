@@ -41,7 +41,7 @@ p4_pd/pd/pd_meters.h \
 p4_pd/pd/pd_tables.h \
 p4_pd/pd/pd_types.h
 
-$(pd_files): $(top_srcdir)/test.p4
+$(pd_files): $(P4_PATH)
 	$(top_srcdir)/../p4c_bm/__main__.py --pd p4_pd/ --p4-prefix $(P4_PREFIX) $(P4_PATH)
 
 BUILT_SOURCES = \

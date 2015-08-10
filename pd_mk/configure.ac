@@ -30,7 +30,7 @@ AC_ARG_VAR([P4_PREFIX],[Prefix to use for the PD APIs])
 AM_CONDITIONAL([P4_PATH_SET], [test ! -z "$P4_PATH"])
 AM_COND_IF([P4_PATH_SET], [], [AC_MSG_ERROR([P4_PATH not defined!])])
 
-AM_CONDITIONAL([P4_PREFIX_SET], [test ! -z "$P4_PREFIX_SET"])
+AM_CONDITIONAL([P4_PREFIX_SET], [test ! -z "$P4_PREFIX"])
 AM_COND_IF([P4_PREFIX_SET], [], [AC_MSG_ERROR([P4_PREFIX not defined!])])
 
 # Checks for header files.
