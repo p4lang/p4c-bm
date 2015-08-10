@@ -56,7 +56,8 @@ AC_CHECK_LIB([pthread], pthread_create, [], [AC_MSG_ERROR([required library pthr
 AC_CHECK_HEADER([thrift/Thrift.h], [], [AC_MSG_ERROR([Thrift headers not found. Install Thrift from http://thrift.apache.org/docs/install/])])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
+# introduces in autoconf 2.69
+# AC_CHECK_HEADER_STDBOOL
 AC_TYPE_SIZE_T
 AC_TYPE_UINT64_T
 AC_LANG_POP(C++)
