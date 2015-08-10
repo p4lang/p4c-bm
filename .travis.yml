@@ -16,9 +16,6 @@ addons:
     sources:
       - boost-latest
       - ubuntu-toolchain-r-test
-
-addons:
-  apt:
     packages:
       - libjudy-dev
       - libboost1.55-dev
