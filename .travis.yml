@@ -29,7 +29,7 @@ addons:
       - flex 
       - bison
       - pkg-config
-      - g++-4.8
+      - g++-4.9
       - libssl-dev
 
 before_install:
