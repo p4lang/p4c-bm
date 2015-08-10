@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
+
 SUBDIRS = tests
 
 standard_thrift_files = \
