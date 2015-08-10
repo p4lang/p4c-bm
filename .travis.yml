@@ -1,5 +1,7 @@
 # Config file for automatic testing at travis-ci.org
 
+sudo: required
+
 language: python
 
 python:
@@ -13,6 +15,7 @@ addons:
   apt:
     sources:
       - boost-latest
+      - ubuntu-toolchain-r-test
 
 addons:
   apt:
@@ -29,7 +32,7 @@ addons:
       - flex 
       - bison
       - pkg-config
-      - g++
+      - g++-4.8
       - libssl-dev
 
 before_install:
