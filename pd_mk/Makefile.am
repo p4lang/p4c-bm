@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
-SUBDIRS = tests
+SUBDIRS = . tests
 
 standard_thrift_files = \
 thrift_gen/gen-cpp/standard_constants.cpp \

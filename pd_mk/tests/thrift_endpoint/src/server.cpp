@@ -19,6 +19,7 @@
  */
 
 #include <thread>
+#include <chrono>
 
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TSimpleServer.h>
@@ -68,5 +69,10 @@ int start_server() {
   int port = 9090;
   std::thread t(run_server, port);
   t.detach();
+  // I have discovered that on slower machine, the server does not have time to
+  // start, and I try to connect to early.
+  // It took me 3 hours to find this :(
+  // TODO: replace sleep with cond var
+  std::this_thread::sleep_for(std::chrono::seconds(1));
   return 0;
 }
