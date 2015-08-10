@@ -9,14 +9,32 @@ env:
   - TOX_ENV=py27
   - TOX_ENV=flake8
 
-# mostly what's needed for the C++ PD test
+addons:
+  apt:
+    sources:
+      - boost-latest
+
+addons:
+  apt:
+    packages:
+      - libjudy-dev
+      - libboost1.55-dev
+      - libboost-test1.55-dev
+      - libboost-program-options1.55-dev
+      - libboost-system1.55-dev
+      - libboost-filesystem1.55-dev
+      - libevent-dev
+      - automake
+      - libtool
+      - flex 
+      - bison
+      - pkg-config
+      - g++
+      - libssl-dev
+
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install libjudy-dev
-  - sudo apt-get install -y libboost-dev libboost-test-dev libboost-program-options-dev libboost-system-dev libboost-filesystem-dev libevent-dev automake libtool flex bison pkg-config g++ libssl-dev
-  - wget -c http://archive.apache.org/dist/thrift/0.9.2/thrift-0.9.2.tar.gz && tar -xzvf thrift-0.9.2.tar.gz && cd thrift-0.9.2/ && ./configure && make && sudo make install && cd ..
-  - wget http://download.nanomsg.org/nanomsg-0.5-beta.tar.gz && tar -xzvf nanomsg-0.5-beta.tar.gz && cd nanomsg-0.5-beta && ./configure && make && sudo make install && cd ..
-  - sudo ldconfig
+  - bash build/travis/install-thrift.sh
+  - bash build/travis/install-nanomsg.sh
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
