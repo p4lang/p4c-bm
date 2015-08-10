@@ -48,7 +48,7 @@ install:
 # command to run tests, e.g. python setup.py test
 script:
   - tox -e $TOX_ENV
-  - cd pd_mk/; make check; cd ..
+  - cd pd_mk/; cd tests/; ./test; cd ..; make check; cd ..
 
 after_success:
   # Report coverage results to codecov.io
