@@ -58,9 +58,9 @@ def test_gen_json(input_p4):
     assert json_dict
 
 
-def list_files(dirname, ext):
-    files = os.listdir(dirname)
-    return [f for f in files if os.path.splitext(f)[1] == ext]
+# def list_files(dirname, ext):
+#     files = os.listdir(dirname)
+#     return [f for f in files if os.path.splitext(f)[1] == ext]
 
 
 @pytest.mark.parametrize("input_p4", list_p4_programs())
@@ -73,14 +73,14 @@ def test_gen_pd(input_p4, tmpdir):
     assert json_dict
     gen_pd.generate_pd_source(json_dict, p, "pref")
     # now we check for all generated files
-    inc_path = tmpdir.join("include").join("pd")
+    inc_path = tmpdir.join("pd")
     src_path = tmpdir.join("src")
     assert inc_path.ensure_dir()
     assert src_path.ensure_dir()
-    expected_inc_path = "p4c_bm/templates/include/pd/"
-    expected_inc = list_files(expected_inc_path, ".h")
+    expected_inc_path = "p4c_bm/templates/pd/"
+    expected_inc = [f for f in os.listdir(expected_inc_path)]
     expected_src_path = "p4c_bm/templates/src/"
-    expected_src = list_files(expected_src_path, ".cpp")
+    expected_src = [f for f in os.listdir(expected_src_path)]
     assert set(expected_inc) == set([f.basename for f in inc_path.listdir()])
     assert set(expected_src) == set([f.basename for f in src_path.listdir()])
 
