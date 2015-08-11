@@ -38,6 +38,7 @@ before_install:
   - g++ -v
   - bash build/travis/install-thrift.sh
   - bash build/travis/install-nanomsg.sh
+  - sudo ldconfig
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:

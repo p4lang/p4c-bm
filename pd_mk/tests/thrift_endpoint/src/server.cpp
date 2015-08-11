@@ -73,6 +73,6 @@ int start_server() {
   // start, and I try to connect to early.
   // It took me 3 hours to find this :(
   // TODO: replace sleep with cond var
-  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::this_thread::sleep_for(std::chrono::seconds(2));
   return 0;
 }
