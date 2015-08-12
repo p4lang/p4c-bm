@@ -1,6 +1,6 @@
 # Config file for automatic testing at travis-ci.org
 
-sudo: required
+sudo: false
 
 language: python
 
@@ -34,8 +34,19 @@ addons:
 
 before_install:
   - bash build/travis/install-thrift.sh
+  - export PATH=$PATH:$HOME/thrift/bin/
+  - export LDFLAGS="$LDFLAGS -L$HOME/thrift/lib"
+  - export CPPFLAGS="$CPPFLAGS -I$HOME/thrift/include"
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/thrift/lib
   - bash build/travis/install-nanomsg.sh
-  - sudo ldconfig
+  - export LDFLAGS="$LDFLAGS -L$HOME/nanomsg/lib"
+  - export CPPFLAGS="$CPPFLAGS -I$HOME/nanomsg/include"
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/nanomsg/lib
+
+cache:
+  directories:
+    - $HOME/thrift
+    - $HOME/nanomsg
 
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
