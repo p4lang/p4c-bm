@@ -10,3 +10,4 @@ if [ ! -d "$HOME/thrift/lib" ]; then
     cd ..;
 else
     echo 'Using cached thrift directory.'
+fi

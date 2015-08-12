@@ -10,3 +10,4 @@ if [ ! -d "$HOME/nanomsg/lib" ]; then
     cd ..;
 else
     echo 'Using cached nanomsg directory.'
+fi
