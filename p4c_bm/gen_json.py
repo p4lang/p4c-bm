@@ -620,7 +620,8 @@ def dump_actions(json_dict, hlir):
                     arg_dict["type"] = "meter_array"
                     arg_dict["value"] = arg.name
                 else:
-                    assert(not "arg type not supported yet:" + type(arg))
+                    print type(arg)
+                    assert(not "arg type not supported yet")
 
                 if primitive_name in {"push", "pop"} and\
                    arg_dict["type"] == "header":

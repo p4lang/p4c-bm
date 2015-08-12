@@ -31,10 +31,10 @@ Usage
 
   You can also use the pd_mk directory to compile the PD code:
 
-    0. cd to pd_mk
-    1. ./configure 'P4_PATH=\ *path_to_p4_program*\ ' 'P4_PREFIX=\ *prefix_for_apis*\ ' --includedir=\ *target_dir_for_headers* --libdir=\ *target_dir_for_libraries*
-    2. make
-    3. make install
+    1. cd pd_mk/
+    2. ./configure 'P4_PATH=\ *path_to_p4_program*\ ' 'P4_PREFIX=\ *prefix_for_apis*\ ' --includedir=\ *target_dir_for_headers* --libdir=\ *target_dir_for_libraries*
+    3. make
+    4. make install
 
   You will find the PD headers (fixed and generated) in *target_dir_for_headers*
   and the libraries (libpdfixed and libpd) in *target_dir_for_libraries*.
