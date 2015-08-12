@@ -29,13 +29,10 @@ addons:
       - flex 
       - bison
       - pkg-config
-      - g++-4.9
+      - g++-4.8
       - libssl-dev
 
 before_install:
-  - g++ -v
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 99
-  - g++ -v
   - bash build/travis/install-thrift.sh
   - bash build/travis/install-nanomsg.sh
   - sudo ldconfig
@@ -44,7 +41,7 @@ before_install:
 install:
   - pip install -r requirements.txt
   - pip install tox
-  - cd pd_mk/ && ./autogen.sh && ./configure && make 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' && cd ..
+  - cd pd_mk/ && ./autogen.sh && CXX=g++-4.8 ./configure && make 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' && cd ..
 
 # command to run tests, e.g. python setup.py test
 script:
