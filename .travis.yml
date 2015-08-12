@@ -44,7 +44,7 @@ before_install:
 install:
   - pip install -r requirements.txt
   - pip install tox
-  - cd pd_mk/ && ./autogen.sh && ./configure 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' && make all && cd ..
+  - cd pd_mk/ && ./autogen.sh && ./configure && make 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' && cd ..
 
 # command to run tests, e.g. python setup.py test
 script:

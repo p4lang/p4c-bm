@@ -24,14 +24,18 @@ AC_SUBST([PICKY_CXXFLAGS])
 AC_SUBST([PICKY_CFLAGS])
 AC_SUBST([DEBUG_CPPFLAGS])
 
-AC_ARG_VAR([P4_PATH],[P4 Program for which you want to generate the PD])
-AC_ARG_VAR([P4_PREFIX],[Prefix to use for the PD APIs])
+# That was a bad idea I think: you don't want to have to run ./configure
+# everytime you swith P4 programs, it is flaky. Instead I just use environment
+# variables in Makefile.am. I'm keeping this here in case I change my mind.
 
-AM_CONDITIONAL([P4_PATH_SET], [test ! -z "$P4_PATH"])
-AM_COND_IF([P4_PATH_SET], [], [AC_MSG_ERROR([P4_PATH not defined!])])
+# AC_ARG_VAR([P4_PATH],[P4 Program for which you want to generate the PD])
+# AC_ARG_VAR([P4_PREFIX],[Prefix to use for the PD APIs])
 
-AM_CONDITIONAL([P4_PREFIX_SET], [test ! -z "$P4_PREFIX"])
-AM_COND_IF([P4_PREFIX_SET], [], [AC_MSG_ERROR([P4_PREFIX not defined!])])
+# AM_CONDITIONAL([P4_PATH_SET], [test ! -z "$P4_PATH"])
+# AM_COND_IF([P4_PATH_SET], [], [AC_MSG_ERROR([P4_PATH not defined!])])
+
+# AM_CONDITIONAL([P4_PREFIX_SET], [test ! -z "$P4_PREFIX"])
+# AM_COND_IF([P4_PREFIX_SET], [], [AC_MSG_ERROR([P4_PREFIX not defined!])])
 
 # Checks for header files.
 AC_LANG_PUSH(C)

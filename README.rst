@@ -32,8 +32,8 @@ Usage
   You can also use the pd_mk directory to compile the PD code:
 
     1. cd pd_mk/
-    2. ./configure 'P4_PATH=\ *path_to_p4_program*\ ' 'P4_PREFIX=\ *prefix_for_apis*\ ' --includedir=\ *target_dir_for_headers* --libdir=\ *target_dir_for_libraries*
-    3. make
+    2. ./configure --includedir=\ *target_dir_for_headers* --libdir=\ *target_dir_for_libraries*
+    3. make 'P4_PATH=\ *path_to_p4_program*\ ' 'P4_PREFIX=\ *prefix_for_apis*\ '
     4. make install
 
   You will find the PD headers (fixed and generated) in *target_dir_for_headers*
