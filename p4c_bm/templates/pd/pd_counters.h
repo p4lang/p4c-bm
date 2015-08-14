@@ -18,32 +18,46 @@
  *
  */
 
-#ifndef _P4_PD_METERS_H_
-#define _P4_PD_METERS_H_
+#ifndef _P4_PD_COUNTERS_H_
+#define _P4_PD_COUNTERS_H_
+
+#include "pd/pd_static.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// direct meters not supported yet
-
-//:: for ma_name, ma in meter_arrays.items():
+//:: for ca_name, ca in counter_arrays.items():
 //::   params = ["p4_pd_sess_hdl_t sess_hdl",
 //::             "p4_pd_dev_target_t dev_tgt"]
-//::   params += ["int index"]
-//::   if ma.type_ == MeterType.PACKETS:
-//::     params += ["uint32_t cir_pps", "uint32_t cburst_pkts",
-//::                "uint32_t pir_pps", "uint32_t pburst_pkts"]
+//::   if ca.is_direct:
+//::     params += ["p4_pd_entry_hdl_t entry_hdl"]
 //::   else:
-//::     params += ["uint32_t cir_kbps", "uint32_t cburst_kbits",
-//::                "uint32_t pir_kbps", "uint32_t pburst_kbits"]
+//::     params += ["int index"]
 //::   #endif
+//::   params += ["int flags"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + "meter_configure_" + ma_name
+//::   name = pd_prefix + "counter_read_" + ca_name
 p4_pd_status_t
 ${name}
 (
-${param_str}
+ ${param_str}
+);
+
+//::   params = ["p4_pd_sess_hdl_t sess_hdl",
+//::             "p4_pd_dev_target_t dev_tgt"]
+//::   if ca.is_direct:
+//::     params += ["p4_pd_entry_hdl_t entry_hdl"]
+//::   else:
+//::     params += ["int index"]
+//::   #endif
+//::   params += ["p4_pd_counter_value_t counter_value"]
+//::   param_str = ",\n ".join(params)
+//::   name = pd_prefix + "counter_write_" + ca_name
+p4_pd_status_t
+${name}
+(
+ ${param_str}
 );
 
 //:: #endfor

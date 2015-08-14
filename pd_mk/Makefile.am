@@ -25,6 +25,22 @@ $(simple_pre_lag_thrift_files)
 standard_IDL = $(top_srcdir)/../submodules/bm/thrift_src/standard.thrift
 simple_pre_lag_IDL = $(top_srcdir)/../submodules/bm/thrift_src/simple_pre_lag.thrift
 
+template_cpp_files = \
+$(top_srcdir)/../p4c_bm/templates/src/pd.cpp \
+$(top_srcdir)/../p4c_bm/templates/src/pd_learning.cpp \
+$(top_srcdir)/../p4c_bm/templates/src/pd_meters.cpp \
+$(top_srcdir)/../p4c_bm/templates/src/pd_counters.cpp \
+$(top_srcdir)/../p4c_bm/templates/src/pd_tables.cpp \
+$(top_srcdir)/../p4c_bm/templates/src/pd_ageing.cpp
+
+template_h_files = \
+$(top_srcdir)/../p4c_bm/templates/pd/pd.h \
+$(top_srcdir)/../p4c_bm/templates/pd/pd_learning.h \
+$(top_srcdir)/../p4c_bm/templates/pd/pd_meters.h \
+$(top_srcdir)/../p4c_bm/templates/pd/pd_counters.h \
+$(top_srcdir)/../p4c_bm/templates/pd/pd_tables.h \
+$(top_srcdir)/../p4c_bm/templates/pd/pd_types.h
+
 $(thrift_files): $(standard_IDL) $(simple_pre_lag_IDL)
 	$(THRIFT) -o $(top_srcdir)/thrift_gen/ --gen cpp -r $(standard_IDL)
 	$(THRIFT) -o $(top_srcdir)/thrift_gen/ --gen cpp -r $(simple_pre_lag_IDL)
@@ -33,6 +49,7 @@ pd_files = \
 p4_pd/src/pd.cpp \
 p4_pd/src/pd_learning.cpp \
 p4_pd/src/pd_meters.cpp \
+p4_pd/src/pd_counters.cpp \
 p4_pd/src/pd_tables.cpp \
 p4_pd/src/pd_ageing.cpp
 
@@ -40,10 +57,11 @@ pd_headers = \
 p4_pd/pd/pd.h \
 p4_pd/pd/pd_learning.h \
 p4_pd/pd/pd_meters.h \
+p4_pd/pd/pd_counters.h \
 p4_pd/pd/pd_tables.h \
 p4_pd/pd/pd_types.h
 
-$(pd_files): $(P4_PATH)
+$(pd_files): $(P4_PATH) $(template_cpp_files) $(template_h_files)
 	$(top_srcdir)/../p4c_bm/__main__.py --pd p4_pd/ --p4-prefix $(P4_PREFIX) $(P4_PATH)
 
 BUILT_SOURCES = \

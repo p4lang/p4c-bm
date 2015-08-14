@@ -619,6 +619,9 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_meter:
                     arg_dict["type"] = "meter_array"
                     arg_dict["value"] = arg.name
+                elif type(arg) is p4.p4_counter:
+                    arg_dict["type"] = "counter_array"
+                    arg_dict["value"] = arg.name
                 else:
                     print type(arg)
                     assert(not "arg type not supported yet")
@@ -780,6 +783,26 @@ def dump_meters(json_dict, hlir):
     json_dict["meter_arrays"] = meters
 
 
+def dump_counters(json_dict, hlir):
+    counters = []
+    id_ = 0
+    for name, p4_counter in hlir.p4_counters.items():
+        counter_dict = OrderedDict()
+        counter_dict["name"] = name
+        counter_dict["id"] = id_
+        id_ += 1
+        if p4_counter.binding and (p4_counter.binding[0] == p4.P4_DIRECT):
+            counter_dict["is_direct"] = True
+            counter_dict["binding"] = p4_counter.binding[1].name
+        else:
+            counter_dict["is_direct"] = False
+            counter_dict["size"] = p4_counter.instance_count
+
+        counters.append(counter_dict)
+
+    json_dict["counter_arrays"] = counters
+
+
 # TODO: what would be a better solution than this
 def dump_force_arith(json_dict, hlir):
     force_arith = []
@@ -812,6 +835,7 @@ def json_dict_create(hlir):
     dump_calculations(json_dict, hlir)
     dump_checksums(json_dict, hlir)
     dump_learn_lists(json_dict, hlir)
+    dump_counters(json_dict, hlir)
 
     dump_force_arith(json_dict, hlir)
 
