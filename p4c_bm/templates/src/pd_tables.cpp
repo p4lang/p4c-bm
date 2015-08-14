@@ -696,6 +696,8 @@ ${name}
 
 /* DIRECT COUNTERS */
 
+/* legacy code, to be removed at some point */
+
 //:: for t_name, t in tables.items():
 //::   if not t.with_counters: continue
 //::   t_name = get_c_name(t_name)
@@ -712,7 +714,7 @@ ${name}
   BmCounterValue value;
   // Thrift's weirdness ? even on client side, the return value becomes the
   // first argument and is passed by reference
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_table_read_counter(
+  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_read_counter(
       value,
       "${t_name}",
       entry_hdl
@@ -730,7 +732,7 @@ ${name}
  p4_pd_dev_target_t dev_tgt
 ) {
   assert(my_devices[dev_tgt.device_id]);
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_table_reset_counters(
+  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_reset_counters(
       "${t_name}"
   );
   return 0;

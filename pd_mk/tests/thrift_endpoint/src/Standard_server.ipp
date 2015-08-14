@@ -74,7 +74,7 @@ public:
   }
 
   BmEntryHandle bm_mt_add_entry(const std::string& table_name, const BmMatchParams& match_key, const std::string& action_name, const BmActionData& action_data, const BmAddEntryOptions& options) {
-    std::cout << "bm_table_add_entry" << std::endl
+    std::cout << "bm_mt_add_entry" << std::endl
 	      << table_name << std::endl;
     for(const auto &p : match_key)
       print_match_param(p);
@@ -86,20 +86,20 @@ public:
   }
 
   void bm_mt_set_default_action(const std::string& table_name, const std::string& action_name, const BmActionData& action_data) {
-    std::cout << "bm_set_default_action" << std::endl
+    std::cout << "bm_mt_set_default_action" << std::endl
 	      << table_name << std::endl
 	      << action_name << std::endl;
     print_spec(action_data);
   }
 
   void bm_mt_delete_entry(const std::string& table_name, const BmEntryHandle entry_handle) {
-    std::cout << "bm_table_delete_entry" << std::endl
+    std::cout << "bm_mt_delete_entry" << std::endl
 	      << table_name << std::endl
 	      << entry_handle << std::endl;
   }
 
   void bm_mt_modify_entry(const std::string& table_name, const BmEntryHandle entry_handle, const std::string &action_name, const BmActionData& action_data) {
-    std::cout << "bm_table_modify_entry" << std::endl
+    std::cout << "bm_mt_modify_entry" << std::endl
 	      << table_name << std::endl
 	      << entry_handle << std::endl
 	      << action_name << std::endl;
@@ -209,15 +209,40 @@ public:
     printf("bm_mt_indirect_ws_set_default_group\n");
   }
 
-  void bm_table_read_counter(BmCounterValue& _return, const std::string& table_name, const BmEntryHandle entry_handle) {
-    std::cout << "bm_table_read_counter" << std::endl
+  void bm_mt_read_counter(BmCounterValue& _return, const std::string& table_name, const BmEntryHandle entry_handle) {
+    std::cout << "bm_mt_read_counter" << std::endl
 	      << table_name << std::endl
-	      << entry_handle << std::endl;      
+	      << entry_handle << std::endl;
   }
 
-  void bm_table_reset_counters(const std::string& table_name) {
-    std::cout << "bm_table_reset_counters" << std::endl
+  void bm_mt_reset_counters(const std::string& table_name) {
+    std::cout << "bm_mt_reset_counters" << std::endl
 	      << table_name << std::endl;
+  }
+
+  void bm_mt_write_counter(const std::string& table_name, const BmEntryHandle entry_handle, const BmCounterValue& value) {
+    std::cout << "bm_mt_write_counter" << std::endl
+	      << table_name << std::endl
+	      << entry_handle << std::endl
+	      << value.bytes << " " << value.packets << std::endl;
+  }
+
+  void bm_counter_read(BmCounterValue& _return, const std::string& counter_name, const int32_t index) {
+    std::cout << "bm_counter_read" << std::endl
+	      << counter_name << std::endl
+	      << index << std::endl;
+  }
+
+  void bm_counter_reset_all(const std::string& counter_name) {
+    std::cout << "bm_counter_reset_all" << std::endl
+	      << counter_name << std::endl;
+  }
+
+  void bm_counter_write(const std::string& counter_name, const int32_t index, const BmCounterValue& value) {
+    std::cout << "bm_counter_write" << std::endl
+	      << counter_name << std::endl
+	      << index << std::endl
+	      << value.bytes << " " << value.packets << std::endl;
   }
 
   void bm_learning_ack(const BmLearningListId list_id, const BmLearningBufferId buffer_id, const std::vector<BmLearningSampleId> & sample_ids) {

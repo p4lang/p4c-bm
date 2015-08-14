@@ -38,6 +38,7 @@ TABLES = {}
 ACTIONS = {}
 LEARN_QUANTAS = {}
 METER_ARRAYS = {}
+COUNTER_ARRAYS = {}
 
 
 def enum(type_name, *sequential, **named):
@@ -141,6 +142,20 @@ class MeterArray:
                                           MeterType.to_str(self.type_))
 
 
+class CounterArray:
+    def __init__(self, name, id_):
+        self.name = name
+        self.id_ = id_
+        self.is_direct = None
+        self.size = None
+        self.table = None
+
+        COUNTER_ARRAYS[name] = self
+
+    def counter_str(self):
+        return "{0:30} [{1}, {2}]".format(self.name, self.is_direct)
+
+
 def load_json(json_str):
     def get_header_type(header_name, j_headers):
         for h in j_headers:
@@ -217,6 +232,14 @@ def load_json(json_str):
         meter_array.size = j_meter["size"]
         meter_array.type_ = MeterType.from_str(j_meter["type"])
         meter_array.rate_count = j_meter["rate_count"]
+
+    for j_counter in json_["counter_arrays"]:
+        counter_array = CounterArray(j_counter["name"], j_counter["id"])
+        counter_array.is_direct = j_counter["is_direct"]
+        if counter_array.is_direct:
+            counter_array.table = j_counter["binding"]
+        else:
+            counter_array.size = j_counter["size"]
 
 
 def ignore_template_file(filename):
@@ -311,6 +334,7 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix):
     ACTIONS.clear()
     LEARN_QUANTAS.clear()
     METER_ARRAYS.clear()
+    COUNTER_ARRAYS.clear()
 
     load_json(json_dict)
     render_dict = {}
@@ -328,4 +352,5 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix):
     render_dict["actions"] = ACTIONS
     render_dict["learn_quantas"] = LEARN_QUANTAS
     render_dict["meter_arrays"] = METER_ARRAYS
+    render_dict["counter_arrays"] = COUNTER_ARRAYS
     render_all_files(render_dict, _validate_dir(dest_dir))

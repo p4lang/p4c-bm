@@ -92,7 +92,7 @@ def main():
             json_dict = json.load(f)
     else:
         h = HLIR(args.source)
-        h.add_preprocessor_args("-D__TARGET_BM__")
+        h.add_preprocessor_args("-D__TARGET_BMV2__")
         if not h.build():
             print "Error while building HLIR"
             sys.exit(1)

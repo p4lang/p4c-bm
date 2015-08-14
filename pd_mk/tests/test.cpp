@@ -26,6 +26,7 @@
 
 #include <pd/pd_tables.h>
 #include <pd/pd_meters.h>
+#include <pd/pd_counters.h>
 #include <pd/pd_static.h>
 #include <pd/pd.h>
 #include <pd/pd_pre.h>
@@ -166,6 +167,18 @@ int main() {
   lag_map[1] = (1 << 5);
   mc_node_hdl_t node_hdl;
   mc_node_create(sess_hdl, dev_tgt.device_id, 21, port_map, lag_map, &node_hdl);
+
+  /* counters */
+
+  // indirect counter
+  p4_pd_test_counter_read_CounterA(sess_hdl, dev_tgt, 17, 0);
+  counter_value.bytes = 12;
+  counter_value.packets = 34;
+  p4_pd_test_counter_write_CounterA(sess_hdl, dev_tgt, 17, counter_value);
+
+  // direct counter
+  p4_pd_test_counter_read_ExactOne_counter(sess_hdl, dev_tgt, 18, 0);
+  p4_pd_test_counter_write_ExactOne_counter(sess_hdl, dev_tgt, 18, counter_value);
 
   /* END TEST */
 

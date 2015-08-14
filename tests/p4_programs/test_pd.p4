@@ -207,6 +207,25 @@ table _MeterATable {
         _MeterAAction;
     }
     size: 512;
+}
+
+counter CounterA {
+    type : packets;
+    instance_count : 1024;
+}
+
+action _CounterAAction() {
+    count(CounterA, 128);
+}
+
+table _CounterATable {
+    reads {
+         header_test.field32 : exact;
+    }
+    actions {
+        _CounterAAction;
+    }
+    size: 512;
 }    
 
 control ingress {
@@ -221,10 +240,9 @@ control ingress {
     apply(IndirectWS);
     apply(_MeterATable);
     apply(ExactOneAgeing);
+    apply(_CounterATable);
 }
 
 control egress {
 
 }
-
-
