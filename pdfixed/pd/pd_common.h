@@ -56,6 +56,22 @@ typedef enum {ENTRY_IDLE, ENTRY_HIT} p4_pd_hit_state_t;
 
 typedef void (*p4_pd_notify_timeout_cb) (p4_pd_entry_hdl_t entry_hdl, void *client_data);
 
+/* mirroring definitions */
+typedef enum {
+  PD_MIRROR_TYPE_NORM = 0,
+  PD_MIRROR_TYPE_COAL,
+  PD_MIRROR_TYPE_MAX
+} p4_pd_mirror_type_e;
+
+typedef enum {
+  PD_DIR_NONE = 0,
+  PD_DIR_INGRESS,
+  PD_DIR_EGRESS,
+  PD_DIR_BOTH
+} p4_pd_direction_t;
+
+typedef uint16_t p4_pd_mirror_id_t;
+
 #ifdef __cplusplus
 }
 #endif
