@@ -27,17 +27,22 @@ extern pd_conn_mgr_t *conn_mgr_state;
 
 extern "C" {
 
-p4_pd_status_t mc_create_session(p4_pd_sess_hdl_t *sess_hdl) {
+p4_pd_status_t p4_pd_mc_create_session(p4_pd_sess_hdl_t *sess_hdl) {
   (void) sess_hdl;
   return 0;
 }
 
-p4_pd_status_t mc_delete_session(p4_pd_sess_hdl_t sess_hdl) {
+p4_pd_status_t p4_pd_mc_delete_session(p4_pd_sess_hdl_t sess_hdl) {
   (void) sess_hdl;
   return 0;
 }
 
-p4_pd_status_t mc_mgrp_create(
+p4_pd_status_t p4_pd_mc_complete_operations(p4_pd_sess_hdl_t sess_hdl) {
+  (void) sess_hdl;
+  return 0;
+}
+
+p4_pd_status_t p4_pd_mc_mgrp_create(
   p4_pd_sess_hdl_t session, int8_t device,
   mgrp_id_t mgid, mc_mgrp_hdl_t *mgrp_hdl
 ) {
@@ -46,7 +51,7 @@ p4_pd_status_t mc_mgrp_create(
   return 0; // TODO
 }
 
-p4_pd_status_t mc_mgrp_destroy(
+p4_pd_status_t p4_pd_mc_mgrp_destroy(
   p4_pd_sess_hdl_t session, int8_t device, mc_mgrp_hdl_t mgrp_hdl
 ) {
   (void) session;
@@ -70,7 +75,7 @@ std::string convert_map(const uint8_t *input, const size_t size) {
 
 }
 
-p4_pd_status_t mc_node_create(
+p4_pd_status_t p4_pd_mc_node_create(
   p4_pd_sess_hdl_t session, int8_t device,
   mgrp_rid_t rid, const uint8_t *port_map, const uint8_t *lag_map,
   mc_node_hdl_t *node_hdl
@@ -82,7 +87,7 @@ p4_pd_status_t mc_node_create(
   return 0; // TODO
 }
 
-p4_pd_status_t mc_associate_node(
+p4_pd_status_t p4_pd_mc_associate_node(
   p4_pd_sess_hdl_t session, int8_t device,
   mc_mgrp_hdl_t mgrp_hdl, mc_node_hdl_t hdl
 ) {
@@ -91,7 +96,7 @@ p4_pd_status_t mc_associate_node(
   return 0; // TODO
 }
 
-p4_pd_status_t mc_dissociate_node(
+p4_pd_status_t p4_pd_mc_dissociate_node(
   p4_pd_sess_hdl_t session, int8_t device,
   mc_mgrp_hdl_t mgrp_hdl, mc_node_hdl_t node_hdl
 ) {
@@ -100,7 +105,7 @@ p4_pd_status_t mc_dissociate_node(
   return 0;
 }
 
-p4_pd_status_t mc_node_destroy(
+p4_pd_status_t p4_pd_mc_node_destroy(
   p4_pd_sess_hdl_t session, int8_t device, mc_node_hdl_t node_hdl
 ) {
   (void) session;
@@ -108,7 +113,7 @@ p4_pd_status_t mc_node_destroy(
   return 0; // TODO
 }
 
-p4_pd_status_t mc_node_update(
+p4_pd_status_t p4_pd_mc_node_update(
   p4_pd_sess_hdl_t session, int8_t device, mc_node_hdl_t node_hdl,
   const uint8_t *port_map, const uint8_t *lag_map
 ) {
@@ -119,7 +124,7 @@ p4_pd_status_t mc_node_update(
   return 0; // TODO
 }
 
-p4_pd_status_t mc_set_lag_membership(
+p4_pd_status_t p4_pd_mc_set_lag_membership(
   p4_pd_sess_hdl_t session, int8_t device,
   mgrp_lag_id_t lag_id, const uint8_t *port_map
 ) {
