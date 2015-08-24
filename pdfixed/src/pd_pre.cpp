@@ -44,7 +44,7 @@ p4_pd_status_t p4_pd_mc_complete_operations(p4_pd_sess_hdl_t sess_hdl) {
 
 p4_pd_status_t p4_pd_mc_mgrp_create(
   p4_pd_sess_hdl_t session, int8_t device,
-  mgrp_id_t mgid, mc_mgrp_hdl_t *mgrp_hdl
+  mgrp_id_t mgid, p4_pd_entry_hdl_t *mgrp_hdl
 ) {
   (void) session;
   *mgrp_hdl = pd_conn_mgr_mc_client(conn_mgr_state, device)->bm_mc_mgrp_create(mgid);
@@ -52,7 +52,7 @@ p4_pd_status_t p4_pd_mc_mgrp_create(
 }
 
 p4_pd_status_t p4_pd_mc_mgrp_destroy(
-  p4_pd_sess_hdl_t session, int8_t device, mc_mgrp_hdl_t mgrp_hdl
+  p4_pd_sess_hdl_t session, int8_t device, p4_pd_entry_hdl_t mgrp_hdl
 ) {
   (void) session;
   pd_conn_mgr_mc_client(conn_mgr_state, device)->bm_mc_mgrp_destroy(mgrp_hdl);
@@ -78,7 +78,7 @@ std::string convert_map(const uint8_t *input, const size_t size) {
 p4_pd_status_t p4_pd_mc_node_create(
   p4_pd_sess_hdl_t session, int8_t device,
   mgrp_rid_t rid, const uint8_t *port_map, const uint8_t *lag_map,
-  mc_node_hdl_t *node_hdl
+  p4_pd_entry_hdl_t *node_hdl
 ) {
   (void) session;
   std::string port_map_ = convert_map(port_map, PRE_PORTS_MAX);
@@ -89,7 +89,7 @@ p4_pd_status_t p4_pd_mc_node_create(
 
 p4_pd_status_t p4_pd_mc_associate_node(
   p4_pd_sess_hdl_t session, int8_t device,
-  mc_mgrp_hdl_t mgrp_hdl, mc_node_hdl_t hdl
+  p4_pd_entry_hdl_t mgrp_hdl, p4_pd_entry_hdl_t hdl
 ) {
   (void) session;
   pd_conn_mgr_mc_client(conn_mgr_state, device)->bm_mc_node_associate(mgrp_hdl, hdl);
@@ -98,7 +98,7 @@ p4_pd_status_t p4_pd_mc_associate_node(
 
 p4_pd_status_t p4_pd_mc_dissociate_node(
   p4_pd_sess_hdl_t session, int8_t device,
-  mc_mgrp_hdl_t mgrp_hdl, mc_node_hdl_t node_hdl
+  p4_pd_entry_hdl_t mgrp_hdl, p4_pd_entry_hdl_t node_hdl
 ) {
   // TODO: needed ?
   (void) session; (void) mgrp_hdl; (void) node_hdl;
@@ -106,7 +106,7 @@ p4_pd_status_t p4_pd_mc_dissociate_node(
 }
 
 p4_pd_status_t p4_pd_mc_node_destroy(
-  p4_pd_sess_hdl_t session, int8_t device, mc_node_hdl_t node_hdl
+  p4_pd_sess_hdl_t session, int8_t device, p4_pd_entry_hdl_t node_hdl
 ) {
   (void) session;
   pd_conn_mgr_mc_client(conn_mgr_state, device)->bm_mc_node_destroy(node_hdl);
@@ -114,7 +114,7 @@ p4_pd_status_t p4_pd_mc_node_destroy(
 }
 
 p4_pd_status_t p4_pd_mc_node_update(
-  p4_pd_sess_hdl_t session, int8_t device, mc_node_hdl_t node_hdl,
+  p4_pd_sess_hdl_t session, int8_t device, p4_pd_entry_hdl_t node_hdl,
   const uint8_t *port_map, const uint8_t *lag_map
 ) {
   (void) session;
