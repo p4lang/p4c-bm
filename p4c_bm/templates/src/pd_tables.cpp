@@ -782,4 +782,13 @@ ${p4_pd_enable_entry_timeout}(p4_pd_sess_hdl_t sess_hdl,
 }
 //:: #endfor
 
+/* Clean all state */
+//:: name = pd_prefix + "clean_all"
+p4_pd_status_t
+${name}(p4_pd_sess_hdl_t sess_hdl, p4_pd_dev_target_t dev_tgt) {
+  assert(my_devices[dev_tgt.device_id]);
+  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_reset_state();
+  return 0;
+}
+
 }

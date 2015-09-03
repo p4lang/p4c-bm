@@ -347,6 +347,11 @@ ${p4_pd_enable_entry_timeout}(p4_pd_sess_hdl_t sess_hdl,
 			      void *client_data);
 //:: #endfor
 
+/* Clean all state */
+//:: name = pd_prefix + "clean_all"
+p4_pd_status_t
+${name}(p4_pd_sess_hdl_t sess_hdl, p4_pd_dev_target_t dev_tgt);
+
 #ifdef __cplusplus
 }
 #endif
