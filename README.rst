@@ -2,8 +2,8 @@
 p4c-bm
 ===============================
 
-.. image:: https://travis-ci.org/p4lang/behavioral-model.svg?branch=develop
-        :target: https://travis-ci.org/p4lang/behavioral-model.svg
+.. image:: https://travis-ci.org/p4lang/p4c-bm.svg?branch=develop
+        :target: https://travis-ci.org/p4lang/p4c-bm.svg
 
 
 Generates the JSON configuration for the behavioral-model, as well as the PD C++ files if needed
