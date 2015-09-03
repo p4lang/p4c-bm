@@ -25,6 +25,7 @@
 #include "pd/pd_tables.h"
 #include "pd/pd_learning.h"
 #include "pd/pd_meters.h"
+#include "pd/pd_counters.h"
 
 #ifdef __cplusplus
 extern "C" {

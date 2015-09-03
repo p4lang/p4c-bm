@@ -38,7 +38,7 @@ extern "C" {
 //::   params += ["int flags"]
 //::   param_str = ",\n ".join(params)
 //::   name = pd_prefix + "counter_read_" + ca_name
-p4_pd_status_t
+p4_pd_counter_value_t
 ${name}
 (
  ${param_str}

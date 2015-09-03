@@ -216,7 +216,7 @@ p4_pd_status_t ${pd_prefix}${lq_name}_deregister
   LearnState *state = device_state[device_id];
   auto &clients = state->${lq_name}_clients;
   std::unique_lock<std::mutex> lock(state->${lq_name}_mutex);
-  assert(clients.erase(sess_hdl) == 0);
+  assert(clients.erase(sess_hdl) == 1);
   return 0;
 }
 
