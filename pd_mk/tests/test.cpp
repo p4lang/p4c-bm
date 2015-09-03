@@ -165,7 +165,7 @@ int main() {
   std::memset(lag_map, 0, sizeof(lag_map));
   lag_map[0] = (1 << 7);
   lag_map[1] = (1 << 5);
-  mc_node_hdl_t node_hdl;
+  p4_pd_entry_hdl_t node_hdl;
   p4_pd_mc_node_create(sess_hdl, dev_tgt.device_id, 21, port_map, lag_map, &node_hdl);
 
   /* counters */

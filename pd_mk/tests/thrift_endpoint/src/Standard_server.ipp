@@ -293,6 +293,11 @@ public:
     // Your implementation goes here
     printf("bm_dump_table\n");
   }
+
+  void bm_reset_state() {
+    // Your implementation goes here
+    printf("bm_reset_state\n");
+  }
   
 };
 
