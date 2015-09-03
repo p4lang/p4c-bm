@@ -329,6 +329,21 @@ def get_c_name(name):
     return n
 
 
+def get_thrift_type(byte_width):
+    if byte_width == 1:
+        return "byte"
+    elif byte_width == 2:
+        return "i16"
+    elif byte_width <= 4:
+        return "i32"
+    elif byte_width == 6:
+        return "MacAddr_t"
+    elif byte_width == 16:
+        return "IPv6_t"
+    else:
+        return "binary"
+
+
 def generate_pd_source(json_dict, dest_dir, p4_prefix):
     TABLES.clear()
     ACTIONS.clear()
@@ -348,6 +363,7 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix):
     render_dict["bits_to_bytes"] = bits_to_bytes
     render_dict["get_c_type"] = get_c_type
     render_dict["get_c_name"] = get_c_name
+    render_dict["get_thrift_type"] = get_thrift_type
     render_dict["tables"] = TABLES
     render_dict["actions"] = ACTIONS
     render_dict["learn_quantas"] = LEARN_QUANTAS
