@@ -3,6 +3,8 @@
 
 AC_PREREQ([2.68])
 AC_INIT([pd_tests], [0.1], [antonin@barefootnetworks.com])
+# This prevents autotools from automatically adding -O2 flag.
+: ${CXXFLAGS=""}
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 dnl AC_CONFIG_SRCDIR([modules/bm_sim/src/checksums.cpp])
 AC_CONFIG_HEADERS([config.h])
