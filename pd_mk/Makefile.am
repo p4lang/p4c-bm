@@ -98,13 +98,18 @@ p4_pd/pd/pd_tables.h \
 p4_pd/pd/pd_types.h \
 p4_pd/pd/pd_mirroring.h
 
+pd_p4_IDL = p4_pd/thrift/p4_pd_rpc.thrift
+pd_p4_src = \
+p4_pd/thrift-src/p4_pd_rpc_server.ipp \
+p4_pd/thrift-src/pd_rpc_server.cpp \
+p4_pd/thrift-src/pd_rpc_server.h
 
 pd_files.ts : $(P4_PATH) $(template_files)
 	@rm -f pd_files.tmp
 	@touch pd_files.tmp
 	$(top_srcdir)/../p4c_bm/__main__.py --pd p4_pd/ --p4-prefix $(P4_PREFIX) $(P4_PATH)
 	@mv -f pd_files.tmp $@
-$(pd_files): pd_files.ts
+$(pd_files) $(pd_p4_IDL) $(pd_p4_src) : pd_files.ts
 ## Recover from the removal of $@
 	@if test -f $@; then :; else \
 	  trap 'rm -rf pd_files.lock pd_files.ts' 1 2 13 15; \
@@ -199,8 +204,6 @@ pd_thrift_gen/gen-cpp/p4_pd_rpc_types.cpp \
 pd_thrift_gen/gen-cpp/p4_pd_rpc_types.h
 
 pd_thrift_files = $(pd_p4_thrift_files)
-
-pd_p4_IDL = p4_pd/thrift/p4_pd_rpc.thrift
 
 pd_p4_py = pd_thrift_gen/gen-py/p4_pd_rpc/constants.py
 
@@ -303,5 +306,6 @@ AM_CPPFLAGS += -I$(top_srcdir)/pd_thrift_gen/gen-cpp/
 CLEANFILES = $(BUILT_SOURCES) \
 thrift_files.ts pd_files.ts pdfixed_thrift_files.ts pd_thrift_files.ts
 
-clean-local:
-	rm -rf pd_thrift_gen thrift_gen
+# this causes 'make clean' to fail when run several times
+# clean-local:
+# 	rm -rf pd_thrift_gen thrift_gen
