@@ -6,7 +6,9 @@ p4c-bm
         :target: https://travis-ci.org/p4lang/p4c-bm.svg
 
 
-Generates the JSON configuration for the behavioral-model, as well as the PD C++ files if needed
+Generates the JSON configuration for the `behavioral-model (bmv2)
+<https://github.com/p4lang/behavioral-model>`_, as well as the PD (Protocol
+Dependent) library C/C++ files, if needed.
 
 Usage
 -----
