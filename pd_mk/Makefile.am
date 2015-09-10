@@ -104,7 +104,21 @@ p4_pd/thrift-src/p4_pd_rpc_server.ipp \
 p4_pd/thrift-src/pd_rpc_server.cpp \
 p4_pd/thrift-src/pd_rpc_server.h
 
-pd_files.ts : $(P4_PATH) $(template_files)
++pd_files-sanitize :
+	@echo "$(P4_PATH)" > .bmv2-pd-sane.tmp
+	@echo "$(P4_PREFIX)" >> .bmv2-pd-sane.tmp
+	@if test -f .bmv2-pd-sane; then :; else \
+		touch .bmv2-pd-sane;\
+	fi
+	@if diff .bmv2-pd-sane .bmv2-pd-sane.tmp >/dev/null; then :; else \
+		echo "p4c-bm env change"; \
+		$(MAKE) clean; \
+	fi
+	@mv .bmv2-pd-sane.tmp .bmv2-pd-sane
+
+.PHONY : pd_files-sanitize
+
+pd_files.ts : $(P4_PATH) $(template_files) | pd_files-sanitize
 	@rm -f pd_files.tmp
 	@touch pd_files.tmp
 	$(top_srcdir)/../p4c_bm/__main__.py --pd p4_pd/ --p4-prefix $(P4_PREFIX) $(P4_PATH)
@@ -304,7 +318,8 @@ AM_CPPFLAGS += -I$(top_srcdir)/p4_pd/
 AM_CPPFLAGS += -I$(top_srcdir)/pd_thrift_gen/gen-cpp/
 
 CLEANFILES = $(BUILT_SOURCES) \
-thrift_files.ts pd_files.ts pdfixed_thrift_files.ts pd_thrift_files.ts
+thrift_files.ts pd_files.ts pdfixed_thrift_files.ts pd_thrift_files.ts \
+.bmv2-pd-sane
 
 # this causes 'make clean' to fail when run several times
 # clean-local:
