@@ -104,7 +104,7 @@ p4_pd/thrift-src/p4_pd_rpc_server.ipp \
 p4_pd/thrift-src/pd_rpc_server.cpp \
 p4_pd/thrift-src/pd_rpc_server.h
 
-+pd_files-sanitize :
+pd_files-sanitize :
 	@echo "$(P4_PATH)" > .bmv2-pd-sane.tmp
 	@echo "$(P4_PREFIX)" >> .bmv2-pd-sane.tmp
 	@if test -f .bmv2-pd-sane; then :; else \
