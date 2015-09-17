@@ -622,6 +622,9 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_counter:
                     arg_dict["type"] = "counter_array"
                     arg_dict["value"] = arg.name
+                elif type(arg) is p4.p4_register:
+                    arg_dict["type"] = "register_array"
+                    arg_dict["value"] = arg.name
                 else:
                     print type(arg)
                     assert(not "arg type not supported yet")
@@ -803,6 +806,24 @@ def dump_counters(json_dict, hlir):
     json_dict["counter_arrays"] = counters
 
 
+def dump_registers(json_dict, hlir):
+    registers = []
+    id_ = 0
+    for name, p4_register in hlir.p4_registers.items():
+        register_dict = OrderedDict()
+        register_dict["name"] = name
+        register_dict["id"] = id_
+        id_ += 1
+        if p4_register.layout is not None:
+            assert(not "registers with layout not supported")
+        register_dict["bitwidth"] = p4_register.width
+        register_dict["size"] = p4_register.instance_count
+
+        registers.append(register_dict)
+
+    json_dict["register_arrays"] = registers
+
+
 # TODO: what would be a better solution than this
 def dump_force_arith(json_dict, hlir):
     force_arith = []
@@ -836,6 +857,7 @@ def json_dict_create(hlir):
     dump_checksums(json_dict, hlir)
     dump_learn_lists(json_dict, hlir)
     dump_counters(json_dict, hlir)
+    dump_registers(json_dict, hlir)
 
     dump_force_arith(json_dict, hlir)
 
