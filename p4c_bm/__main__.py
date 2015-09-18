@@ -29,6 +29,7 @@ from p4_hlir.main import HLIR
 import gen_json
 import gen_pd
 import json
+from pkg_resources import resource_string
 
 
 def get_parser():
@@ -93,6 +94,11 @@ def main():
     else:
         h = HLIR(args.source)
         h.add_preprocessor_args("-D__TARGET_BMV2__")
+        # in addition to standard P4 primitives
+        more_primitives = json.loads(
+            resource_string(__name__, 'primitives.json')
+        )
+        h.add_primitives(more_primitives)
         if not h.build():
             print "Error while building HLIR"
             sys.exit(1)

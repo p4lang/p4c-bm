@@ -33,6 +33,8 @@ import pytest
 import os
 import sys
 import tempfile
+import json
+from pkg_resources import resource_string
 
 from p4_hlir.main import HLIR
 
@@ -53,6 +55,11 @@ def list_p4_programs():
 def test_gen_json(input_p4):
     assert os.path.exists(input_p4)
     h = HLIR(input_p4)
+    more_primitives = json.loads(
+        resource_string(__name__,
+                        os.path.join('..', 'p4c_bm', 'primitives.json'))
+    )
+    h.add_primitives(more_primitives)
     assert h.build()
     json_dict = gen_json.json_dict_create(h)
     assert json_dict
@@ -68,6 +75,11 @@ def test_gen_pd(input_p4, tmpdir):
     assert os.path.exists(input_p4)
     p = str(tmpdir)
     h = HLIR(input_p4)
+    more_primitives = json.loads(
+        resource_string(__name__,
+                        os.path.join('..', 'p4c_bm', 'primitives.json'))
+    )
+    h.add_primitives(more_primitives)
     assert h.build()
     json_dict = gen_json.json_dict_create(h)
     assert json_dict

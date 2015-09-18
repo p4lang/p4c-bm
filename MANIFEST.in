@@ -8,6 +8,8 @@ recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 
+recursive-include p4c_bm *.json
+
 recursive-include p4c_bm *.c
 recursive-include p4c_bm *.h
 
