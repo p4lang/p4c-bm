@@ -79,7 +79,7 @@ int main() {
   p4_pd_test_ExactOneAgeing_table_add_with_actionA(sess_hdl, dev_tgt,
 						   &ExactOneAgeing_match_spec,
 						   &actionA_action_spec,
-						   2, // ttl
+						   2000, // ttl
 						   &entry_hdl);
   
   p4_pd_test_LpmOne_match_spec_t LpmOne_match_spec = {0x12345678, 12};
