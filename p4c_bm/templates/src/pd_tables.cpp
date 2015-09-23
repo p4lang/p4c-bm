@@ -208,7 +208,7 @@ ${name}
 
     // bmv2 takes a ttl in milliseconds
     pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_set_entry_ttl(
-      "${t_name}", *entry_hdl, ttl * 1000
+      "${t_name}", *entry_hdl, ttl
     );
 //::     #endif
   } catch (InvalidTableOperation &ito) {
