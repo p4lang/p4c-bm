@@ -21,7 +21,7 @@ Usage
 
 * Using p4c-bm
 
-  * Try :code:`p4c-bm -h`
+  * Try :code:`p4c-bmv2 -h`
   * :code:`--json` to generate a JSON representation of the P4 program
   * :code:`--pd` to generate the PD C++ code
 
