@@ -30,6 +30,7 @@
 
 #include "Standard_server.ipp"
 #include "SimplePreLAG_server.ipp"
+#include "SimpleSwitch_server.ipp"
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -42,10 +43,13 @@ using ::bm_runtime::standard::StandardHandler;
 using ::bm_runtime::standard::StandardProcessor;
 using ::bm_runtime::simple_pre_lag::SimplePreLAGHandler;
 using ::bm_runtime::simple_pre_lag::SimplePreLAGProcessor;
+using ::sswitch_runtime::SimpleSwitchHandler;
+using ::sswitch_runtime::SimpleSwitchProcessor;
 
 void run_server(int port) {
   shared_ptr<StandardHandler> standard_handler(new StandardHandler());
   shared_ptr<SimplePreLAGHandler> simple_pre_lag_handler(new SimplePreLAGHandler());
+  shared_ptr<SimpleSwitchHandler> simple_switch_handler(new SimpleSwitchHandler());
 
   shared_ptr<TMultiplexedProcessor> processor(new TMultiplexedProcessor());
   processor->registerProcessor(
@@ -55,6 +59,10 @@ void run_server(int port) {
   processor->registerProcessor(
     "simple_pre_lag",
     shared_ptr<TProcessor>(new SimplePreLAGProcessor(simple_pre_lag_handler))
+  );
+  processor->registerProcessor(
+    "simple_switch",
+    shared_ptr<TProcessor>(new SimpleSwitchProcessor(simple_switch_handler))
   );
 
   shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));

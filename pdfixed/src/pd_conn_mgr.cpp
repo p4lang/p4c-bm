@@ -36,6 +36,7 @@ using namespace ::apache::thrift::transport;
 struct client_t {
   StandardClient *client;
   McClient *mc_client;
+  SSwitchClient *sswitch_client;
 };
 
 struct pd_conn_mgr_s {
@@ -68,10 +69,14 @@ int pd_conn_mgr_client_init(pd_conn_mgr_t *conn_mgr_state,
   boost::shared_ptr<TMultiplexedProtocol> mc_protocol(
     new TMultiplexedProtocol(protocol, "simple_pre_lag")
   );
+  boost::shared_ptr<TMultiplexedProtocol> sswitch_protocol(
+    new TMultiplexedProtocol(protocol, "simple_switch")
+  );
 
   conn_mgr_state->transports[dev_id] = transport;
   conn_mgr_state->clients[dev_id].client = new StandardClient(standard_protocol);
   conn_mgr_state->clients[dev_id].mc_client = new McClient(mc_protocol);
+  conn_mgr_state->clients[dev_id].sswitch_client = new SSwitchClient(sswitch_protocol);
 
   try {
     transport->open();
@@ -104,4 +109,9 @@ Client *pd_conn_mgr_client(pd_conn_mgr_t *conn_mgr_state,
 McClient *pd_conn_mgr_mc_client(pd_conn_mgr_t *conn_mgr_state,
 				int dev_id) {
   return conn_mgr_state->clients[dev_id].mc_client;
+}
+
+SSwitchClient *pd_conn_mgr_sswitch_client(pd_conn_mgr_t *conn_mgr_state,
+					  int dev_id) {
+  return conn_mgr_state->clients[dev_id].sswitch_client;
 }

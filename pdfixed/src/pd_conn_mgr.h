@@ -23,12 +23,15 @@
 
 #include "Standard.h"
 #include "SimplePreLAG.h"
+#include "SimpleSwitch.h"
 
 using namespace  ::bm_runtime::standard;
 using namespace  ::bm_runtime::simple_pre_lag;
+using namespace  ::sswitch_runtime;
 
 typedef StandardClient Client;
 typedef SimplePreLAGClient McClient;
+typedef SimpleSwitchClient SSwitchClient;
 
 typedef struct pd_conn_mgr_s pd_conn_mgr_t;
 
@@ -37,6 +40,7 @@ void pd_conn_mgr_destroy(pd_conn_mgr_t *conn_mgr_state);
 
 Client *pd_conn_mgr_client(pd_conn_mgr_t *, int dev_id);
 McClient *pd_conn_mgr_mc_client(pd_conn_mgr_t *, int dev_id);
+SSwitchClient *pd_conn_mgr_sswitch_client(pd_conn_mgr_t *, int dev_id);
 
 int pd_conn_mgr_client_init(pd_conn_mgr_t *, int dev_id, int thrift_port_num);
 int pd_conn_mgr_client_close(pd_conn_mgr_t *, int dev_id);

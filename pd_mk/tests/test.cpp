@@ -30,6 +30,7 @@
 #include <pd/pd_static.h>
 #include <pd/pd.h>
 #include <pd/pd_pre.h>
+#include <pd/pd_mirroring.h>
 
 #define DEVICE_THRIFT_PORT 9090
 
@@ -179,6 +180,12 @@ int main() {
   // direct counter
   p4_pd_test_counter_read_ExactOne_counter(sess_hdl, dev_tgt, 18, 0);
   p4_pd_test_counter_write_ExactOne_counter(sess_hdl, dev_tgt, 18, counter_value);
+
+  /* mirroring */
+  p4_pd_test_mirror_session_create(sess_hdl, dev_tgt,
+				   PD_MIRROR_TYPE_NORM, PD_DIR_INGRESS,
+				   11, 12,
+				   4096, 0, false);
 
   /* END TEST */
 
