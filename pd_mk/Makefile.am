@@ -18,12 +18,22 @@ thrift_gen/gen-cpp/SimplePreLAG.h \
 thrift_gen/gen-cpp/simple_pre_lag_types.cpp \
 thrift_gen/gen-cpp/simple_pre_lag_types.h
 
+simple_switch_thrift_files = \
+thrift_gen/gen-cpp/simple_switch_constants.cpp \
+thrift_gen/gen-cpp/simple_switch_constants.h \
+thrift_gen/gen-cpp/SimpleSwitch.cpp \
+thrift_gen/gen-cpp/SimpleSwitch.h \
+thrift_gen/gen-cpp/simple_switch_types.cpp \
+thrift_gen/gen-cpp/simple_switch_types.h
+
 thrift_files = \
 $(standard_thrift_files) \
-$(simple_pre_lag_thrift_files)
+$(simple_pre_lag_thrift_files) \
+$(simple_switch_thrift_files)
 
 standard_IDL = $(top_srcdir)/../submodules/bm/thrift_src/standard.thrift
 simple_pre_lag_IDL = $(top_srcdir)/../submodules/bm/thrift_src/simple_pre_lag.thrift
+simple_switch_IDL = $(top_srcdir)/../submodules/bm/targets/simple_switch/thrift/simple_switch.thrift
 
 template_cpp_files = \
 $(top_srcdir)/../p4c_bm/templates/src/pd.cpp \
@@ -60,6 +70,7 @@ thrift_files.ts: $(standard_IDL) $(simple_pre_lag_IDL)
 	@touch thrift_files.tmp
 	$(THRIFT) -o $(top_srcdir)/thrift_gen/ --gen cpp -r $(standard_IDL)
 	$(THRIFT) -o $(top_srcdir)/thrift_gen/ --gen cpp -r $(simple_pre_lag_IDL)
+	$(THRIFT) -o $(top_srcdir)/thrift_gen/ --gen cpp -r $(simple_switch_IDL)
 	@mv -f thrift_files.tmp $@
 $(thrift_files): thrift_files.ts
 ## Recover from the removal of $@

@@ -77,3 +77,6 @@ libtool
 *.o
 *.la
 *.libs
+
+*.ts
+*.tar.lz

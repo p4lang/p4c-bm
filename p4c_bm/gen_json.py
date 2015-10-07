@@ -547,9 +547,20 @@ def index_OrderedDict(self, kf):
 OrderedDict.index = index_OrderedDict
 
 
+# TODO: unify with method below
 @static_var("ids", {})
 def field_list_to_learn_id(p4_field_list):
     ids = field_list_to_learn_id.ids
+    if p4_field_list in ids:
+        return ids[p4_field_list]
+    idx = len(ids) + 1
+    ids[p4_field_list] = idx
+    return idx
+
+
+@static_var("ids", {})
+def field_list_to_id(p4_field_list):
+    ids = field_list_to_id.ids
     if p4_field_list in ids:
         return ids[p4_field_list]
     idx = len(ids) + 1
@@ -609,10 +620,12 @@ def dump_actions(json_dict, hlir):
                     arg_dict["value"] = arg.idx
                 elif type(arg) is p4.p4_field_list:
                     # hack for generate_digest calls
-                    assert(primitive_name == "generate_digest")
-                    learn_id = field_list_to_learn_id(arg)
+                    if primitive_name == "generate_digest":
+                        id_ = field_list_to_learn_id(arg)
+                    elif "clone" in primitive_name:
+                        id_ = field_list_to_id(arg)
                     arg_dict["type"] = "hexstr"
-                    arg_dict["value"] = hex(learn_id)
+                    arg_dict["value"] = hex(id_)
                 elif type(arg) is p4.p4_field_list_calculation:
                     arg_dict["type"] = "calculation"
                     arg_dict["value"] = arg.name
@@ -733,6 +746,7 @@ def dump_checksums(json_dict, hlir):
     json_dict["checksums"] = checksums
 
 
+# TODO: deprecate this function and merge with the one below
 def dump_learn_lists(json_dict, hlir):
     learn_lists = []
 
@@ -759,6 +773,34 @@ def dump_learn_lists(json_dict, hlir):
     learn_lists.sort(key=lambda field_list: field_list["id"])
 
     json_dict["learn_lists"] = learn_lists
+
+
+def dump_field_lists(json_dict, hlir):
+    field_lists = []
+
+    list_ids = field_list_to_id.ids
+    for p4_field_list, id_ in list_ids.items():
+        field_list_dict = OrderedDict()
+        field_list_dict["id"] = id_
+        field_list_dict["name"] = p4_field_list.name
+
+        elements = []
+        for field in p4_field_list.fields:
+            element_dict = OrderedDict()
+            if type(field) is not p4.p4_field:
+                assert(not "only fields supported in field lists for now")
+            element_dict["type"] = "field"
+            element_dict["value"] = format_field_ref(field)
+
+            elements.append(element_dict)
+
+        field_list_dict["elements"] = elements
+
+        field_lists.append(field_list_dict)
+
+    field_lists.sort(key=lambda field_list: field_list["id"])
+
+    json_dict["field_lists"] = field_lists
 
 
 def dump_meters(json_dict, hlir):
@@ -856,6 +898,7 @@ def json_dict_create(hlir):
     dump_calculations(json_dict, hlir)
     dump_checksums(json_dict, hlir)
     dump_learn_lists(json_dict, hlir)
+    dump_field_lists(json_dict, hlir)
     dump_counters(json_dict, hlir)
     dump_registers(json_dict, hlir)
 

@@ -29,10 +29,10 @@ extern int *my_devices;
 
 extern "C" {
 
+// TODO: remove
 int ${pd_prefix}mirroring_mapping_add(p4_pd_mirror_id_t mirror_id,
                                       uint16_t egress_port) {
-  (void) mirror_id;
-  (void) egress_port;
+  (void) mirror_id; (void) egress_port;
   return 0;
 }
 
@@ -45,16 +45,9 @@ int ${pd_prefix}mirror_session_create(p4_pd_sess_hdl_t shdl,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
                                       bool c2c) {
-  (void) shdl;
-  (void) dev_tgt;
-  (void) type;
-  (void) dir;
-  (void) id;
-  (void) egr_port;
-  (void) max_pkt_len;
-  (void) cos;
-  (void) c2c;
-  return 0;
+  (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos; (void) c2c;
+  SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
+  return client->mirroring_mapping_add(id, egr_port);
 }
 
 int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
@@ -66,19 +59,12 @@ int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
                                       bool c2c, bool enable) {
-  (void) shdl;
-  (void) dev_tgt;
-  (void) type;
-  (void) dir;
-  (void) id;
-  (void) egr_port;
-  (void) max_pkt_len;
-  (void) cos;
-  (void) c2c;
-  (void) enable;
-  return 0;
+  (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos; (void) c2c; (void) enable;
+  SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
+  return client->mirroring_mapping_add(id, egr_port);
 }
 
+// TODO: remove
 int ${pd_prefix}mirroring_mapping_delete(p4_pd_mirror_id_t mirror_id) {
   (void) mirror_id;
   return 0;
@@ -88,9 +74,8 @@ int ${pd_prefix}mirror_session_delete(p4_pd_sess_hdl_t shdl,
                                       p4_pd_dev_target_t dev_tgt,
                                       p4_pd_mirror_id_t mirror_id) {
   (void) shdl;
-  (void) dev_tgt;
-  (void) mirror_id;
-  return 0;
+  SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
+  return client->mirroring_mapping_delete(mirror_id);
 }
 
 int ${pd_prefix}mirroring_mapping_get_egress_port(int mirror_id) {
