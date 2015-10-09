@@ -700,7 +700,7 @@ def dump_calculations(json_dict, hlir):
                 for i, h in enumerate(topo_sorting):
                     if h == last_header:
                         break
-                for h in topo_sorting[i:]:
+                for h in topo_sorting[(i + 1):]:
                     field_dict = OrderedDict()
                     field_dict["type"] = "header"
                     field_dict["value"] = h.name
