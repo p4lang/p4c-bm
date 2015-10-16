@@ -194,6 +194,12 @@ def dump_parsers(json_dict, hlir):
                 elif type(src) is tuple:
                     src_dict["type"] = "lookahead"
                     src_dict["value"] = list(src)
+                elif type(src) is p4.p4_expression:
+                    src_dict["type"] = "expression"
+                    src_dict["value"] = dump_expression(src)
+                else:
+                    print type(src)
+                    assert(not "src type for set_metadata() not supported")
                 parameters.append(src_dict)
             else:
                 assert(0 and "invalid parser operation")
@@ -341,6 +347,9 @@ def dump_expression(p4_expression):
     elif type(p4_expression) is p4.p4_field:
         expression_dict["type"] = "field"
         expression_dict["value"] = format_field_ref(p4_expression)
+    elif type(p4_expression) is p4.p4_signature_ref:
+        expression_dict["type"] = "local"
+        expression_dict["value"] = p4_expression.idx
     else:
         expression_dict["type"] = "expression"
         expression_dict["value"] = OrderedDict()
@@ -638,6 +647,9 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_register:
                     arg_dict["type"] = "register_array"
                     arg_dict["value"] = arg.name
+                elif type(arg) is p4.p4_expression:
+                    arg_dict["type"] = "expression"
+                    arg_dict["value"] = dump_expression(arg)
                 else:
                     print type(arg)
                     assert(not "arg type not supported yet")
