@@ -194,8 +194,14 @@ def dump_parsers(json_dict, hlir):
                 elif type(src) is tuple:
                     src_dict["type"] = "lookahead"
                     src_dict["value"] = list(src)
+                elif type(src) is p4.p4_expression:
+                    src_dict["type"] = "expression"
+                    src_dict["value"] = dump_expression(src)
+                else:  # pragma: no cover
+                    print type(src)
+                    assert(not "src type for set_metadata() not supported")
                 parameters.append(src_dict)
-            else:
+            else:  # pragma: no cover
                 assert(0 and "invalid parser operation")
 
             parser_op_dict["parameters"] = parameters
@@ -219,7 +225,7 @@ def dump_parsers(json_dict, hlir):
                 field_widths.append(switch_ref[1])
                 switch_ref_dict["type"] = "lookahead"
                 switch_ref_dict["value"] = list(switch_ref)
-            else:
+            else:  # pragma: no cover
                 assert(not "not supported")
             transition_key.append(switch_ref_dict)
         parse_state_dict["transition_key"] = transition_key
@@ -235,7 +241,7 @@ def dump_parsers(json_dict, hlir):
             elif type(branch_case) is tuple:
                 value, mask = (build_match_value(field_widths, branch_case[0]),
                                build_match_value(field_widths, branch_case[1]))
-            else:
+            else:  # pragma: no cover
                 assert(not "only basic parsers supported,"
                        " value sets not supported")
 
@@ -341,6 +347,9 @@ def dump_expression(p4_expression):
     elif type(p4_expression) is p4.p4_field:
         expression_dict["type"] = "field"
         expression_dict["value"] = format_field_ref(p4_expression)
+    elif type(p4_expression) is p4.p4_signature_ref:
+        expression_dict["type"] = "local"
+        expression_dict["value"] = p4_expression.idx
     else:
         expression_dict["type"] = "expression"
         expression_dict["value"] = OrderedDict()
@@ -383,7 +392,7 @@ def get_table_match_type(p4_table):
         match_type = "exact"
     elif "ternary" in match_types:
         match_type = "ternary"
-    elif match_types.count("lpm") >= 2:
+    elif match_types.count("lpm") >= 2:  # pragma: no cover
         assert(not "cannot have 2 different lpm in a single table")
     elif "lpm" in match_types:
         match_type = "lpm"
@@ -456,7 +465,7 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
             assert(len(p4_selector.selection_key.input) == 1)
             for field in p4_selector.selection_key.input[0].fields:
                 element_dict = OrderedDict()
-                if type(field) is not p4.p4_field:
+                if type(field) is not p4.p4_field:  # pragma: no cover
                     assert(not "only fields supported in field lists for now")
                 element_dict["type"] = "field"
                 element_dict["value"] = format_field_ref(field)
@@ -586,7 +595,7 @@ def dump_actions(json_dict, hlir):
         runtime_data = []
         param_with_bit_widths = OrderedDict()
         for param, width in zip(action.signature, action.signature_widths):
-            if not width:
+            if not width:  # pragma: no cover
                 assert(not "unused parameter in action def")
             param_with_bit_widths[param] = width
 
@@ -638,7 +647,10 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_register:
                     arg_dict["type"] = "register_array"
                     arg_dict["value"] = arg.name
-                else:
+                elif type(arg) is p4.p4_expression:
+                    arg_dict["type"] = "expression"
+                    arg_dict["value"] = dump_expression(arg)
+                else:  # pragma: no cover
                     print type(arg)
                     assert(not "arg type not supported yet")
 
@@ -708,7 +720,7 @@ def dump_calculations(json_dict, hlir):
                 field_dict = OrderedDict()
                 field_dict["type"] = "payload"
                 my_input.append(field_dict)
-            else:
+            else:  # pragma: no cover
                 assert(0 and "field lists can only include fields")
         calc_dict["input"] = my_input
         calc_dict["algo"] = p4_calculation.algorithm
@@ -759,7 +771,7 @@ def dump_learn_lists(json_dict, hlir):
         elements = []
         for field in p4_field_list.fields:
             element_dict = OrderedDict()
-            if type(field) is not p4.p4_field:
+            if type(field) is not p4.p4_field:  # pragma: no cover
                 assert(not "only fields supported in field lists for now")
             element_dict["type"] = "field"
             element_dict["value"] = format_field_ref(field)
@@ -787,7 +799,7 @@ def dump_field_lists(json_dict, hlir):
         elements = []
         for field in p4_field_list.fields:
             element_dict = OrderedDict()
-            if type(field) is not p4.p4_field:
+            if type(field) is not p4.p4_field:  # pragma: no cover
                 assert(not "only fields supported in field lists for now")
             element_dict["type"] = "field"
             element_dict["value"] = format_field_ref(field)
@@ -812,13 +824,13 @@ def dump_meters(json_dict, hlir):
         meter_dict["id"] = id_
         id_ += 1
         if p4_meter.binding and (p4_meter.binding[0] == p4.P4_DIRECT):
-            assert(0 and "direct meters not supported yet")
+            assert(0 and "direct meters not supported yet")  # pragma: no cover
         meter_dict["rate_count"] = 2  # 2 rate, 3 colors
         if p4_meter.type == p4.P4_COUNTER_BYTES:
             type_ = "bytes"
         elif p4_meter.type == p4.P4_COUNTER_PACKETS:
             type_ = "packets"
-        else:
+        else:  # pragma: no cover
             assert(0 and "invalid meter type")
         meter_dict["type"] = type_
         meter_dict["size"] = p4_meter.instance_count
@@ -856,7 +868,7 @@ def dump_registers(json_dict, hlir):
         register_dict["name"] = name
         register_dict["id"] = id_
         id_ += 1
-        if p4_register.layout is not None:
+        if p4_register.layout is not None:  # pragma: no cover
             assert(not "registers with layout not supported")
         register_dict["bitwidth"] = p4_register.width
         register_dict["size"] = p4_register.instance_count
