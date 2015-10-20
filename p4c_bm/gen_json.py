@@ -43,6 +43,28 @@ def reset_static_vars():
         setattr(func, varname, copy(value))
 
 
+def header_length_exp_format(p4_expression, fields):
+
+    def find_idx(name):
+        for idx, field in enumerate(fields):
+            if name == field:
+                return idx
+        return -1
+
+    if type(p4_expression) is p4.p4_expression:
+        new_expr = p4.p4_expression(op=p4_expression.op)
+        new_expr.left = header_length_exp_format(p4_expression.left, fields)
+        new_expr.right = header_length_exp_format(p4_expression.right, fields)
+        return new_expr
+    elif type(p4_expression) is str:  # refers to field in same header
+        idx = find_idx(p4_expression)
+        assert(idx >= 0)
+        # trick so that dump_expression uses local for this
+        return p4.p4_signature_ref(idx)
+    else:
+        return p4_expression
+
+
 def dump_header_types(json_dict, hlir):
     header_types = []
     id_ = 0
@@ -51,10 +73,26 @@ def dump_header_types(json_dict, hlir):
         header_type_dict["name"] = name
         header_type_dict["id"] = id_
         id_ += 1
+
         fields = []
         for field, bit_width in p4_header.layout.items():
+            if bit_width == p4.P4_AUTO_WIDTH:
+                bit_width = "*"
             fields.append([field, bit_width])
         header_type_dict["fields"] = fields
+
+        length_exp = None
+        max_length = None
+        if p4_header.flex_width:
+            length_exp = header_length_exp_format(p4_header.length,
+                                                  zip(*fields)[0])
+            # bm expects a length in bits
+            length_exp = p4.p4_expression(length_exp, "*", 8)
+            length_exp = dump_expression(length_exp)
+            max_length = p4_header.max_length
+        header_type_dict["length_exp"] = length_exp
+        header_type_dict["max_length"] = max_length
+
         header_types.append(header_type_dict)
 
     json_dict["header_types"] = header_types
