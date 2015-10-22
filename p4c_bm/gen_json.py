@@ -25,9 +25,29 @@ import p4_hlir.hlir.p4 as p4
 from util.topo_sorting import Graph
 import re
 from copy import copy
+import logging
+import sys
 
 
 _STATIC_VARS = []
+
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+
+
+def LOG_CRITICAL(msg, *args, **kwargs):  # pragma: no cover
+    logger.critical(msg, *args, **kwargs)
+    logging.shutdown()
+    sys.exit(1)
+
+
+def LOG_WARNING(msg, *args, **kwargs):  # pragma: no cover
+    logger.warning(msg, *args, **kwargs)
+
+
+def LOG_INFO(msg, *args, **kwargs):  # pragma: no cover
+    logger.info(msg, *args, **kwargs)
 
 
 def static_var(varname, value):
@@ -74,6 +94,11 @@ def dump_header_types(json_dict, hlir):
         header_type_dict["id"] = id_
         id_ += 1
 
+        fixed_width = 0
+        for field, bit_width in p4_header.layout.items():
+            if bit_width != p4.P4_AUTO_WIDTH:
+                fixed_width += bit_width
+
         fields = []
         for field, bit_width in p4_header.layout.items():
             if bit_width == p4.P4_AUTO_WIDTH:
@@ -88,6 +113,7 @@ def dump_header_types(json_dict, hlir):
                                                   zip(*fields)[0])
             # bm expects a length in bits
             length_exp = p4.p4_expression(length_exp, "*", 8)
+            length_exp = p4.p4_expression(length_exp, "-", fixed_width)
             length_exp = dump_expression(length_exp)
             max_length = p4_header.max_length
         header_type_dict["length_exp"] = length_exp
@@ -236,11 +262,11 @@ def dump_parsers(json_dict, hlir):
                     src_dict["type"] = "expression"
                     src_dict["value"] = dump_expression(src)
                 else:  # pragma: no cover
-                    print type(src)
-                    assert(not "src type for set_metadata() not supported")
+                    LOG_CRITICAL("invalid src type for set_metadata: %s",
+                                 type(src))
                 parameters.append(src_dict)
             else:  # pragma: no cover
-                assert(0 and "invalid parser operation")
+                LOG_CRITICAL("invalid parser operation: %s", op_type)
 
             parser_op_dict["parameters"] = parameters
             parser_ops.append(parser_op_dict)
@@ -264,7 +290,7 @@ def dump_parsers(json_dict, hlir):
                 switch_ref_dict["type"] = "lookahead"
                 switch_ref_dict["value"] = list(switch_ref)
             else:  # pragma: no cover
-                assert(not "not supported")
+                LOG_CRITICAL("not supported")
             transition_key.append(switch_ref_dict)
         parse_state_dict["transition_key"] = transition_key
 
@@ -280,8 +306,7 @@ def dump_parsers(json_dict, hlir):
                 value, mask = (build_match_value(field_widths, branch_case[0]),
                                build_match_value(field_widths, branch_case[1]))
             else:  # pragma: no cover
-                assert(not "only basic parsers supported,"
-                       " value sets not supported")
+                LOG_CRITICAL("value sets not supported in parser")
 
             transition_dict["value"] = value
             transition_dict["mask"] = mask
@@ -305,10 +330,25 @@ def dump_parsers(json_dict, hlir):
     json_dict["parsers"] = parsers
 
 
+def process_forced_header_ordering(hlir, ordering):
+    p4_ordering = []
+    for hdr_name in ordering:
+        if hdr_name in hlir.p4_header_instances:
+            p4_ordering.append(hlir.p4_header_instances[hdr_name])
+        elif hdr_name + "[0]" in hlir.p4_header_instances:
+            hdr_0 = hlir.p4_header_instances[hdr_name + "[0]"]
+            for index in xrange(hdr_0.max_index + 1):
+                indexed_name = hdr_name + "[" + str(index) + "]"
+                p4_ordering.append(hlir.p4_header_instances[indexed_name])
+        else:
+            return None
+    return p4_ordering
+
+
 def produce_parser_topo_sorting(hlir):
     header_graph = Graph()
 
-    def walk_rec(hlir, parse_state, prev_hdr_node, tag_stacks_index):
+    def walk_rec(hlir, parse_state, prev_hdr_node, tag_stacks_index, visited):
         assert(isinstance(parse_state, p4.p4_parse_state))
         for call in parse_state.call_sequence:
             call_type = call[0]
@@ -323,6 +363,9 @@ def produce_parser_topo_sorting(hlir):
                     tag_stacks_index[base_name] += 1
                     name = base_name + "[%d]" % current_index
                     hdr = hlir.p4_header_instances[name]
+                # takes care of loops in parser (e.g. for TLV parsing)
+                elif parse_state in visited:
+                    return
 
                 if hdr not in header_graph:
                     header_graph.add_node(hdr)
@@ -339,12 +382,27 @@ def produce_parser_topo_sorting(hlir):
                 continue
             if not isinstance(next_state, p4.p4_parse_state):
                 continue
-            walk_rec(hlir, next_state, prev_hdr_node, tag_stacks_index.copy())
+            walk_rec(hlir, next_state, prev_hdr_node,
+                     tag_stacks_index.copy(), visited | {parse_state})
 
     start_state = hlir.p4_parse_states["start"]
-    walk_rec(hlir, start_state, None, defaultdict(int))
+    for pragma in start_state._pragmas:
+        try:
+            words = pragma.split()
+            if words[0] != "header_ordering":
+                continue
+        except:  # pragma: no cover
+            continue
+        sorting = process_forced_header_ordering(hlir, words[1:])
+        if sorting is None:  # pragma: no cover
+            LOG_CRITICAL("invalid 'header_ordering' pragma")
+        return sorting
+
+    walk_rec(hlir, start_state, None, defaultdict(int), set())
 
     header_topo_sorting = header_graph.produce_topo_sorting()
+    if header_topo_sorting is None:  # pragma: no cover
+        LOG_CRITICAL("could not produce topo sorting because of cycles")
 
     return header_topo_sorting
 
@@ -431,7 +489,7 @@ def get_table_match_type(p4_table):
     elif "ternary" in match_types:
         match_type = "ternary"
     elif match_types.count("lpm") >= 2:  # pragma: no cover
-        assert(not "cannot have 2 different lpm in a single table")
+        LOG_CRITICAL("cannot have 2 different lpm matches in a single table")
     elif "lpm" in match_types:
         match_type = "lpm"
     else:
@@ -504,7 +562,7 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
             for field in p4_selector.selection_key.input[0].fields:
                 element_dict = OrderedDict()
                 if type(field) is not p4.p4_field:  # pragma: no cover
-                    assert(not "only fields supported in field lists for now")
+                    LOG_CRITICAL("only fields supported in field lists")
                 element_dict["type"] = "field"
                 element_dict["value"] = format_field_ref(field)
                 elements.append(element_dict)
@@ -520,7 +578,8 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         key = []
         for field_ref, m_type, mask in table.match_fields:
             key_field = OrderedDict()
-            assert((not mask) and "mask not supported for match fields")
+            if mask:  # pragma: no cover
+                LOG_CRITICAL("mask not supported for match fields")
             match_type = match_types_map[m_type]
             key_field["match_type"] = match_type
             if(match_type == "valid"):
@@ -634,7 +693,7 @@ def dump_actions(json_dict, hlir):
         param_with_bit_widths = OrderedDict()
         for param, width in zip(action.signature, action.signature_widths):
             if not width:  # pragma: no cover
-                assert(not "unused parameter in action def")
+                LOG_CRITICAL("unused parameter in action def")
             param_with_bit_widths[param] = width
 
             param_dict = OrderedDict()
@@ -689,8 +748,8 @@ def dump_actions(json_dict, hlir):
                     arg_dict["type"] = "expression"
                     arg_dict["value"] = dump_expression(arg)
                 else:  # pragma: no cover
-                    print type(arg)
-                    assert(not "arg type not supported yet")
+                    LOG_CRITICAL("action arg type is not supported: ",
+                                 type(arg))
 
                 if primitive_name in {"push", "pop"} and\
                    arg_dict["type"] == "header":
@@ -731,8 +790,10 @@ def dump_calculations(json_dict, hlir):
                 my_input.append(field_dict)
             elif type(field) is p4.p4_sized_integer:
                 field_dict = OrderedDict()
-                assert(field.width % 8 == 0 and
-                       "p4 sized integers' width needs to be a multiple of 8")
+                if field.width % 8 != 0:  # pragma: no cover
+                    LOG_CRITICAL(
+                        "p4 sized integers' width needs to be a multiple of 8"
+                    )
                 # recycling function I wrote for parser
                 # TODO: find a better name for it
                 s = build_match_value([field.width / 8], field)
@@ -759,7 +820,7 @@ def dump_calculations(json_dict, hlir):
                 field_dict["type"] = "payload"
                 my_input.append(field_dict)
             else:  # pragma: no cover
-                assert(0 and "field lists can only include fields")
+                LOG_CRITICAL("field lists can only include fields")
         calc_dict["input"] = my_input
         calc_dict["algo"] = p4_calculation.algorithm
         # calc_dict["output_width"] = calculation.output_width
@@ -784,12 +845,8 @@ def dump_checksums(json_dict, hlir):
                 checksum_dict["id"] = id_
                 id_ += 1
                 checksum_dict["target"] = field_ref
-                if "ip" in field_name:
-                    checksum_dict["type"] = "ipv4"
-                else:
-                    checksum_dict["type"] = "generic"
-                    checksum_dict["calculation"] = calc.name
-                    # assert(not "checksum not supported")
+                checksum_dict["type"] = "generic"
+                checksum_dict["calculation"] = calc.name
                 checksums.append(checksum_dict)
                 break
 
@@ -810,7 +867,7 @@ def dump_learn_lists(json_dict, hlir):
         for field in p4_field_list.fields:
             element_dict = OrderedDict()
             if type(field) is not p4.p4_field:  # pragma: no cover
-                assert(not "only fields supported in field lists for now")
+                LOG_CRITICAL("only fields supported in field lists for now")
             element_dict["type"] = "field"
             element_dict["value"] = format_field_ref(field)
 
@@ -838,7 +895,7 @@ def dump_field_lists(json_dict, hlir):
         for field in p4_field_list.fields:
             element_dict = OrderedDict()
             if type(field) is not p4.p4_field:  # pragma: no cover
-                assert(not "only fields supported in field lists for now")
+                LOG_CRITICAL("only fields supported in field lists for now")
             element_dict["type"] = "field"
             element_dict["value"] = format_field_ref(field)
 
@@ -862,14 +919,14 @@ def dump_meters(json_dict, hlir):
         meter_dict["id"] = id_
         id_ += 1
         if p4_meter.binding and (p4_meter.binding[0] == p4.P4_DIRECT):
-            assert(0 and "direct meters not supported yet")  # pragma: no cover
+            LOG_CRITICAL("direct meters not supported yet")  # pragma: no cover
         meter_dict["rate_count"] = 2  # 2 rate, 3 colors
         if p4_meter.type == p4.P4_COUNTER_BYTES:
             type_ = "bytes"
         elif p4_meter.type == p4.P4_COUNTER_PACKETS:
             type_ = "packets"
         else:  # pragma: no cover
-            assert(0 and "invalid meter type")
+            LOG_CRITICAL("invalid meter type")
         meter_dict["type"] = type_
         meter_dict["size"] = p4_meter.instance_count
 
@@ -907,7 +964,7 @@ def dump_registers(json_dict, hlir):
         register_dict["id"] = id_
         id_ += 1
         if p4_register.layout is not None:  # pragma: no cover
-            assert(not "registers with layout not supported")
+            LOG_CRITICAL("registers with layout not supported")
         register_dict["bitwidth"] = p4_register.width
         register_dict["size"] = p4_register.instance_count
 
