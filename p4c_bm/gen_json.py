@@ -74,6 +74,11 @@ def dump_header_types(json_dict, hlir):
         header_type_dict["id"] = id_
         id_ += 1
 
+        fixed_width = 0
+        for field, bit_width in p4_header.layout.items():
+            if bit_width != p4.P4_AUTO_WIDTH:
+                fixed_width += bit_width
+
         fields = []
         for field, bit_width in p4_header.layout.items():
             if bit_width == p4.P4_AUTO_WIDTH:
@@ -88,6 +93,7 @@ def dump_header_types(json_dict, hlir):
                                                   zip(*fields)[0])
             # bm expects a length in bits
             length_exp = p4.p4_expression(length_exp, "*", 8)
+            length_exp = p4.p4_expression(length_exp, "-", fixed_width)
             length_exp = dump_expression(length_exp)
             max_length = p4_header.max_length
         header_type_dict["length_exp"] = length_exp
@@ -305,10 +311,25 @@ def dump_parsers(json_dict, hlir):
     json_dict["parsers"] = parsers
 
 
+def process_forced_header_ordering(hlir, ordering):
+    p4_ordering = []
+    for hdr_name in ordering:
+        if hdr_name in hlir.p4_header_instances:
+            p4_ordering.append(hlir.p4_header_instances[hdr_name])
+        elif hdr_name + "[0]" in hlir.p4_header_instances:
+            hdr_0 = hlir.p4_header_instances[hdr_name + "[0]"]
+            for index in xrange(hdr_0.max_index + 1):
+                indexed_name = hdr_name + "[" + str(index) + "]"
+                p4_ordering.append(hlir.p4_header_instances[indexed_name])
+        else:
+            return None
+    return p4_ordering
+
+
 def produce_parser_topo_sorting(hlir):
     header_graph = Graph()
 
-    def walk_rec(hlir, parse_state, prev_hdr_node, tag_stacks_index):
+    def walk_rec(hlir, parse_state, prev_hdr_node, tag_stacks_index, visited):
         assert(isinstance(parse_state, p4.p4_parse_state))
         for call in parse_state.call_sequence:
             call_type = call[0]
@@ -323,6 +344,9 @@ def produce_parser_topo_sorting(hlir):
                     tag_stacks_index[base_name] += 1
                     name = base_name + "[%d]" % current_index
                     hdr = hlir.p4_header_instances[name]
+                # takes care of loops in parser (e.g. for TLV parsing)
+                elif parse_state in visited:
+                    return
 
                 if hdr not in header_graph:
                     header_graph.add_node(hdr)
@@ -339,12 +363,26 @@ def produce_parser_topo_sorting(hlir):
                 continue
             if not isinstance(next_state, p4.p4_parse_state):
                 continue
-            walk_rec(hlir, next_state, prev_hdr_node, tag_stacks_index.copy())
+            walk_rec(hlir, next_state, prev_hdr_node,
+                     tag_stacks_index.copy(), visited | {parse_state})
 
     start_state = hlir.p4_parse_states["start"]
-    walk_rec(hlir, start_state, None, defaultdict(int))
+    for pragma in start_state._pragmas:
+        try:
+            words = pragma.split()
+            if words[0] != "header_ordering":
+                continue
+        except:  # pragma: no cover
+            continue
+        sorting = process_forced_header_ordering(hlir, words[1:])
+        assert(sorting is not None and "invalid 'header_ordering' pragma")
+        return sorting
+
+    walk_rec(hlir, start_state, None, defaultdict(int), set())
 
     header_topo_sorting = header_graph.produce_topo_sorting()
+    if header_topo_sorting is None:  # pragma: no cover
+        assert(not "could not produce topo sorting because of cycles")
 
     return header_topo_sorting
 
@@ -784,12 +822,12 @@ def dump_checksums(json_dict, hlir):
                 checksum_dict["id"] = id_
                 id_ += 1
                 checksum_dict["target"] = field_ref
-                if "ip" in field_name:
-                    checksum_dict["type"] = "ipv4"
-                else:
-                    checksum_dict["type"] = "generic"
-                    checksum_dict["calculation"] = calc.name
-                    # assert(not "checksum not supported")
+                # if "ip" in field_name:
+                #     checksum_dict["type"] = "ipv4"
+                # else:
+                checksum_dict["type"] = "generic"
+                checksum_dict["calculation"] = calc.name
+                # assert(not "checksum not supported")
                 checksums.append(checksum_dict)
                 break
 
