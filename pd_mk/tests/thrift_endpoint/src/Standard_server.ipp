@@ -279,6 +279,16 @@ public:
     }
   }
 
+  BmRegisterValue bm_register_read(const std::string& register_name, const int32_t index) {
+    // Your implementation goes here
+    printf("bm_register_read\n");
+  }
+
+  void bm_register_write(const std::string& register_name, const int32_t index, const BmRegisterValue value) {
+    // Your implementation goes here
+    printf("bm_register_write\n");
+  }
+
   void bm_dev_mgr_add_port(const std::string& iface_name, const int32_t port_num, const std::string& pcap_path) {
     // Your implementation goes here
     printf("bm_dev_mgr_add_port\n");
