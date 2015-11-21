@@ -86,10 +86,10 @@ p4_pd_load_new_config(p4_pd_sess_hdl_t shdl, uint8_t dev_id,
     client->bm_load_new_config(std::string(config_str));
   } catch(InvalidSwapOperation &iso) {
     const char *what =
-      _SwapOperationErrorCode_VALUES_TO_NAMES.find(iso.what)->second;
-    std::cout << "Invalid swap operation (" << iso.what << "): "
+      _SwapOperationErrorCode_VALUES_TO_NAMES.find(iso.code)->second;
+    std::cout << "Invalid swap operation (" << iso.code << "): "
 	      << what << std::endl;
-    return iso.what;
+    return iso.code;
   }
   return 0;
 }
@@ -102,10 +102,10 @@ p4_pd_swap_configs(p4_pd_sess_hdl_t shdl, uint8_t dev_id) {
     client->bm_swap_configs();
   } catch(InvalidSwapOperation &iso) {
     const char *what =
-      _SwapOperationErrorCode_VALUES_TO_NAMES.find(iso.what)->second;
-    std::cout << "Invalid swap operation (" << iso.what << "): "
+      _SwapOperationErrorCode_VALUES_TO_NAMES.find(iso.code)->second;
+    std::cout << "Invalid swap operation (" << iso.code << "): "
 	      << what << std::endl;
-    return iso.what;
+    return iso.code;
   }
   return 0;
 }

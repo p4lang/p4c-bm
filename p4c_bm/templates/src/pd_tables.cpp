@@ -213,10 +213,10 @@ ${name}
 //::     #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -264,10 +264,10 @@ ${name}
     );
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -298,10 +298,10 @@ ${name}
     );
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -331,10 +331,10 @@ ${name}
 //::   #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -375,10 +375,10 @@ ${name}
     );
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -421,10 +421,10 @@ ${name}
     );
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -453,10 +453,10 @@ ${name}
     client->bm_mt_indirect_set_default_member("${t_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -476,10 +476,10 @@ ${name}
     client->bm_mt_indirect_ws_set_default_group("${t_name}", grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -522,10 +522,10 @@ ${name}
     );
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -556,10 +556,10 @@ ${name}
     );
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -582,10 +582,10 @@ ${name}
     client->bm_mt_indirect_delete_member("${t_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -610,10 +610,10 @@ ${name}
     *grp_hdl = client->bm_mt_indirect_ws_create_group("${t_name}");
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -634,10 +634,10 @@ ${name}
     client->bm_mt_indirect_ws_delete_group("${t_name}", grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -659,10 +659,10 @@ ${name}
     client->bm_mt_indirect_ws_add_member_to_group("${t_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
@@ -684,10 +684,10 @@ ${name}
     client->bm_mt_indirect_ws_remove_member_from_group("${t_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
-      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.what)->second;
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
     std::cout << "Invalid table (" << "${t_name}" << ") operation ("
-	      << ito.what << "): " << what << std::endl;
-    return ito.what;
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
   }
   return 0;
 }
