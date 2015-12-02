@@ -583,8 +583,12 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
             match_type = match_types_map[m_type]
             key_field["match_type"] = match_type
             if(match_type == "valid"):
-                assert(type(field_ref) is p4.p4_header_instance)
-                key_field["target"] = field_ref.name
+                if isinstance(field_ref, p4.p4_field):
+                    header_ref = field_ref.instance
+                else:
+                    header_ref = field_ref
+                assert(type(header_ref) is p4.p4_header_instance)
+                key_field["target"] = header_ref.name
             else:
                 key_field["target"] = format_field_ref(field_ref)
             key.append(key_field)
