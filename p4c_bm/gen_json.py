@@ -732,7 +732,8 @@ def dump_actions(json_dict, hlir):
                     # hack for generate_digest calls
                     if primitive_name == "generate_digest":
                         id_ = field_list_to_learn_id(arg)
-                    elif "clone" in primitive_name:
+                    elif "clone" in primitive_name or\
+                         primitive_name in {"resubmit", "recirculate"}:
                         id_ = field_list_to_id(arg)
                     arg_dict["type"] = "hexstr"
                     arg_dict["value"] = hex(id_)
