@@ -18,31 +18,15 @@
  *
  */
 
-#ifndef _P4_PD_H_
-#define _P4_PD_H_
+#ifndef _P4_PD_NOTIFICATIONS_H_
+#define _P4_PD_NOTIFICATIONS_H_
 
-#include "pd/pd_static.h"
-#include "pd/pd_tables.h"
-#include "pd/pd_learning.h"
-#include "pd/pd_meters.h"
-#include "pd/pd_counters.h"
+typedef void (*NotificationCb)(const char *hdr, const char *data);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+int pd_notifications_add_device(int dev_id, const char *notifications_addr,
+                                NotificationCb ageing_cb,
+                                NotificationCb learning_cb);
 
-// I am not using sess_hdl for these functions, right thing to do?
-
-p4_pd_status_t ${pd_prefix}init(void);
-
-p4_pd_status_t ${pd_prefix}assign_device(int dev_id,
-                                         const char *notifications_addr,
-                                         int rpc_port_num);
-
-p4_pd_status_t ${pd_prefix}remove_device(int dev_id);
-
-#ifdef __cplusplus
-}
-#endif
+int pd_notifications_remove_device(int dev_id);
 
 #endif

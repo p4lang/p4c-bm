@@ -18,19 +18,19 @@
  *
  */
 
-#include "nn.h"
 #include "pd/pd_learning.h"
 #include "pd_conn_mgr.h"
-#include <nanomsg/pubsub.h>
 #include <iostream>
-#include <thread>
 #include <mutex>
 #include <map>
+#include <cstring>
 
 #define NUM_DEVICES 256
 
 extern pd_conn_mgr_t *conn_mgr_state;
 extern int *my_devices;
+
+namespace {
 
 //:: for lq_name, lq in learn_quantas.items():
 //::   lq_name = get_c_name(lq_name)
@@ -50,9 +50,7 @@ struct LearnState {
 //:: #endfor
 };
 
-static LearnState *device_state[NUM_DEVICES];
-
-namespace {
+LearnState *device_state[NUM_DEVICES];
 
 template <int L>
 void bytes_to_field(const char *bytes, char *field) {
@@ -100,30 +98,30 @@ void bytes_to_field<4>(const char *bytes, char *field) {
 #endif
 }
 
-}
-
 typedef struct {
+  char sub_topic[4];
   int switch_id;
   int list_id;
   unsigned long long buffer_id;
   unsigned int num_samples;
+  char _padding[8];
 } __attribute__((packed)) learn_hdr_t;
 
 
 //:: for lq_name, lq in learn_quantas.items():
 //::   lq_name = get_c_name(lq_name)
-void ${lq_name}_handle_learn_msg(const learn_hdr_t &hdr, const char *data) {
-  LearnState *state = device_state[hdr.switch_id];
+void ${lq_name}_handle_learn_msg(const learn_hdr_t *hdr, const char *data) {
+  LearnState *state = device_state[hdr->switch_id];
   auto lock = std::unique_lock<std::mutex>(state->${lq_name}_mutex);
   ${pd_prefix}${lq_name}_digest_msg_t msg;
-  msg.dev_tgt.device_id = static_cast<uint8_t>(hdr.switch_id);
-  msg.num_entries = hdr.num_samples;
+  msg.dev_tgt.device_id = static_cast<uint8_t>(hdr->switch_id);
+  msg.num_entries = hdr->num_samples;
   std::unique_ptr<char []> buf(
-    new char[hdr.num_samples * sizeof(${pd_prefix}${lq_name}_digest_entry_t)]
+    new char[hdr->num_samples * sizeof(${pd_prefix}${lq_name}_digest_entry_t)]
   );
   char *buf_ = buf.get();
   const char *data_ = data;
-  for(size_t i = 0; i < hdr.num_samples; i++){
+  for(size_t i = 0; i < hdr->num_samples; i++){
 //::   for name, bit_width in lq.fields:
 //::     c_name = get_c_name(name)
 //::     width = (bit_width + 7) / 8
@@ -134,7 +132,7 @@ void ${lq_name}_handle_learn_msg(const learn_hdr_t &hdr, const char *data) {
 //::   #endfor	
   }
   msg.entries = (${pd_prefix}${lq_name}_digest_entry_t *) buf.get();
-  msg.buffer_id = hdr.buffer_id;
+  msg.buffer_id = hdr->buffer_id;
   for(const auto &it : state->${lq_name}_clients) {
     it.second.cb_fn(it.first, &msg, it.second.cb_cookie);
   }
@@ -142,39 +140,7 @@ void ${lq_name}_handle_learn_msg(const learn_hdr_t &hdr, const char *data) {
 
 //:: #endfor
 
-static void learning_listener(const char *learning_addr) {
-  nn::socket s(AF_SP, NN_SUB);
-  s.setsockopt(NN_SUB, NN_SUB_SUBSCRIBE, "", 0);
-  s.connect(learning_addr);
-
-  struct nn_msghdr msghdr;
-  struct nn_iovec iov[2];
-  learn_hdr_t learn_hdr;
-  char data[4096];
-  iov[0].iov_base = &learn_hdr;
-  iov[0].iov_len = sizeof(learn_hdr);
-  iov[1].iov_base = data;
-  iov[1].iov_len = sizeof(data); // apparently only max size needed ?
-  memset(&msghdr, 0, sizeof(msghdr));
-  msghdr.msg_iov = iov;
-  msghdr.msg_iovlen = 2;
-
-  while(s.recvmsg(&msghdr, 0) >= 0) {
-    std::cout << "I received " << learn_hdr.num_samples << " samples"
-	      << std::endl;
-    switch(learn_hdr.list_id) {
-//:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
-    case ${lq.id_}:
-      ${lq_name}_handle_learn_msg(learn_hdr, data);
-      break;
-//:: #endfor
-    default:
-      assert(0 && "invalid lq id");
-      break;
-    }
-  }
-}
+}  // namespace
 
 extern "C" {
 
@@ -246,12 +212,21 @@ p4_pd_status_t ${pd_prefix}learning_remove_device(int dev_id) {
   return 0;
 }
 
-p4_pd_status_t ${pd_prefix}start_learning_listener(const char *learning_addr) {
-  std::thread t(learning_listener, learning_addr);
-
-  t.detach();
-
-  return 0;
+void ${pd_prefix}learning_notification_cb(const char *hdr, const char *data) {
+  const learn_hdr_t *learn_hdr = reinterpret_cast<const learn_hdr_t *>(hdr);
+  std::cout << "I received " << learn_hdr->num_samples << " samples"
+            << std::endl;
+  switch(learn_hdr->list_id) {
+//:: for lq_name, lq in learn_quantas.items():
+//::   lq_name = get_c_name(lq_name)
+  case ${lq.id_}:
+    ${lq_name}_handle_learn_msg(learn_hdr, data);
+    break;
+//:: #endfor
+  default:
+    assert(0 && "invalid lq id");
+    break;
+  }  
 }
 
 }

@@ -18,12 +18,9 @@
  *
  */
 
-#include "nn.h"
 #include "pd/pd_learning.h"
 #include "pd_conn_mgr.h"
-#include <nanomsg/pubsub.h>
 #include <iostream>
-#include <thread>
 #include <mutex>
 #include <unordered_map>
 
@@ -31,6 +28,8 @@
 
 extern pd_conn_mgr_t *conn_mgr_state;
 extern int *my_devices;
+
+namespace {
 
 struct AgeingCb {
   p4_pd_notify_timeout_cb cb_fn;
@@ -43,44 +42,18 @@ struct AgeingState {
 };
 
 
-static AgeingState *device_state[NUM_DEVICES];
+AgeingState *device_state[NUM_DEVICES];
 
 typedef struct {
+  char sub_topic[4];
   int switch_id;
   uint64_t buffer_id;
   int table_id;
   unsigned int num_entries;
+  char _padding[8];
 } __attribute__((packed)) ageing_hdr_t;
 
-static void ageing_listener(const char *ageing_addr) {
-  nn::socket s(AF_SP, NN_SUB);
-  s.setsockopt(NN_SUB, NN_SUB_SUBSCRIBE, "", 0);
-  s.connect(ageing_addr);
-
-  struct nn_msghdr msghdr;
-  struct nn_iovec iov[2];
-  ageing_hdr_t ageing_hdr;
-  char data[4096];
-  iov[0].iov_base = &ageing_hdr;
-  iov[0].iov_len = sizeof(ageing_hdr);
-  iov[1].iov_base = data;
-  iov[1].iov_len = sizeof(data); // apparently only max size needed ?
-  memset(&msghdr, 0, sizeof(msghdr));
-  msghdr.msg_iov = iov;
-  msghdr.msg_iovlen = 2;
-
-  while(s.recvmsg(&msghdr, 0) >= 0) {
-    std::cout << "I received " << ageing_hdr.num_entries << " expired hanldes "
-	      << "for table " << ageing_hdr.table_id << std::endl;
-    // const AgeingState *state = device_state[ageing_hdr.switch_id];
-    const AgeingState *state = device_state[0];
-    const AgeingCb &cb = state->cbs.find(ageing_hdr.table_id)->second;
-    uint64_t *handles = (uint64_t *) &data;
-    for(unsigned int i = 0; i < ageing_hdr.num_entries; i++) {
-      cb.cb_fn(handles[i], cb.cb_cookie);
-    }
-  }
-}
+}  // namespace
 
 extern "C" {
 
@@ -103,12 +76,16 @@ p4_pd_status_t ${pd_prefix}ageing_remove_device(int dev_id) {
   return 0;
 }
 
-p4_pd_status_t ${pd_prefix}start_ageing_listener(const char *ageing_addr) {
-  std::thread t(ageing_listener, ageing_addr);
-
-  t.detach();
-
-  return 0;
+void ${pd_prefix}ageing_notification_cb(const char *hdr, const char *data) {
+  const ageing_hdr_t *ageing_hdr = reinterpret_cast<const ageing_hdr_t *>(hdr);
+  std::cout << "I received " << ageing_hdr->num_entries << " expired hanldes "
+            << "for table " << ageing_hdr->table_id << std::endl;
+    const AgeingState *state = device_state[ageing_hdr->switch_id];
+    const AgeingCb &cb = state->cbs.find(ageing_hdr->table_id)->second;
+    uint64_t *handles = (uint64_t *) &data;
+    for(unsigned int i = 0; i < ageing_hdr->num_entries; i++) {
+      cb.cb_fn(handles[i], cb.cb_cookie);
+    }
 }
 
 }
