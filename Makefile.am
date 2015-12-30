@@ -4,6 +4,28 @@ pd_conn_mgr_IDL = $(srcdir)/pdfixed/thrift/conn_mgr_pd_rpc.thrift
 pd_mc_IDL = $(srcdir)/pdfixed/thrift/mc_pd_rpc.thrift
 pd_res_IDL = $(srcdir)/pdfixed/thrift/res.thrift
 
+pd_conn_mgr_thrift_files = \
+pd_thrift_gen/gen-cpp/conn_mgr.cpp \
+pd_thrift_gen/gen-cpp/conn_mgr.h \
+pd_thrift_gen/gen-cpp/conn_mgr_pd_rpc_constants.cpp \
+pd_thrift_gen/gen-cpp/conn_mgr_pd_rpc_constants.h \
+pd_thrift_gen/gen-cpp/conn_mgr_pd_rpc_types.cpp \
+pd_thrift_gen/gen-cpp/conn_mgr_pd_rpc_types.h
+
+pd_mc_thrift_files = \
+pd_thrift_gen/gen-cpp/mc.cpp \
+pd_thrift_gen/gen-cpp/mc.h \
+pd_thrift_gen/gen-cpp/mc_pd_rpc_constants.cpp \
+pd_thrift_gen/gen-cpp/mc_pd_rpc_constants.h \
+pd_thrift_gen/gen-cpp/mc_pd_rpc_types.cpp \
+pd_thrift_gen/gen-cpp/mc_pd_rpc_types.h
+
+pd_res_thrift_files = \
+pd_thrift_gen/gen-cpp/res_constants.cpp \
+pd_thrift_gen/gen-cpp/res_constants.h \
+pd_thrift_gen/gen-cpp/res_types.cpp \
+pd_thrift_gen/gen-cpp/res_types.h
+
 pdfixed_thrift_files = \
 $(pd_conn_mgr_thrift_files) \
 $(pd_mc_thrift_files) \
@@ -77,10 +99,10 @@ AM_CPPFLAGS += -I$(srcdir)/pd_thrift_gen/gen-cpp/
 
 all-local: pdfixed_thrift_files.ts $(pkglib_LTLIBRARIES) $(nobase_pkginclude_HEADERS)
 
-# Ideally, Makefile inside pd_mk should be used.. but it is mixed up with other targets that
-# cannot be built at this time
-install-exec-local: all-local
-	$(PYTHON) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
+# setup.py needs sudo permissions if files are installed to /usr/local.. 
+# use of DESTDIR is running into problems with PYTHONPATH (TBD)
+# install-exec-local: all-local
+# 	$(PYTHON) $(srcdir)/setup.py install --prefix $(DESTDIR)
 
 CLEANFILES = \
 pdfixed_thrift_files.ts $(pdfixed_thrift_files) \
