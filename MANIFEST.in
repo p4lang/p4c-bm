@@ -15,6 +15,7 @@ recursive-include p4c_bm *.cpp
 recursive-include p4c_bm *.h
 
 recursive-include pdfixed *.h
+recursive-include pdfixed/src *.h
 
 
 recursive-include docs *.rst conf.py Makefile make.bat

@@ -67,6 +67,7 @@ $(pdf_files) : pdfixed_thrift_files.ts
 pdf_files = \
 pdfixed/src/pd_conn_mgr.cpp \
 pdfixed/src/pd_pre.cpp \
+pdfixed/src/pd_notifications.cpp \
 pdfixed/src/pd_static.cpp
 
 pdf_headers = \
@@ -74,24 +75,28 @@ pdfixed/pd/pd_pre.h \
 pdfixed/pd/pd_static.h \
 pdfixed/pd/pd_common.h
 
+more_pdf_headers = \
+pdfixed/src/pd_conn_mgr.h \
+pdfixed/src/pd_notifications.h \
+pdfixed/src/nn.h
+
 pkglib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
 
 nobase_pkginclude_HEADERS = \
 $(pdf_headers) \
-pdfixed/src/pd_conn_mgr.h \
-pdfixed/src/nn.h
+$(more_pdf_headers)
 
 libpdfixed_la_SOURCES = \
 $(pdf_files)
 
 BMV2_INC_DIR = $(includedir)/bm_sim
-libpdfixed_la_CXXFLAGS = -I $(BMV2_INC_DIR)
+libpdfixed_la_CXXFLAGS = -I $(BMV2_INC_DIR) -std=c++11
 
 libpdfixedthrift_la_SOURCES = \
 $(pdfixed_thrift_files) \
 pdfixed/thrift-src/pdfixed_rpc_server.cpp
 
-libpdfixedthrift_la_CXXFLAGS = -I $(BMV2_INC_DIR)
+libpdfixedthrift_la_CXXFLAGS = -I $(BMV2_INC_DIR) -std=c++11
 
 AM_CPPFLAGS = -I$(srcdir)/pdfixed/
 AM_CPPFLAGS += -I$(srcdir)/pdfixed/src/
