@@ -89,7 +89,8 @@ $(more_pdf_headers)
 libpdfixed_la_SOURCES = \
 $(pdf_files)
 
-BMV2_INC_DIR = $(includedir)/bm_sim
+PFX ?= 
+BMV2_INC_DIR = $(PFX)/$(includedir)/bm_sim
 libpdfixed_la_CXXFLAGS = -I $(BMV2_INC_DIR) -std=c++11
 
 libpdfixedthrift_la_SOURCES = \
