@@ -77,8 +77,7 @@ ${param_str}
 
   assert(my_devices[dev_tgt.device_id]);
   pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_meter_set_rates(
-    "${ma_name}", index, rates
-  );
+      0, "${ma_name}", index, rates);
 
   return 0;
 }

@@ -193,9 +193,7 @@ p4_pd_status_t ${pd_prefix}${lq_name}_notify_ack
 ) {
   assert(my_devices[msg->dev_tgt.device_id]);
   pd_conn_mgr_client(conn_mgr_state, msg->dev_tgt.device_id)->bm_learning_ack_buffer(
-      ${lq.id_},
-      msg->buffer_id
-  );
+      0, ${lq.id_}, msg->buffer_id);
   return 0;
 }
 

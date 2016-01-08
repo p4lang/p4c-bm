@@ -200,16 +200,12 @@ ${name}
 //::     #endif
   try {
     *entry_hdl = pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_add_entry(
-      "${t_name}", match_key,
-      "${a_name}", action_data,
-      options
-    );
+        0, "${t_name}", match_key, "${a_name}", action_data, options);
 //::     if t.support_timeout:
 
     // bmv2 takes a ttl in milliseconds
     pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_set_entry_ttl(
-      "${t_name}", *entry_hdl, ttl
-    );
+        0, "${t_name}", *entry_hdl, ttl);
 //::     #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
@@ -260,8 +256,7 @@ ${name}
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id);
   try {
     *entry_hdl = client->bm_mt_indirect_add_entry(
-      "${t_name}", match_key, mbr_hdl, options
-    );
+        0, "${t_name}", match_key, mbr_hdl, options);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -294,8 +289,7 @@ ${name}
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id);
   try {
     *entry_hdl = client->bm_mt_indirect_ws_add_entry(
-      "${t_name}", match_key, grp_hdl, options
-    );
+        0, "${t_name}", match_key, grp_hdl, options);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -325,9 +319,9 @@ ${name}
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_id);
   try {
 //::   if t_type == TableType.SIMPLE:
-    client->bm_mt_delete_entry("${t_name}", entry_hdl);
+    client->bm_mt_delete_entry(0, "${t_name}", entry_hdl);
 //::   else:
-    client->bm_mt_indirect_delete_entry("${t_name}", entry_hdl);
+    client->bm_mt_indirect_delete_entry(0, "${t_name}", entry_hdl);
 //::   #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
@@ -371,8 +365,7 @@ ${name}
 //::     #endif
   try {
     pd_conn_mgr_client(conn_mgr_state, dev_id)->bm_mt_modify_entry(
-      "${t_name}", entry_hdl, "${a_name}", action_data
-    );
+        0, "${t_name}", entry_hdl, "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -417,8 +410,7 @@ ${name}
 //::     #endif
   try {
     pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_set_default_action(
-      "${t_name}", "${a_name}", action_data
-    );
+        0, "${t_name}", "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -450,7 +442,7 @@ ${name}
   assert(my_devices[dev_tgt.device_id]);
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id);
   try {
-    client->bm_mt_indirect_set_default_member("${t_name}", mbr_hdl);
+    client->bm_mt_indirect_set_default_member(0, "${t_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -473,7 +465,7 @@ ${name}
   assert(my_devices[dev_tgt.device_id]);
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id);
   try {
-    client->bm_mt_indirect_ws_set_default_group("${t_name}", grp_hdl);
+    client->bm_mt_indirect_ws_set_default_group(0, "${t_name}", grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -518,8 +510,7 @@ ${name}
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id);
   try {
     *mbr_hdl = client->bm_mt_indirect_add_member(
-      "${t_name}", "${a_name}", action_data
-    );
+        0, "${t_name}", "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -552,8 +543,7 @@ ${name}
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_id);
   try {
     client->bm_mt_indirect_modify_member(
-      "${t_name}", mbr_hdl, "${a_name}", action_data
-    );
+        0, "${t_name}", mbr_hdl, "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -579,7 +569,7 @@ ${name}
   assert(my_devices[dev_id]);
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_id);
   try {
-    client->bm_mt_indirect_delete_member("${t_name}", mbr_hdl);
+    client->bm_mt_indirect_delete_member(0, "${t_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -607,7 +597,7 @@ ${name}
   assert(my_devices[dev_tgt.device_id]);
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id);
   try {
-    *grp_hdl = client->bm_mt_indirect_ws_create_group("${t_name}");
+    *grp_hdl = client->bm_mt_indirect_ws_create_group(0, "${t_name}");
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -631,7 +621,7 @@ ${name}
   assert(my_devices[dev_id]);
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_id);
   try {
-    client->bm_mt_indirect_ws_delete_group("${t_name}", grp_hdl);
+    client->bm_mt_indirect_ws_delete_group(0, "${t_name}", grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -656,7 +646,8 @@ ${name}
   assert(my_devices[dev_id]);
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_id);
   try {
-    client->bm_mt_indirect_ws_add_member_to_group("${t_name}", mbr_hdl, grp_hdl);
+    client->bm_mt_indirect_ws_add_member_to_group(
+        0, "${t_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -681,7 +672,8 @@ ${name}
   assert(my_devices[dev_id]);
   Client *client = pd_conn_mgr_client(conn_mgr_state, dev_id);
   try {
-    client->bm_mt_indirect_ws_remove_member_from_group("${t_name}", mbr_hdl, grp_hdl);
+    client->bm_mt_indirect_ws_remove_member_from_group(
+        0, "${t_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -715,10 +707,7 @@ ${name}
   // Thrift's weirdness ? even on client side, the return value becomes the
   // first argument and is passed by reference
   pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_read_counter(
-      value,
-      "${t_name}",
-      entry_hdl
-  );
+      value, 0, "${t_name}", entry_hdl);
   counter_value->bytes = (uint64_t) value.bytes;
   counter_value->packets = (uint64_t) value.packets;
   return 0;
@@ -733,8 +722,7 @@ ${name}
 ) {
   assert(my_devices[dev_tgt.device_id]);
   pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_reset_counters(
-      "${t_name}"
-  );
+      0, "${t_name}");
   return 0;
 }
 
