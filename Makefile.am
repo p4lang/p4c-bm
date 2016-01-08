@@ -80,9 +80,9 @@ pdfixed/src/pd_conn_mgr.h \
 pdfixed/src/pd_notifications.h \
 pdfixed/src/nn.h
 
-pkglib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
+lib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
 
-nobase_pkginclude_HEADERS = \
+nobase_include_HEADERS = \
 $(pdf_headers) \
 $(more_pdf_headers)
 
@@ -90,7 +90,7 @@ libpdfixed_la_SOURCES = \
 $(pdf_files)
 
 PFX ?= 
-BMV2_INC_DIR = $(PFX)/$(includedir)/bm_sim
+BMV2_INC_DIR = $(PFX)/$(includedir)
 libpdfixed_la_CXXFLAGS = -I $(BMV2_INC_DIR) -std=c++11
 
 libpdfixedthrift_la_SOURCES = \
@@ -103,7 +103,7 @@ AM_CPPFLAGS = -I$(srcdir)/pdfixed/
 AM_CPPFLAGS += -I$(srcdir)/pdfixed/src/
 AM_CPPFLAGS += -I$(srcdir)/pd_thrift_gen/gen-cpp/
 
-all-local: pdfixed_thrift_files.ts $(pkglib_LTLIBRARIES) $(nobase_pkginclude_HEADERS)
+all-local: pdfixed_thrift_files.ts $(lib_LTLIBRARIES) $(nobase_include_HEADERS)
 
 # setup.py needs sudo permissions if files are installed to /usr/local.. 
 # use of DESTDIR is running into problems with PYTHONPATH (TBD)
