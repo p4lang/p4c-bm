@@ -32,7 +32,7 @@ import sys
 _STATIC_VARS = []
 
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -578,8 +578,6 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         key = []
         for field_ref, m_type, mask in table.match_fields:
             key_field = OrderedDict()
-            if mask:  # pragma: no cover
-                LOG_CRITICAL("mask not supported for match fields")
             match_type = match_types_map[m_type]
             key_field["match_type"] = match_type
             if(match_type == "valid"):
@@ -591,7 +589,25 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
                 key_field["target"] = header_ref.name
             else:
                 key_field["target"] = format_field_ref(field_ref)
+
+            if mask:
+                if match_type == "valid":
+                    LOG_WARNING("a field mask does not make much sense for a "
+                                "valid match")
+                    field_width = 1
+                else:
+                    assert(isinstance(field_ref, p4.p4_field))
+                    field_width = field_ref.width
+                # re-using this function (used by parser)
+                mask = build_match_value([field_width], mask)
+                LOG_INFO("you are using a mask in a match table, "
+                         "this is still an experimental feature")
+            else:
+                mask = None  # should aready be the case
+            key_field["mask"] = mask
+
             key.append(key_field)
+
         table_dict["key"] = key
 
         table_dict["actions"] = [a.name for a in table.actions]
