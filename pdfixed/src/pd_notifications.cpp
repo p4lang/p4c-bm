@@ -28,6 +28,7 @@
 #include <type_traits>
 #include <functional>
 #include <cstring>
+#include <unistd.h>
 
 #define NUM_DEVICES 256
 
@@ -73,6 +74,7 @@ class NotificationsListener {
     int rcv_timeout_ms = 200;
     s.setsockopt(NN_SOL_SOCKET, NN_RCVTIMEO,
                  &rcv_timeout_ms, sizeof(rcv_timeout_ms));
+    sleep(3);
     s.connect(addr);
     receiver_thread = std::thread(&NotificationsListener::receive_loop, this);
     started = true;
