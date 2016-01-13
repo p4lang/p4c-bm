@@ -21,7 +21,7 @@
 #include "Standard.h"
 
 #include <iostream>
-#include <sstream> 
+#include <sstream>
 #include <iomanip>
 
 namespace bm_runtime { namespace standard {
@@ -227,6 +227,15 @@ public:
 	      << value.bytes << " " << value.packets << std::endl;
   }
 
+  void bm_mt_set_meter_rates(const int32_t cxt_id, const std::string& table_name, const BmEntryHandle entry_handle, const std::vector<BmMeterRateConfig> & rates) {
+    std::cout << "bm_mt_set_meter_rates" << std::endl
+              << table_name << std::endl
+              << entry_handle << std::endl;
+    for(const auto &rate : rates) {
+      std::cout << rate.units_per_micros << " " << rate.burst_size << std::endl;
+    }
+  }
+
   void bm_counter_read(BmCounterValue& _return, const int32_t cxt_id, const std::string& counter_name, const int32_t index) {
     std::cout << "bm_counter_read" << std::endl
 	      << counter_name << std::endl
@@ -308,7 +317,7 @@ public:
     // Your implementation goes here
     printf("bm_reset_state\n");
   }
-  
+
 };
 
 } }

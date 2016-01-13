@@ -55,6 +55,12 @@ counter ExactOne_counter {
     direct : ExactOne;
 }
 
+meter ExactOne_meter {
+    type : bytes;
+    direct : ExactOne;
+    result : header_test.field16;
+}
+
 table ExactOneAgeing {
     reads {
          header_test.field32 : exact;

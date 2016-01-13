@@ -526,6 +526,12 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
                 return True
         return False
 
+    def table_direct_meters(p4_table):
+        for name, meter in hlir.p4_meters.items():
+            if meter.binding == (p4.P4_DIRECT, p4_table):
+                return name
+        return None
+
     pipeline_dict = OrderedDict()
     pipeline_dict["name"] = name
     pipeline_dict["id"] = dump_one_pipeline.pipeline_id
@@ -571,7 +577,11 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
 
         table_dict["max_size"] = table.max_size if table.max_size else 16384
 
+        # TODO(antonin): update counters to be the same as direct meters, but
+        # that would make the JSON non-backwards compatible
         table_dict["with_counters"] = table_has_counters(table)
+
+        table_dict["direct_meters"] = table_direct_meters(table)
 
         table_dict["support_timeout"] = table.support_timeout
 
@@ -940,7 +950,13 @@ def dump_meters(json_dict, hlir):
         meter_dict["id"] = id_
         id_ += 1
         if p4_meter.binding and (p4_meter.binding[0] == p4.P4_DIRECT):
-            LOG_CRITICAL("direct meters not supported yet")  # pragma: no cover
+            meter_dict["is_direct"] = True
+            meter_dict["binding"] = p4_meter.binding[1].name
+            meter_dict["size"] = p4_meter.binding[1].max_size
+            meter_dict["result_target"] = format_field_ref(p4_meter.result)
+        else:
+            meter_dict["is_direct"] = False
+            meter_dict["size"] = p4_meter.instance_count
         meter_dict["rate_count"] = 2  # 2 rate, 3 colors
         if p4_meter.type == p4.P4_COUNTER_BYTES:
             type_ = "bytes"
@@ -949,7 +965,6 @@ def dump_meters(json_dict, hlir):
         else:  # pragma: no cover
             LOG_CRITICAL("invalid meter type")
         meter_dict["type"] = type_
-        meter_dict["size"] = p4_meter.instance_count
 
         meters.append(meter_dict)
 

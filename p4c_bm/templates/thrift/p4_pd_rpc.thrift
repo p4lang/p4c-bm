@@ -37,6 +37,22 @@ struct ${api_prefix}counter_flags_t {
   1: required bool read_hw_sync;
 }
 
+struct ${api_prefix}packets_meter_spec_t {
+  1: required i32 cir_pps;
+  2: required i32 cburst_pkts;
+  3: required i32 pir_pps;
+  4: required i32 pburst_pkts;
+  5: required bool color_aware;  // ignored for now
+}
+
+struct ${api_prefix}bytes_meter_spec_t {
+  1: required i32 cir_kbps;
+  2: required i32 cburst_kbits;
+  3: required i32 pir_kbps;
+  4: required i32 pburst_kbits;
+  5: required bool color_aware;  // ignored for now
+}
+
 # Match structs
 
 //:: for t_name, t in tables.items():
@@ -382,18 +398,20 @@ service ${p4_prefix} {
 //:: for ma_name, ma in meter_arrays.items():
 //::   params = ["res.SessionHandle_t sess_hdl",
 //::             "res.DevTarget_t dev_tgt"]
-//::   params += ["i32 index"]
-//::   if ma.type_ == MeterType.PACKETS:
-//::     params += ["i32 cir_pps", "i32 cburst_pkts",
-//::                "i32 pir_pps", "i32 pburst_pkts"]
+//::   if ma.is_direct:
+//::     params += ["EntryHandle_t entry"]
 //::   else:
-//::     params += ["i32 cir_kbps", "i32 cburst_kbits",
-//::                "i32 pir_kbps", "i32 pburst_kbits"]
+//::     params += ["i32 index"]
+//::   #endif
+//::   if ma.type_ == MeterType.PACKETS:
+//::     params += [api_prefix + "packets_meter_spec_t meter_spec"]
+//::   else:
+//::     params += [api_prefix + "bytes_meter_spec_t meter_spec"]
 //::   #endif
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
 //::   
-//::   name = "meter_configure_" + ma_name
+//::   name = "meter_set_" + ma_name
     i32 ${name}(${param_str});
 
 //:: #endfor

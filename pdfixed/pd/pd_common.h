@@ -52,6 +52,29 @@ typedef struct p4_pd_counter_value {
   uint64_t bytes;
 } p4_pd_counter_value_t;
 
+// TODO(antonin): color aware meters not supported yet in bmv2
+// everything is treated as color unaware
+typedef enum {
+  PD_METER_TYPE_COLOR_AWARE,    /* Color aware meter */
+  PD_METER_TYPE_COLOR_UNAWARE,  /* Color unaware meter */
+} p4_pd_meter_type_t;
+
+typedef struct p4_pd_packets_meter_spec {
+  uint32_t cir_pps;
+  uint32_t cburst_pkts;
+  uint32_t pir_pps;
+  uint32_t pburst_pkts;
+  p4_pd_meter_type_t meter_type;
+} p4_pd_packets_meter_spec_t;
+
+typedef struct p4_pd_bytes_meter_spec {
+  uint32_t cir_kbps;
+  uint32_t cburst_kbits;
+  uint32_t pir_kbps;
+  uint32_t pburst_kbits;
+  p4_pd_meter_type_t meter_type;
+} p4_pd_bytes_meter_spec_t;
+
 typedef enum {ENTRY_IDLE, ENTRY_HIT} p4_pd_hit_state_t;
 
 typedef void (*p4_pd_notify_timeout_cb) (p4_pd_entry_hdl_t entry_hdl, void *client_data);
