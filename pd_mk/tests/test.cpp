@@ -148,13 +148,17 @@ int main() {
 
   /* meter test */
 
-  uint32_t cir_kbps = 8000;
-  uint32_t cburst_kbits = 8;
-  uint32_t pir_kbps = 16000;
-  uint32_t pburst_kbits = 8;
-  p4_pd_test_meter_configure_MeterA(sess_hdl, dev_tgt, 16,
-				    cir_kbps, cburst_kbits,
-				    pir_kbps, pburst_kbits);
+  p4_pd_bytes_meter_spec_t meter_spec;
+  meter_spec.cir_kbps = 8000;
+  meter_spec.cburst_kbits = 8;
+  meter_spec.pir_kbps = 16000;
+  meter_spec.pburst_kbits = 8;
+
+  // indirect meter
+  p4_pd_test_meter_set_MeterA(sess_hdl, dev_tgt, 16, &meter_spec);
+
+  // direct meter
+  p4_pd_test_meter_set_ExactOne_meter(sess_hdl, dev_tgt, 18, &meter_spec);
 
   /* multicast */
   
