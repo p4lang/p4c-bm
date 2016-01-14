@@ -57,6 +57,12 @@ int main() {
     {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
   p4_pd_test_actionB_action_spec actionB_action_spec =
     {0xab};
+
+  p4_pd_bytes_meter_spec_t meter_spec;
+  meter_spec.cir_kbps = 8000;
+  meter_spec.cburst_kbits = 8;
+  meter_spec.pir_kbps = 16000;
+  meter_spec.pburst_kbits = 8;
   
   // right now PD assumes everything is passed in network byte order, so this
   // will actually be interpreted as byte string "bb00aa00"
@@ -64,10 +70,13 @@ int main() {
   p4_pd_test_ExactOne_table_add_with_actionA(sess_hdl, dev_tgt,
                                              &ExactOne_match_spec,
                                              &actionA_action_spec,
+                                             &meter_spec,
                                              &entry_hdl);
 
   p4_pd_test_ExactOne_table_modify_with_actionB(sess_hdl, dev_tgt.device_id,
-                                                entry_hdl, &actionB_action_spec);
+                                                entry_hdl,
+                                                &actionB_action_spec,
+                                                &meter_spec);
 
   p4_pd_counter_value_t counter_value;
   p4_pd_test_ExactOne_read_counter(sess_hdl, dev_tgt, entry_hdl, &counter_value);  
@@ -120,6 +129,7 @@ int main() {
   
   p4_pd_test_ExactOne_set_default_action_actionA(sess_hdl, dev_tgt,
                                                  &actionA_action_spec,
+                                                 &meter_spec,
                                                  &entry_hdl);
 
   /* indirect table */
@@ -147,12 +157,6 @@ int main() {
   p4_pd_test_ActProf_del_member(sess_hdl, dev_tgt.device_id, mbr_hdl);
 
   /* meter test */
-
-  p4_pd_bytes_meter_spec_t meter_spec;
-  meter_spec.cir_kbps = 8000;
-  meter_spec.cburst_kbits = 8;
-  meter_spec.pir_kbps = 16000;
-  meter_spec.pburst_kbits = 8;
 
   // indirect meter
   p4_pd_test_meter_set_MeterA(sess_hdl, dev_tgt, 16, &meter_spec);

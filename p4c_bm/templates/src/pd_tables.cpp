@@ -24,6 +24,7 @@
 #include "pd/pd_types.h"
 #include "pd/pd_static.h"
 #include "pd_conn_mgr.h"
+#include "pd_helpers.h"
 
 #define PD_DEBUG 1
 
@@ -148,6 +149,23 @@ std::vector<std::string> build_action_data_${a_name} (
 
 }
 
+//:: def get_direct_parameter_specs(d, t):
+//::   for k in d:
+//::     exec "%s=d[k]" % k
+//::   #endfor
+//::   specs = []
+//::   if t.direct_meters:
+//::     m_name = t.direct_meters
+//::     m = meter_arrays[m_name]
+//::     if m.type_ == MeterType.PACKETS:
+//::       specs += ["p4_pd_packets_meter_spec_t *" + m_name + "_spec"]
+//::     else:
+//::       specs += ["p4_pd_bytes_meter_spec_t *" + m_name + "_spec"]
+//::     #endif
+//::   #endif
+//::   return specs
+//:: #enddef
+
 extern "C" {
 
 /* ADD ENTRIES */
@@ -175,6 +193,7 @@ extern "C" {
 //::     if t.support_timeout:
 //::       params += ["uint32_t ttl"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t)
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 //::     name = pd_prefix + t_name + "_table_add_with_" + a_name
@@ -206,6 +225,14 @@ ${name}
     // bmv2 takes a ttl in milliseconds
     pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_set_entry_ttl(
         0, "${t_name}", *entry_hdl, ttl);
+//::     #endif
+//::     if t.direct_meters:
+
+//::       m_name = t.direct_meters
+//::       type_name = MeterType.to_str(meter_arrays[m_name].type_)
+    pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_set_meter_rates(
+        0, "${t_name}", *entry_hdl,
+        pd_${type_name}_meter_spec_to_rates(${m_name}_spec));
 //::     #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
@@ -350,6 +377,7 @@ ${name}
 //::     if has_action_spec:
 //::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t)
 //::     param_str = ",\n ".join(params)
 //::     name = pd_prefix + t_name + "_table_modify_with_" + a_name
 p4_pd_status_t
@@ -366,6 +394,14 @@ ${name}
   try {
     pd_conn_mgr_client(conn_mgr_state, dev_id)->bm_mt_modify_entry(
         0, "${t_name}", entry_hdl, "${a_name}", action_data);
+//::     if t.direct_meters:
+
+//::       m_name = t.direct_meters
+//::       type_name = MeterType.to_str(meter_arrays[m_name].type_)
+    pd_conn_mgr_client(conn_mgr_state, dev_id)->bm_mt_set_meter_rates(
+        0, "${t_name}", entry_hdl,
+        pd_${type_name}_meter_spec_to_rates(${m_name}_spec));
+//::     #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -394,6 +430,7 @@ ${name}
 //::     if has_action_spec:
 //::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t)
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 //::     name = pd_prefix + t_name + "_set_default_action_" + a_name

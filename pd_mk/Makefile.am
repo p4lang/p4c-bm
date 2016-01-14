@@ -292,6 +292,7 @@ $(thrift_py_lzma)
 pdf_files = \
 pdfixed/src/pd_conn_mgr.cpp \
 pdfixed/src/pd_notifications.cpp \
+pdfixed/src/pd_helpers.cpp \
 pdfixed/src/pd_pre.cpp \
 pdfixed/src/pd_static.cpp
 

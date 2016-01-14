@@ -23,6 +23,7 @@
 #include "pd/pd_types.h"
 #include "pd/pd_static.h"
 #include "pd_conn_mgr.h"
+#include "pd_helpers.h"
 
 extern pd_conn_mgr_t *conn_mgr_state;
 extern int *my_devices;
@@ -49,33 +50,13 @@ ${name}
 (
 ${param_str}
 ) {
-  double info_rate;
-  uint32_t burst_size;
-  BmMeterRateConfig rate;
-
-  std::vector<BmMeterRateConfig> rates;
-
 //::   if ma.type_ == MeterType.PACKETS:
-  info_rate = static_cast<double>(meter_spec->cir_pps) / 1000000.;
-  burst_size = meter_spec->cburst_pkts;
+  std::vector<BmMeterRateConfig> rates =
+      pd_packets_meter_spec_to_rates(meter_spec);
 //::   else:
-  info_rate = static_cast<double>(meter_spec->cir_kbps) / 8000.; // bytes per microsecond
-  burst_size = meter_spec->cburst_kbits * 1000 / 8;
+  std::vector<BmMeterRateConfig> rates =
+      pd_bytes_meter_spec_to_rates(meter_spec);
 //::   #endif
-
-  rate.units_per_micros = info_rate; rate.burst_size = burst_size;
-  rates.push_back(rate);
-
-//::   if ma.type_ == MeterType.PACKETS:
-  info_rate = static_cast<double>(meter_spec->pir_pps) / 1000000.;
-  burst_size = meter_spec->pburst_pkts;
-//::   else:
-  info_rate = static_cast<double>(meter_spec->pir_kbps) / 8000.;
-  burst_size = meter_spec->pburst_kbits * 1000 / 8;
-//::   #endif
-
-  rate.units_per_micros = info_rate; rate.burst_size = burst_size;
-  rates.push_back(rate);
 
   assert(my_devices[dev_tgt.device_id]);
 

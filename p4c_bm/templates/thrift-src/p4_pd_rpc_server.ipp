@@ -47,6 +47,22 @@ void packets_meter_spec_thrift_to_pd(
 
 }  // namespace
 
+//:: def get_direct_parameter_specs(d, t, api_prefix):
+//::   for k in d:
+//::     exec "%s=d[k]" % k
+//::   #endfor
+//::   specs = []
+//::   if t.direct_meters:
+//::     m_name = t.direct_meters
+//::     m = meter_arrays[m_name]
+//::     if m.type_ == MeterType.PACKETS:
+//::       specs += ["const " + api_prefix + "packets_meter_spec_t &" + m_name + "_spec"]
+//::     else:
+//::       specs += ["const " + api_prefix + "bytes_meter_spec_t &" + m_name + "_spec"]
+//::     #endif
+//::   #endif
+//::   return specs
+//:: #enddef
 
 class ${p4_prefix}Handler : virtual public ${p4_prefix}If {
 public:
@@ -82,6 +98,7 @@ public:
 //::     if t.support_timeout:
 //::       params += ["const int32_t ttl"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
 //::     name = t_name + "_table_add_with_" + a_name
 //::     pd_name = pd_prefix + name
@@ -133,6 +150,15 @@ public:
 //::     if t.support_timeout:
 //::       pd_params += ["(uint32_t)ttl"]
 //::     #endif
+//::     # direct parameter specs
+//::     if t.direct_meters:
+//::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
+//::       type_name = MeterType.to_str(m.type_)
+        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
+//::       pd_params += ["&pd_" + m_name + "_spec"]
+//::     #endif
 //::     pd_params += ["&pd_entry"]
 //::     pd_param_str = ", ".join(pd_params)
         ${pd_name}(${pd_param_str});
@@ -158,6 +184,7 @@ public:
 //::     if has_action_spec:
 //::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
 //::     name = t_name + "_table_modify_with_" + a_name
 //::     pd_name = pd_prefix + name
@@ -181,6 +208,15 @@ public:
 //::     pd_params = ["sess_hdl", "dev_id", "entry"]
 //::     if has_action_spec:
 //::       pd_params += ["&pd_action_spec"]
+//::     #endif
+//::     # direct parameter specs
+//::     if t.direct_meters:
+//::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
+//::       type_name = MeterType.to_str(m.type_)
+        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
+//::       pd_params += ["&pd_" + m_name + "_spec"]
 //::     #endif
 //::     pd_param_str = ", ".join(pd_params)
         return ${pd_name}(${pd_param_str});
@@ -223,6 +259,7 @@ public:
 //::     if has_action_spec:
 //::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
 //::     name = t_name + "_set_default_action_" + a_name
 //::     pd_name = pd_prefix + name
@@ -251,6 +288,15 @@ public:
 //::     pd_params = ["sess_hdl", "pd_dev_tgt"]
 //::     if has_action_spec:
 //::       pd_params += ["&pd_action_spec"]
+//::     #endif
+//::     # direct parameter specs
+//::     if t.direct_meters:
+//::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
+//::       type_name = MeterType.to_str(m.type_)
+        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
+//::       pd_params += ["&pd_" + m_name + "_spec"]
 //::     #endif
 //::     pd_params += ["&pd_entry"]
 //::     pd_param_str = ", ".join(pd_params)

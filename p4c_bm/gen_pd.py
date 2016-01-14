@@ -378,4 +378,5 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix):
     render_dict["learn_quantas"] = LEARN_QUANTAS
     render_dict["meter_arrays"] = METER_ARRAYS
     render_dict["counter_arrays"] = COUNTER_ARRAYS
+    render_dict["render_dict"] = render_dict
     render_all_files(render_dict, _validate_dir(dest_dir))
