@@ -739,8 +739,20 @@ def dump_actions(json_dict, hlir):
             primitive_name = call[0].name
             primitive_dict["op"] = primitive_name
 
+            args = call[1]
+
+            # backwards compatibility with older P4 programs
+            if primitive_name == "modify_field" and len(args) == 3:
+                LOG_WARNING(
+                    "Your P4 program uses the modify_field() action primitive "
+                    "with 3 arguments (aka masked modify), bmv2 does not "
+                    "support it anymore and this compiler will replace your "
+                    "modify_field(a, b, c) with modify_field(a, b & c)")
+                new_arg = p4.p4_expression(args[1], "&", args[2])
+                args = [args[0], new_arg]
+
             primitive_args = []
-            for arg in call[1]:
+            for arg in args:
                 arg_dict = OrderedDict()
                 if type(arg) is int or type(arg) is long:
                     arg_dict["type"] = "hexstr"

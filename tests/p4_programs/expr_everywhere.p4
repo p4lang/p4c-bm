@@ -20,6 +20,10 @@ parser start {
 }
 
 action one_action(param_1, param_2) {
+    modify_field(one_hdr.f16, one_hdr.f32 & 0x0000ffff);
+    // bmv2 does not support the 3 argument version, the compiler will
+    // automatically replace this by the above version
+    modify_field(one_hdr.f16, one_hdr.f32, 0x0000ffff);
     modify_field(one_hdr.f16, (param_1 + 1) * 2);
     add(one_hdr.f48, ((one_hdr.f32 ^ one_meta.f16) + ((param_2))), 18);
 }
