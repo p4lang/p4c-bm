@@ -104,11 +104,67 @@ AM_CPPFLAGS += -I$(srcdir)/pdfixed/src/
 AM_CPPFLAGS += -I$(srcdir)/pd_thrift_gen/gen-cpp/
 
 all-local: pdfixed_thrift_files.ts $(lib_LTLIBRARIES) $(nobase_include_HEADERS)
-
 # setup.py needs sudo permissions if files are installed to /usr/local.. 
 # use of DESTDIR is running into problems with PYTHONPATH (TBD)
 # install-exec-local: all-local
-# 	$(PYTHON) $(srcdir)/setup.py install --prefix $(DESTDIR)
+# 	$(PYTHON) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
+
+# Brute force installation of the python package
+p4c_bm_template_inc_files = \
+p4c_bm/templates/pd/pd_counters.h \
+p4c_bm/templates/pd/pd.h \
+p4c_bm/templates/pd/pd_learning.h \
+p4c_bm/templates/pd/pd_meters.h \
+p4c_bm/templates/pd/pd_mirroring.h \
+p4c_bm/templates/pd/pd_tables.h \
+p4c_bm/templates/pd/pd_types.h
+
+p4c_bm_template_src_files = \
+p4c_bm/templates/src/pd_ageing.cpp \
+p4c_bm/templates/src/pd_counters.cpp \
+p4c_bm/templates/src/pd.cpp \
+p4c_bm/templates/src/pd_learning.cpp \
+p4c_bm/templates/src/pd_meters.cpp \
+p4c_bm/templates/src/pd_mirroring.cpp \
+p4c_bm/templates/src/pd_tables.cpp
+
+p4c_bm_template_thrift_files = \
+p4c_bm/templates/thrift-src/pd_rpc_server.cpp \
+p4c_bm/templates/thrift-src/pd_rpc_server.h
+
+p4c_bm_util_files = \
+p4c_bm/util/__init__.py \
+p4c_bm/util/tenjin_wrapper.py \
+p4c_bm/util/topo_sorting.py
+
+p4c_bm_py_files = \
+p4c_bm/gen_json.py \
+p4c_bm/gen_pd.py \
+p4c_bm/__init__.py \
+p4c_bm/__main__.py \
+p4c_bm/p4c-bmv2
+
+p4c_bm_json_files = \
+p4c_bm/primitives.json
+
+# Ideally we could live with p4c-compiler installed on the host system
+# Or if bitbake file can handle python package installation
+#
+install-exec-hook:
+	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/templates/pd
+	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/templates/pd \
+		$(p4c_bm_template_inc_files)
+	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/templates/src
+	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/templates/src \
+		$(p4c_bm_template_src_files)
+	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/templates/thrift-src
+	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/templates/thrift-src \
+		$(p4c_bm_template_thrift_files)
+	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/util
+	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/util \
+		$(p4c_bm_util_files)
+	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm \
+		$(p4c_bm_py_files) $(p4c_bm_json_files)
 
 CLEANFILES = \
 pdfixed_thrift_files.ts $(pdfixed_thrift_files) \
