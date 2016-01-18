@@ -99,7 +99,7 @@ def main():
             resource_string(__name__, 'primitives.json')
         )
         h.add_primitives(more_primitives)
-        if not h.build():
+        if not h.build(analyze=False):
             print "Error while building HLIR"
             sys.exit(1)
 
