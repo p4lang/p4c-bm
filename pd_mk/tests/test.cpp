@@ -191,9 +191,10 @@ int main() {
 
   /* mirroring */
   p4_pd_test_mirror_session_create(sess_hdl, dev_tgt,
-				   PD_MIRROR_TYPE_NORM, PD_DIR_INGRESS,
-				   11, 12,
-				   4096, 0, false);
+                                   PD_MIRROR_TYPE_NORM, PD_DIR_INGRESS,
+                                   11, 12,
+                                   4096, 0, false,
+                                   0, 0, nullptr, 0);
 
   /* END TEST */
 

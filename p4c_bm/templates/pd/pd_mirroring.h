@@ -39,7 +39,11 @@ int ${pd_prefix}mirror_session_create(p4_pd_sess_hdl_t shdl,
                                       uint16_t egr_port,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
-                                      bool c2c);
+                                      bool c2c,
+                                      uint16_t extract_len,
+                                      uint32_t timeout_usec,
+                                      uint32_t *int_hdr,
+                                      uint8_t int_hdr_len);
 
 int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
                                       p4_pd_dev_target_t dev_tgt,
@@ -49,7 +53,12 @@ int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
                                       uint16_t egr_port,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
-                                      bool c2c, bool enable);
+                                      bool c2c,
+                                      uint16_t extract_len,
+                                      uint32_t timeout_usec,
+                                      uint32_t *int_hdr,
+                                      uint8_t int_hdr_len,
+                                      bool enable);
 
 int ${pd_prefix}mirroring_mapping_delete(p4_pd_mirror_id_t mirror_id);
 
