@@ -146,6 +146,12 @@ def test_main(tmpdir):
     # PD from JSON with invalid input
     assert call_main(["plop.json", "--pd", str(tmpdir), "--pd-from-json"]) != 0
 
+    # preprocessor flag
+    assert call_main([input_p4, "-DANTONIN_ON"]) == 0
+
+    # invalid option
+    assert call_main([input_p4, "--nonsense"]) != 0
+
     os.remove(tmp_json[1])
 
 
