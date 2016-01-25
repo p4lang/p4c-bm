@@ -19,8 +19,9 @@
  */
 
 #include <iostream>
-
 #include <cstring>
+#include <thread>
+#include <chrono>
 
 #include <thrift_endpoint.h>
 
@@ -188,6 +189,7 @@ int main() {
   p4_pd_test_counter_hw_sync_CounterA(
       sess_hdl, dev_tgt,
       [](int d, void *c){ std::cout << "hw_sync_CounterA\n"; }, nullptr);
+  std::this_thread::sleep_for(std::chrono::seconds(2));
 
   // direct counter
   p4_pd_test_counter_read_ExactOne_counter(sess_hdl, dev_tgt, 18, 0);
