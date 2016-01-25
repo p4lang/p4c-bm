@@ -185,6 +185,10 @@ int main() {
   counter_value.packets = 34;
   p4_pd_test_counter_write_CounterA(sess_hdl, dev_tgt, 17, counter_value);
 
+  p4_pd_test_counter_hw_sync_CounterA(
+      sess_hdl, dev_tgt,
+      [](int d, void *c){ std::cout << "hw_sync_CounterA\n"; }, nullptr);
+
   // direct counter
   p4_pd_test_counter_read_ExactOne_counter(sess_hdl, dev_tgt, 18, 0);
   p4_pd_test_counter_write_ExactOne_counter(sess_hdl, dev_tgt, 18, counter_value);
