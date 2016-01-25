@@ -3,11 +3,21 @@ ExactOne
 EXACT: bb00aa00
 actionA
 aabbccddeeff 
+bm_mt_set_meter_rates
+ExactOne
+0
+1 1000
+2 1000
 bm_mt_modify_entry
 ExactOne
 0
 actionB
 ab 
+bm_mt_set_meter_rates
+ExactOne
+0
+1 1000
+2 1000
 bm_mt_read_counter
 ExactOne
 0
@@ -82,6 +92,11 @@ Indirect
 bm_meter_set_rates
 MeterA
 16
+1 1000
+2 1000
+bm_mt_set_meter_rates
+ExactOne
+18
 1 1000
 2 1000
 bm_mc_node_create

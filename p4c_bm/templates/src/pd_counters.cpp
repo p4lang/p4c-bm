@@ -51,16 +51,10 @@ ${name}
   // TODO: try / catch block
 //::   if ca.is_direct:
   pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_read_counter(
-      value,
-      "${ca.table}",
-      entry_hdl
-  );
+      value, 0, "${ca.table}", entry_hdl);
 //::   else:
   pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_counter_read(
-      value,
-      "${ca_name}",
-      index
-  );
+      value, 0, "${ca_name}", index);
 //::   #endif
 
   counter_value.bytes = (uint64_t) value.bytes;
@@ -91,16 +85,10 @@ ${name}
   // TODO: try / catch block
 //::   if ca.is_direct:
   pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_write_counter(
-      "${ca.table}",
-      entry_hdl,
-      value
-  );
+      0, "${ca.table}", entry_hdl, value);
 //::   else:
   pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_counter_write(
-      "${ca_name}",
-      index,
-      value
-  );
+      0, "${ca_name}", index, value);
 //::   #endif
 
   return 0;

@@ -28,6 +28,23 @@
 extern "C" {
 #endif
 
+//:: def get_direct_parameter_specs(d, t):
+//::   for k in d:
+//::     exec "%s=d[k]" % k
+//::   #endfor
+//::   specs = []
+//::   if t.direct_meters:
+//::     m_name = t.direct_meters
+//::     m = meter_arrays[m_name]
+//::     if m.type_ == MeterType.PACKETS:
+//::       specs += ["p4_pd_packets_meter_spec_t *" + m_name + "_spec"]
+//::     else:
+//::       specs += ["p4_pd_bytes_meter_spec_t *" + m_name + "_spec"]
+//::     #endif
+//::   #endif
+//::   return specs
+//:: #enddef
+
 /* ADD ENTRIES */
 
 //:: for t_name, t in tables.items():
@@ -53,6 +70,7 @@ extern "C" {
 //::     if t.support_timeout:
 //::       params += ["uint32_t ttl"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t)
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 //::     name = pd_prefix + t_name + "_table_add_with_" + a_name
@@ -132,6 +150,7 @@ ${name}
 //::     if has_action_spec:
 //::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t)
 //::     param_str = ",\n ".join(params)
 //::     name = pd_prefix + t_name + "_table_modify_with_" + a_name
 p4_pd_status_t
@@ -158,6 +177,8 @@ ${name}
 //::     if has_action_spec:
 //::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
 //::     #endif
+//::     # ignored for now
+//::     params += get_direct_parameter_specs(render_dict, t)
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
 //::     name = pd_prefix + t_name + "_set_default_action_" + a_name

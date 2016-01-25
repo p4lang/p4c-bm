@@ -47,10 +47,11 @@ AgeingState *device_state[NUM_DEVICES];
 typedef struct {
   char sub_topic[4];
   int switch_id;
+  int cxt_id;
   uint64_t buffer_id;
   int table_id;
   unsigned int num_entries;
-  char _padding[8];
+  char _padding[4];
 } __attribute__((packed)) ageing_hdr_t;
 
 }  // namespace
@@ -78,11 +79,11 @@ p4_pd_status_t ${pd_prefix}ageing_remove_device(int dev_id) {
 
 void ${pd_prefix}ageing_notification_cb(const char *hdr, const char *data) {
   const ageing_hdr_t *ageing_hdr = reinterpret_cast<const ageing_hdr_t *>(hdr);
-  std::cout << "I received " << ageing_hdr->num_entries << " expired hanldes "
+  std::cout << "I received " << ageing_hdr->num_entries << " expired handles "
             << "for table " << ageing_hdr->table_id << std::endl;
     const AgeingState *state = device_state[ageing_hdr->switch_id];
     const AgeingCb &cb = state->cbs.find(ageing_hdr->table_id)->second;
-    uint64_t *handles = (uint64_t *) &data;
+    const uint64_t *handles = reinterpret_cast<const uint64_t *>(data);
     for(unsigned int i = 0; i < ageing_hdr->num_entries; i++) {
       cb.cb_fn(handles[i], cb.cb_cookie);
     }

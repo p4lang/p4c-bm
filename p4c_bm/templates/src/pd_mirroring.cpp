@@ -44,8 +44,14 @@ int ${pd_prefix}mirror_session_create(p4_pd_sess_hdl_t shdl,
                                       uint16_t egr_port,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
-                                      bool c2c) {
-  (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos; (void) c2c;
+                                      bool c2c,
+                                      uint16_t extract_len,
+                                      uint32_t timeout_usec,
+                                      uint32_t *int_hdr,
+                                      uint8_t int_hdr_len) {
+  (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos;
+  (void) c2c; (void) extract_len; (void) timeout_usec; (void) int_hdr;
+  (void) int_hdr_len;
   SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
   return client->mirroring_mapping_add(id, egr_port);
 }
@@ -58,8 +64,15 @@ int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
                                       uint16_t egr_port,
                                       uint16_t max_pkt_len,
                                       uint8_t cos,
-                                      bool c2c, bool enable) {
-  (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos; (void) c2c; (void) enable;
+                                      bool c2c,
+                                      uint16_t extract_len,
+                                      uint32_t timeout_usec,
+                                      uint32_t *int_hdr,
+                                      uint8_t int_hdr_len,
+                                      bool enable) {
+  (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos;
+  (void) c2c; (void) extract_len; (void) timeout_usec; (void) int_hdr;
+  (void) int_hdr_len; (void) enable;
   SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
   return client->mirroring_mapping_add(id, egr_port);
 }

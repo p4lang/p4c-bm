@@ -32,7 +32,7 @@ import sys
 _STATIC_VARS = []
 
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -526,6 +526,12 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
                 return True
         return False
 
+    def table_direct_meters(p4_table):
+        for name, meter in hlir.p4_meters.items():
+            if meter.binding == (p4.P4_DIRECT, p4_table):
+                return name
+        return None
+
     pipeline_dict = OrderedDict()
     pipeline_dict["name"] = name
     pipeline_dict["id"] = dump_one_pipeline.pipeline_id
@@ -571,15 +577,17 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
 
         table_dict["max_size"] = table.max_size if table.max_size else 16384
 
+        # TODO(antonin): update counters to be the same as direct meters, but
+        # that would make the JSON non-backwards compatible
         table_dict["with_counters"] = table_has_counters(table)
+
+        table_dict["direct_meters"] = table_direct_meters(table)
 
         table_dict["support_timeout"] = table.support_timeout
 
         key = []
         for field_ref, m_type, mask in table.match_fields:
             key_field = OrderedDict()
-            if mask:  # pragma: no cover
-                LOG_CRITICAL("mask not supported for match fields")
             match_type = match_types_map[m_type]
             key_field["match_type"] = match_type
             if(match_type == "valid"):
@@ -591,7 +599,25 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
                 key_field["target"] = header_ref.name
             else:
                 key_field["target"] = format_field_ref(field_ref)
+
+            if mask:
+                if match_type == "valid":
+                    LOG_WARNING("a field mask does not make much sense for a "
+                                "valid match")
+                    field_width = 1
+                else:
+                    assert(isinstance(field_ref, p4.p4_field))
+                    field_width = field_ref.width
+                # re-using this function (used by parser)
+                mask = build_match_value([field_width], mask)
+                LOG_INFO("you are using a mask in a match table, "
+                         "this is still an experimental feature")
+            else:
+                mask = None  # should aready be the case
+            key_field["mask"] = mask
+
             key.append(key_field)
+
         table_dict["key"] = key
 
         table_dict["actions"] = [a.name for a in table.actions]
@@ -713,8 +739,20 @@ def dump_actions(json_dict, hlir):
             primitive_name = call[0].name
             primitive_dict["op"] = primitive_name
 
+            args = call[1]
+
+            # backwards compatibility with older P4 programs
+            if primitive_name == "modify_field" and len(args) == 3:
+                LOG_WARNING(
+                    "Your P4 program uses the modify_field() action primitive "
+                    "with 3 arguments (aka masked modify), bmv2 does not "
+                    "support it anymore and this compiler will replace your "
+                    "modify_field(a, b, c) with modify_field(a, b & c)")
+                new_arg = p4.p4_expression(args[1], "&", args[2])
+                args = [args[0], new_arg]
+
             primitive_args = []
-            for arg in call[1]:
+            for arg in args:
                 arg_dict = OrderedDict()
                 if type(arg) is int or type(arg) is long:
                     arg_dict["type"] = "hexstr"
@@ -924,7 +962,13 @@ def dump_meters(json_dict, hlir):
         meter_dict["id"] = id_
         id_ += 1
         if p4_meter.binding and (p4_meter.binding[0] == p4.P4_DIRECT):
-            LOG_CRITICAL("direct meters not supported yet")  # pragma: no cover
+            meter_dict["is_direct"] = True
+            meter_dict["binding"] = p4_meter.binding[1].name
+            meter_dict["size"] = p4_meter.binding[1].max_size
+            meter_dict["result_target"] = format_field_ref(p4_meter.result)
+        else:
+            meter_dict["is_direct"] = False
+            meter_dict["size"] = p4_meter.instance_count
         meter_dict["rate_count"] = 2  # 2 rate, 3 colors
         if p4_meter.type == p4.P4_COUNTER_BYTES:
             type_ = "bytes"
@@ -933,7 +977,6 @@ def dump_meters(json_dict, hlir):
         else:  # pragma: no cover
             LOG_CRITICAL("invalid meter type")
         meter_dict["type"] = type_
-        meter_dict["size"] = p4_meter.instance_count
 
         meters.append(meter_dict)
 

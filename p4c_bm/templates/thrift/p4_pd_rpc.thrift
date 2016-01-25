@@ -37,6 +37,22 @@ struct ${api_prefix}counter_flags_t {
   1: required bool read_hw_sync;
 }
 
+struct ${api_prefix}packets_meter_spec_t {
+  1: required i32 cir_pps;
+  2: required i32 cburst_pkts;
+  3: required i32 pir_pps;
+  4: required i32 pburst_pkts;
+  5: required bool color_aware;  // ignored for now
+}
+
+struct ${api_prefix}bytes_meter_spec_t {
+  1: required i32 cir_kbps;
+  2: required i32 cburst_kbits;
+  3: required i32 pir_kbps;
+  4: required i32 pburst_kbits;
+  5: required bool color_aware;  // ignored for now
+}
+
 # Match structs
 
 //:: for t_name, t in tables.items():
@@ -109,6 +125,22 @@ struct ${rpc_msg_type} {
 }
 //:: #endfor
 
+//:: def get_direct_parameter_specs(d, t, api_prefix):
+//::   for k in d:
+//::     exec "%s=d[k]" % k
+//::   #endfor
+//::   specs = []
+//::   if t.direct_meters:
+//::     m_name = t.direct_meters
+//::     m = meter_arrays[m_name]
+//::     if m.type_ == MeterType.PACKETS:
+//::       specs += [api_prefix + "packets_meter_spec_t " + m_name + "_spec"]
+//::     else:
+//::       specs += [api_prefix + "bytes_meter_spec_t " + m_name + "_spec"]
+//::     #endif
+//::   #endif
+//::   return specs
+//:: #enddef
 
 service ${p4_prefix} {
 
@@ -136,6 +168,7 @@ service ${p4_prefix} {
 //::     if t.support_timeout:
 //::       params += ["i32 ttl"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::     param_str = ", ".join(param_list)
 //::     name = t_name + "_table_add_with_" + a_name
@@ -157,6 +190,7 @@ service ${p4_prefix} {
 //::     if has_action_spec:
 //::       params += [api_prefix + a_name + "_action_spec_t action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::     param_str = ", ".join(param_list)
 //::     name = t_name + "_table_modify_with_" + a_name
@@ -190,6 +224,7 @@ service ${p4_prefix} {
 //::     if has_action_spec:
 //::       params += [api_prefix + a_name + "_action_spec_t action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::     param_str = ", ".join(param_list)
 //::     name = t_name + "_set_default_action_" + a_name
@@ -382,18 +417,20 @@ service ${p4_prefix} {
 //:: for ma_name, ma in meter_arrays.items():
 //::   params = ["res.SessionHandle_t sess_hdl",
 //::             "res.DevTarget_t dev_tgt"]
-//::   params += ["i32 index"]
-//::   if ma.type_ == MeterType.PACKETS:
-//::     params += ["i32 cir_pps", "i32 cburst_pkts",
-//::                "i32 pir_pps", "i32 pburst_pkts"]
+//::   if ma.is_direct:
+//::     params += ["EntryHandle_t entry"]
 //::   else:
-//::     params += ["i32 cir_kbps", "i32 cburst_kbits",
-//::                "i32 pir_kbps", "i32 pburst_kbits"]
+//::     params += ["i32 index"]
+//::   #endif
+//::   if ma.type_ == MeterType.PACKETS:
+//::     params += [api_prefix + "packets_meter_spec_t meter_spec"]
+//::   else:
+//::     params += [api_prefix + "bytes_meter_spec_t meter_spec"]
 //::   #endif
 //::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
 //::   param_str = ", ".join(param_list)
 //::   
-//::   name = "meter_configure_" + ma_name
+//::   name = "meter_set_" + ma_name
     i32 ${name}(${param_str});
 
 //:: #endfor

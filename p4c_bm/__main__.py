@@ -74,7 +74,22 @@ def _validate_dir(path):
 
 def main():
     parser = get_parser()
-    args = parser.parse_args()
+    input_args = sys.argv[1:]
+    args, unparsed_args = parser.parse_known_args()
+
+    # parse preprocessor flags
+    has_remaining_args = False
+    preprocessor_args = []
+    for a in unparsed_args:
+        if a[:2] == "-D":
+            input_args.remove(a)
+            preprocessor_args.append(a)
+        else:
+            has_remaining_args = True
+
+    # trigger error
+    if has_remaining_args:
+        parser.parse_args(input_args)
 
     if args.json:
         path_json = _validate_path(args.json)
@@ -94,12 +109,14 @@ def main():
     else:
         h = HLIR(args.source)
         h.add_preprocessor_args("-D__TARGET_BMV2__")
+        for parg in preprocessor_args:
+            h.add_preprocessor_args(parg)
         # in addition to standard P4 primitives
         more_primitives = json.loads(
             resource_string(__name__, 'primitives.json')
         )
         h.add_primitives(more_primitives)
-        if not h.build():
+        if not h.build(analyze=False):
             print "Error while building HLIR"
             sys.exit(1)
 

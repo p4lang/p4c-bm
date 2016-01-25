@@ -101,10 +101,11 @@ void bytes_to_field<4>(const char *bytes, char *field) {
 typedef struct {
   char sub_topic[4];
   int switch_id;
+  int cxt_id;
   int list_id;
   unsigned long long buffer_id;
   unsigned int num_samples;
-  char _padding[8];
+  char _padding[4];
 } __attribute__((packed)) learn_hdr_t;
 
 
@@ -193,9 +194,7 @@ p4_pd_status_t ${pd_prefix}${lq_name}_notify_ack
 ) {
   assert(my_devices[msg->dev_tgt.device_id]);
   pd_conn_mgr_client(conn_mgr_state, msg->dev_tgt.device_id)->bm_learning_ack_buffer(
-      ${lq.id_},
-      msg->buffer_id
-  );
+      0, ${lq.id_}, msg->buffer_id);
   return 0;
 }
 

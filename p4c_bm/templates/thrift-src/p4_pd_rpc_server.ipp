@@ -21,6 +21,49 @@ extern "C" {
 using namespace  ::p4_pd_rpc;
 using namespace  ::res_pd_rpc;
 
+namespace {
+
+void bytes_meter_spec_thrift_to_pd(
+    const ${api_prefix}bytes_meter_spec_t &meter_spec,
+    p4_pd_bytes_meter_spec_t *pd_meter_spec) {
+  pd_meter_spec->cir_kbps = meter_spec.cir_kbps;
+  pd_meter_spec->cburst_kbits = meter_spec.cburst_kbits;
+  pd_meter_spec->pir_kbps = meter_spec.pir_kbps;
+  pd_meter_spec->pburst_kbits = meter_spec.pburst_kbits;
+  pd_meter_spec->meter_type = meter_spec.color_aware ?
+      PD_METER_TYPE_COLOR_AWARE : PD_METER_TYPE_COLOR_UNAWARE;
+}
+
+void packets_meter_spec_thrift_to_pd(
+    const ${api_prefix}packets_meter_spec_t &meter_spec,
+    p4_pd_packets_meter_spec_t *pd_meter_spec) {
+  pd_meter_spec->cir_pps = meter_spec.cir_pps;
+  pd_meter_spec->cburst_pkts = meter_spec.cburst_pkts;
+  pd_meter_spec->pir_pps = meter_spec.pir_pps;
+  pd_meter_spec->pburst_pkts = meter_spec.pburst_pkts;
+   pd_meter_spec->meter_type = meter_spec.color_aware ?
+       PD_METER_TYPE_COLOR_AWARE : PD_METER_TYPE_COLOR_UNAWARE;
+}
+
+}  // namespace
+
+//:: def get_direct_parameter_specs(d, t, api_prefix):
+//::   for k in d:
+//::     exec "%s=d[k]" % k
+//::   #endfor
+//::   specs = []
+//::   if t.direct_meters:
+//::     m_name = t.direct_meters
+//::     m = meter_arrays[m_name]
+//::     if m.type_ == MeterType.PACKETS:
+//::       specs += ["const " + api_prefix + "packets_meter_spec_t &" + m_name + "_spec"]
+//::     else:
+//::       specs += ["const " + api_prefix + "bytes_meter_spec_t &" + m_name + "_spec"]
+//::     #endif
+//::   #endif
+//::   return specs
+//:: #enddef
+
 class ${p4_prefix}Handler : virtual public ${p4_prefix}If {
 public:
     ${p4_prefix}Handler() {
@@ -55,6 +98,7 @@ public:
 //::     if t.support_timeout:
 //::       params += ["const int32_t ttl"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
 //::     name = t_name + "_table_add_with_" + a_name
 //::     pd_name = pd_prefix + name
@@ -106,6 +150,15 @@ public:
 //::     if t.support_timeout:
 //::       pd_params += ["(uint32_t)ttl"]
 //::     #endif
+//::     # direct parameter specs
+//::     if t.direct_meters:
+//::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
+//::       type_name = MeterType.to_str(m.type_)
+        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
+//::       pd_params += ["&pd_" + m_name + "_spec"]
+//::     #endif
 //::     pd_params += ["&pd_entry"]
 //::     pd_param_str = ", ".join(pd_params)
         ${pd_name}(${pd_param_str});
@@ -131,6 +184,7 @@ public:
 //::     if has_action_spec:
 //::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
 //::     name = t_name + "_table_modify_with_" + a_name
 //::     pd_name = pd_prefix + name
@@ -154,6 +208,15 @@ public:
 //::     pd_params = ["sess_hdl", "dev_id", "entry"]
 //::     if has_action_spec:
 //::       pd_params += ["&pd_action_spec"]
+//::     #endif
+//::     # direct parameter specs
+//::     if t.direct_meters:
+//::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
+//::       type_name = MeterType.to_str(m.type_)
+        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
+//::       pd_params += ["&pd_" + m_name + "_spec"]
 //::     #endif
 //::     pd_param_str = ", ".join(pd_params)
         return ${pd_name}(${pd_param_str});
@@ -196,6 +259,7 @@ public:
 //::     if has_action_spec:
 //::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
 //::     #endif
+//::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
 //::     name = t_name + "_set_default_action_" + a_name
 //::     pd_name = pd_prefix + name
@@ -224,6 +288,15 @@ public:
 //::     pd_params = ["sess_hdl", "pd_dev_tgt"]
 //::     if has_action_spec:
 //::       pd_params += ["&pd_action_spec"]
+//::     #endif
+//::     # direct parameter specs
+//::     if t.direct_meters:
+//::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
+//::       type_name = MeterType.to_str(m.type_)
+        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
+//::       pd_params += ["&pd_" + m_name + "_spec"]
 //::     #endif
 //::     pd_params += ["&pd_entry"]
 //::     pd_param_str = ", ".join(pd_params)
@@ -358,7 +431,7 @@ public:
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
 
-        return ${pd_name}(sess_hdl, dev_id, mbr);	
+        return ${pd_name}(sess_hdl, dev_id, mbr);
     }
 
 //::   if t.type_ != TableType.INDIRECT_WS: continue
@@ -404,7 +477,7 @@ public:
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
 
-        return ${pd_name}(sess_hdl, dev_id, grp, mbr);	
+        return ${pd_name}(sess_hdl, dev_id, grp, mbr);
     }
 
 //::   params = ["const SessionHandle_t sess_hdl",
@@ -417,7 +490,7 @@ public:
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
 
-        return ${pd_name}(sess_hdl, dev_id, grp, mbr);	
+        return ${pd_name}(sess_hdl, dev_id, grp, mbr);
     }
 
 //::   params = ["const SessionHandle_t sess_hdl",
@@ -681,26 +754,25 @@ public:
 //:: for ma_name, ma in meter_arrays.items():
 //::   params = ["const SessionHandle_t sess_hdl",
 //::             "const DevTarget_t &dev_tgt"]
-//::   entry_or_index = "index";
-//::   params += ["const int32_t index"]
-//::   if ma.type_ == MeterType.PACKETS:
-//::     params += ["const int32_t cir_pps", "const int32_t cburst_pkts",
-//::                "const int32_t pir_pps", "const int32_t pburst_pkts"]
+//::   pd_params = ["sess_hdl", "pd_dev_tgt"]
+//::   if ma.is_direct:
+//::     params += ["const EntryHandle_t entry"]
+//::     pd_params += ["entry"]
 //::   else:
-//::     params += ["const int32_t cir_kbps", "const int32_t cburst_kbits",
-//::                "const int32_t pir_kbps", "const int32_t pburst_kbits"]
+//::     params += ["const int32_t index"]
+//::     pd_params += ["index"]
 //::   #endif
+//::   if ma.type_ == MeterType.PACKETS:
+//::     params += ["const " + api_prefix + "packets_meter_spec_t &meter_spec"]
+//::   else:
+//::     params += ["const " + api_prefix + "bytes_meter_spec_t &meter_spec"]
+//::   #endif
+//::   pd_params += ["&pd_meter_spec"]
 //::   param_str = ", ".join(params)
 //::
-//::   pd_params = ["sess_hdl", "pd_dev_tgt", entry_or_index]
-//::   if ma.type_ == MeterType.PACKETS:
-//::     pd_params += ["cir_pps", "cburst_pkts", "pir_pps", "pburst_pkts"]
-//::   else:
-//::     pd_params += ["cir_kbps", "cburst_kbits", "pir_kbps", "pburst_kbits"]
-//::   #endif
 //::   pd_param_str = ", ".join(pd_params)
-//::   
-//::   name = "meter_configure_" + ma_name
+//::
+//::   name = "meter_set_" + ma_name
 //::   pd_name = pd_prefix + name
   int32_t ${name}(${param_str}) {
       std::cerr << "In ${name}\n";
@@ -708,6 +780,14 @@ public:
       p4_pd_dev_target_t pd_dev_tgt;
       pd_dev_tgt.device_id = dev_tgt.dev_id;
       pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
+
+//::   if ma.type_ == MeterType.PACKETS:
+      p4_pd_packets_meter_spec_t pd_meter_spec;
+      packets_meter_spec_thrift_to_pd(meter_spec, &pd_meter_spec);
+//::   else:
+      p4_pd_bytes_meter_spec_t pd_meter_spec;
+      bytes_meter_spec_thrift_to_pd(meter_spec, &pd_meter_spec);
+//::   #endif
 
       return ${pd_name}(${pd_param_str});
   }

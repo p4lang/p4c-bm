@@ -42,6 +42,7 @@ from p4c_bm import gen_json
 from p4c_bm import gen_pd
 from p4c_bm import __main__
 from p4c_bm.util.topo_sorting import Graph
+from p4c_bm.util.tenjin_wrapper import MacroPreprocessor
 
 
 def list_p4_programs():
@@ -145,6 +146,12 @@ def test_main(tmpdir):
     # PD from JSON with invalid input
     assert call_main(["plop.json", "--pd", str(tmpdir), "--pd-from-json"]) != 0
 
+    # preprocessor flag
+    assert call_main([input_p4, "-DANTONIN_ON"]) == 0
+
+    # invalid option
+    assert call_main([input_p4, "--nonsense"]) != 0
+
     os.remove(tmp_json[1])
 
 
@@ -174,3 +181,26 @@ def test_topo_sorting_bad():
         nodes[n1].add_edge_to(nodes[n2])
     topo_sorting = g.produce_topo_sorting()
     assert topo_sorting is None
+
+
+def test_tenjin_macro_preprocessor():
+    mp = MacroPreprocessor()
+    input_ = """
+//:: #define METER_STUFF
+//:: for i in xrange(10):
+//::   if True:
+print "YES!"
+//::   #endif
+//:: #endfor
+//:: #enddefine
+//::   #expand METER_STUFF 2
+"""
+    expected_output = """
+//::   for i in xrange(10):
+//::     if True:
+  print "YES!"
+//::     #endif
+//::   #endfor
+"""
+    output = mp.__call__(input_)
+    assert expected_output.strip() == output.strip()

@@ -74,6 +74,7 @@ class Table:
         self.key = []
         self.default_action = None
         self.with_counters = False
+        self.direct_meters = None
         self.support_timeout = False
 
         TABLES[name] = self
@@ -132,14 +133,17 @@ class MeterArray:
         self.name = name
         self.id_ = id_
         self.type_ = None
+        self.is_direct = None
         self.size = None
         self.rate_count = None
+        self.table = None
 
         METER_ARRAYS[name] = self
 
     def meter_str(self):
-        return "{0:30} [{1}, {2}]".format(self.name, self.size,
-                                          MeterType.to_str(self.type_))
+        return "{0:30} [{1}, {2}, {3}]".format(self.name, self.is_direct,
+                                               self.size,
+                                               MeterType.to_str(self.type_))
 
 
 class CounterArray:
@@ -186,6 +190,7 @@ def load_json(json_str):
             table.match_type = MatchType.from_str(j_table["match_type"])
             table.type_ = TableType.from_str(j_table["type"])
             table.with_counters = j_table["with_counters"]
+            table.direct_meters = j_table["direct_meters"]
             table.support_timeout = j_table["support_timeout"]
             assert(type(table.with_counters) is bool)
             assert(type(table.support_timeout) is bool)
@@ -229,7 +234,11 @@ def load_json(json_str):
 
     for j_meter in json_["meter_arrays"]:
         meter_array = MeterArray(j_meter["name"], j_meter["id"])
-        meter_array.size = j_meter["size"]
+        meter_array.is_direct = j_meter["is_direct"]
+        if meter_array.is_direct:
+            meter_array.table = j_meter["binding"]
+        else:
+            meter_array.size = j_meter["size"]
         meter_array.type_ = MeterType.from_str(j_meter["type"])
         meter_array.rate_count = j_meter["rate_count"]
 
@@ -369,4 +378,5 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix):
     render_dict["learn_quantas"] = LEARN_QUANTAS
     render_dict["meter_arrays"] = METER_ARRAYS
     render_dict["counter_arrays"] = COUNTER_ARRAYS
+    render_dict["render_dict"] = render_dict
     render_all_files(render_dict, _validate_dir(dest_dir))

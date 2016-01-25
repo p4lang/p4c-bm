@@ -57,6 +57,12 @@ int main() {
     {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
   p4_pd_test_actionB_action_spec actionB_action_spec =
     {0xab};
+
+  p4_pd_bytes_meter_spec_t meter_spec;
+  meter_spec.cir_kbps = 8000;
+  meter_spec.cburst_kbits = 8;
+  meter_spec.pir_kbps = 16000;
+  meter_spec.pburst_kbits = 8;
   
   // right now PD assumes everything is passed in network byte order, so this
   // will actually be interpreted as byte string "bb00aa00"
@@ -64,10 +70,13 @@ int main() {
   p4_pd_test_ExactOne_table_add_with_actionA(sess_hdl, dev_tgt,
                                              &ExactOne_match_spec,
                                              &actionA_action_spec,
+                                             &meter_spec,
                                              &entry_hdl);
 
   p4_pd_test_ExactOne_table_modify_with_actionB(sess_hdl, dev_tgt.device_id,
-                                                entry_hdl, &actionB_action_spec);
+                                                entry_hdl,
+                                                &actionB_action_spec,
+                                                &meter_spec);
 
   p4_pd_counter_value_t counter_value;
   p4_pd_test_ExactOne_read_counter(sess_hdl, dev_tgt, entry_hdl, &counter_value);  
@@ -120,6 +129,7 @@ int main() {
   
   p4_pd_test_ExactOne_set_default_action_actionA(sess_hdl, dev_tgt,
                                                  &actionA_action_spec,
+                                                 &meter_spec,
                                                  &entry_hdl);
 
   /* indirect table */
@@ -148,13 +158,11 @@ int main() {
 
   /* meter test */
 
-  uint32_t cir_kbps = 8000;
-  uint32_t cburst_kbits = 8;
-  uint32_t pir_kbps = 16000;
-  uint32_t pburst_kbits = 8;
-  p4_pd_test_meter_configure_MeterA(sess_hdl, dev_tgt, 16,
-				    cir_kbps, cburst_kbits,
-				    pir_kbps, pburst_kbits);
+  // indirect meter
+  p4_pd_test_meter_set_MeterA(sess_hdl, dev_tgt, 16, &meter_spec);
+
+  // direct meter
+  p4_pd_test_meter_set_ExactOne_meter(sess_hdl, dev_tgt, 18, &meter_spec);
 
   /* multicast */
   
@@ -183,9 +191,10 @@ int main() {
 
   /* mirroring */
   p4_pd_test_mirror_session_create(sess_hdl, dev_tgt,
-				   PD_MIRROR_TYPE_NORM, PD_DIR_INGRESS,
-				   11, 12,
-				   4096, 0, false);
+                                   PD_MIRROR_TYPE_NORM, PD_DIR_INGRESS,
+                                   11, 12,
+                                   4096, 0, false,
+                                   0, 0, nullptr, 0);
 
   /* END TEST */
 
