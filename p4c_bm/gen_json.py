@@ -747,8 +747,12 @@ def dump_actions(json_dict, hlir):
                     "Your P4 program uses the modify_field() action primitive "
                     "with 3 arguments (aka masked modify), bmv2 does not "
                     "support it anymore and this compiler will replace your "
-                    "modify_field(a, b, c) with modify_field(a, b & c)")
-                new_arg = p4.p4_expression(args[1], "&", args[2])
+                    "modify_field(a, b, c) with "
+                    "modify_field(a, (a & ~c) | (b & c))")
+                Lexpr = p4.p4_expression(args[0], "&",
+                                         p4.p4_expression(None, "~", args[2]))
+                Rexpr = p4.p4_expression(args[1], "&", args[2])
+                new_arg = p4.p4_expression(Lexpr, "|", Rexpr)
                 args = [args[0], new_arg]
 
             primitive_args = []
