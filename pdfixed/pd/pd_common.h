@@ -40,7 +40,7 @@ typedef void* p4_pd_value_hdl_t;
 
 #define PD_DEV_PIPE_ALL 0xffff
 typedef struct p4_pd_dev_target {
-  uint8_t device_id; /*!< Device Identifier the API request is for */
+  int device_id; /*!< Device Identifier the API request is for */
   uint16_t dev_pipe_id;/*!< If specified localizes target to the resources
 			 * only accessible to the port. DEV_PORT_ALL serves
 			 * as a wild-card value
@@ -51,6 +51,11 @@ typedef struct p4_pd_counter_value {
   uint64_t packets;
   uint64_t bytes;
 } p4_pd_counter_value_t;
+
+typedef void (*p4_pd_stat_ent_sync_cb) (int device_id, void *cookie);
+typedef void (*p4_pd_stat_sync_cb) (int device_id, void *cookie);
+
+#define COUNTER_READ_HW_SYNC (1 << 0)
 
 // TODO(antonin): color aware meters not supported yet in bmv2
 // everything is treated as color unaware

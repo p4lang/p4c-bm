@@ -22,6 +22,8 @@
 #include "pd/pd_static.h"
 #include "pd_conn_mgr.h"
 
+#include <thread>
+
 extern pd_conn_mgr_t *conn_mgr_state;
 extern int *my_devices;
 
@@ -92,6 +94,19 @@ ${name}
 //::   #endif
 
   return 0;
+}
+
+//::   name = pd_prefix + "counter_hw_sync_" + ca_name
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt,
+ p4_pd_stat_sync_cb cb_fn,
+ void *cb_cookie
+) {
+  std::thread cb_thread(cb_fn, dev_tgt.device_id, cb_cookie);
+  cb_thread.detach();
 }
 
 //:: #endfor

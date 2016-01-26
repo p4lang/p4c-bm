@@ -76,7 +76,7 @@ public:
   int32_t mc_associate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
     std::cerr << "In mc_associate_node\n";
 
-    return p4_pd_mc_associate_node(sess_hdl, dev, grp_hdl, l1_hdl);
+    return p4_pd_mc_associate_node(sess_hdl, dev, grp_hdl, l1_hdl, 0, 0);
   }
 
   int32_t mc_dissociate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){

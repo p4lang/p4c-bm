@@ -36,55 +36,102 @@ typedef uint16_t mgrp_rid_t;
 typedef uint16_t mgrp_lag_id_t;
 typedef uint16_t mgrp_port_id_t;
 
-p4_pd_status_t p4_pd_mc_create_session(p4_pd_sess_hdl_t *sess_hdl);
+p4_pd_status_t
+p4_pd_mc_create_session(p4_pd_sess_hdl_t *sess_hdl);
 
-p4_pd_status_t p4_pd_mc_delete_session(p4_pd_sess_hdl_t sess_hdl);
+p4_pd_status_t
+p4_pd_mc_delete_session(p4_pd_sess_hdl_t sess_hdl);
 
-p4_pd_status_t p4_pd_mc_complete_operations(p4_pd_sess_hdl_t sess_hdl);
+p4_pd_status_t
+p4_pd_mc_complete_operations(p4_pd_sess_hdl_t sess_hdl);
 
-p4_pd_status_t p4_pd_mc_mgrp_create(p4_pd_sess_hdl_t session,
-				    int8_t device,
-				    mgrp_id_t mgid,
-				    p4_pd_entry_hdl_t *mgrp_hdl);
+p4_pd_status_t
+p4_pd_mc_mgrp_create(p4_pd_sess_hdl_t session,
+                     int device,
+                     mgrp_id_t mgid,
+                     p4_pd_entry_hdl_t *mgrp_hdl);
 
-p4_pd_status_t p4_pd_mc_mgrp_destroy(p4_pd_sess_hdl_t session,
-				     int8_t device, 
-				     p4_pd_entry_hdl_t mgrp_hdl);
+p4_pd_status_t
+p4_pd_mc_mgrp_destroy(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t mgrp_hdl);
 
-p4_pd_status_t p4_pd_mc_node_create(p4_pd_sess_hdl_t session,
-				    int8_t device,
-				    mgrp_rid_t rid,
-				    const uint8_t *port_map,
-				    const uint8_t *lag_map,
-				    p4_pd_entry_hdl_t *node_hdl);
+p4_pd_status_t
+p4_pd_mc_node_create(p4_pd_sess_hdl_t session,
+                     int device,
+                     mgrp_rid_t rid,
+                     const uint8_t *port_map,
+                     const uint8_t *lag_map,
+                     p4_pd_entry_hdl_t *node_hdl);
 
-p4_pd_status_t p4_pd_mc_node_destroy(p4_pd_sess_hdl_t session,
-				     int8_t device,
-				     p4_pd_entry_hdl_t node_hdl);
+p4_pd_status_t
+p4_pd_mc_node_destroy(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t node_hdl);
 
-p4_pd_status_t p4_pd_mc_node_update(p4_pd_sess_hdl_t session,
-				    int8_t device,
-				    p4_pd_entry_hdl_t node_hdl,
-				    const uint8_t *port_map,
-				    const uint8_t *lag_map);
+p4_pd_status_t
+p4_pd_mc_node_update(p4_pd_sess_hdl_t session,
+                     int device,
+                     p4_pd_entry_hdl_t node_hdl,
+                     const uint8_t *port_map,
+                     const uint8_t *lag_map);
 
-p4_pd_status_t p4_pd_mc_associate_node(p4_pd_sess_hdl_t session,
-				       int8_t device,
-				       p4_pd_entry_hdl_t mgrp_hdl,
-				       p4_pd_entry_hdl_t node_hdl);
+p4_pd_status_t
+p4_pd_mc_associate_node(p4_pd_sess_hdl_t session,
+                        int device,
+                        p4_pd_entry_hdl_t mgrp_hdl,
+                        p4_pd_entry_hdl_t node_hdl,
+                        uint16_t xid, bool xid_valid);
 
-p4_pd_status_t p4_pd_mc_dissociate_node(p4_pd_sess_hdl_t session,
-					int8_t device,
-					p4_pd_entry_hdl_t mgrp_hdl,
-					p4_pd_entry_hdl_t node_hdl);
+p4_pd_status_t
+p4_pd_mc_dissociate_node(p4_pd_sess_hdl_t session,
+                         int device,
+                         p4_pd_entry_hdl_t mgrp_hdl,
+                         p4_pd_entry_hdl_t node_hdl);
 
-p4_pd_status_t p4_pd_mc_set_lag_membership(p4_pd_sess_hdl_t session,
-					   int8_t device,
-					   mgrp_lag_id_t lag_id,
-					   const uint8_t *port_map);
+p4_pd_status_t
+p4_pd_mc_set_lag_membership(p4_pd_sess_hdl_t session,
+                            int device,
+                            mgrp_lag_id_t lag_id,
+                            const uint8_t *port_map);
+
+p4_pd_status_t
+p4_pd_mc_ecmp_create(p4_pd_sess_hdl_t session,
+                     int device,
+                     p4_pd_entry_hdl_t *ecmp_hdl);
+
+p4_pd_status_t
+p4_pd_mc_ecmp_destroy(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t ecmp_hdl);
+
+p4_pd_status_t
+p4_pd_mc_ecmp_mbr_add(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t ecmp_hdl,
+                      p4_pd_entry_hdl_t l1_hdl);
+
+p4_pd_status_t
+p4_pd_mc_ecmp_mbr_rem(p4_pd_sess_hdl_t session,
+                      int device,
+                      p4_pd_entry_hdl_t ecmp_hdl,
+                      p4_pd_entry_hdl_t l1_hdl);
+
+p4_pd_status_t
+p4_pd_mc_associate_ecmp(p4_pd_sess_hdl_t session,
+                        int device,
+                        p4_pd_entry_hdl_t grp_hdl,
+                        p4_pd_entry_hdl_t ecmp_hdl,
+                        uint16_t xid, bool xid_valid);
+
+p4_pd_status_t
+p4_pd_mc_dissociate_ecmp(p4_pd_sess_hdl_t session,
+                         int device,
+                         p4_pd_entry_hdl_t grp_hdl,
+                         p4_pd_entry_hdl_t ecmp_hdl);
 
 #ifdef __cplusplus
 }
 #endif
- 
+
 #endif
