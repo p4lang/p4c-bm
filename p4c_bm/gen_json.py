@@ -482,6 +482,10 @@ match_types_map = {
 def get_table_match_type(p4_table):
     match_types = []
     for _, m_type, _ in p4_table.match_fields:
+        if m_type == p4.p4_match_type.P4_MATCH_RANGE:  # pragma: no cover
+            LOG_CRITICAL("'range' match type is not supported by bmv2 yet")
+        elif m_type not in match_types_map:  # pragma: no cover
+            LOG_CRITICAL("found invalid match type")
         match_types.append(match_types_map[m_type])
 
     if len(match_types) == 0:
