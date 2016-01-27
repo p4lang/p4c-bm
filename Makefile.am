@@ -78,7 +78,6 @@ pdfixed/pd/pd_common.h
 more_pdf_headers = \
 pdfixed/src/pd_conn_mgr.h \
 pdfixed/src/pd_notifications.h \
-pdfixed/src/pd_helpers.h \
 pdfixed/src/nn.h
 
 lib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
@@ -148,24 +147,10 @@ p4c_bm/p4c-bmv2
 p4c_bm_json_files = \
 p4c_bm/primitives.json
 
-# Ideally we could live with p4c-compiler installed on the host system
-# Or if bitbake file can handle python package installation
-#
 install-exec-hook:
-	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/templates/pd
-	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/templates/pd \
-		$(p4c_bm_template_inc_files)
-	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/templates/src
-	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/templates/src \
-		$(p4c_bm_template_src_files)
-	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/templates/thrift-src
-	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/templates/thrift-src \
-		$(p4c_bm_template_thrift_files)
-	install -m 0755 -o root -g root -d $(PFX)/$(bindir)/p4c_bm/util
-	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm/util \
-		$(p4c_bm_util_files)
-	install -m 0755 -o root -g root -t $(PFX)/$(bindir)/p4c_bm \
-		$(p4c_bm_py_files) $(p4c_bm_json_files)
+	PYTHONPATH=$(PFX)/$(libdir)/python$(PYTHON_VERSION)/site-packages \
+	$(PYTHON) ./setup.py install \
+		--prefix $(PFX)/$(prefix)
 
 CLEANFILES = \
 pdfixed_thrift_files.ts $(pdfixed_thrift_files) \
