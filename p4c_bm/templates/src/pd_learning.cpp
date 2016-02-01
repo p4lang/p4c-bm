@@ -151,8 +151,23 @@ p4_pd_status_t ${pd_prefix}set_learning_timeout
  uint8_t device_id,
  uint64_t usecs
 ) {
-  // TODO
-  (void) sess_hdl; (void) device_id; (void) usecs;
+  (void) sess_hdl;
+  assert(my_devices[device_id]);
+  try {
+    // in bmv2, there can be a different timeout for each learn list, so this
+    // RPC function is called for each learn list
+    // bmv2 also takes a timeout in ms, thus the "/ 1000"
+//:: for lq_name, lq in learn_quantas.items():
+    pd_conn_mgr_client(conn_mgr_state, device_id)->bm_learning_set_timeout(
+        0, ${lq.id_}, usecs / 1000);
+//:: #endfor
+  } catch (InvalidLearnOperation &ilo) {
+    const char *what =
+      _LearnOperationErrorCode_VALUES_TO_NAMES.find(ilo.code)->second;
+    std::cout << "Invalid learn operation (" << ilo.code << "): "
+              << what << std::endl;
+    return ilo.code;
+  }
   return 0;
 }
 

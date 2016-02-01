@@ -264,6 +264,17 @@ public:
     printf("bm_learning_ack_buffer\n");
   }
 
+  void bm_learning_set_timeout(const int32_t cxt_id, const BmLearningListId list_id, const int32_t timeout_ms) {
+    std::cout << "bm_learning_set_timeout" << std::endl
+              << list_id << std::endl
+              << timeout_ms << std::endl;
+  }
+
+  void bm_learning_set_buffer_size(const int32_t cxt_id, const BmLearningListId list_id, const int32_t nb_samples) {
+    // Your implementation goes here
+    printf("bm_learning_set_buffer_size\n");
+  }
+
   void bm_load_new_config(const std::string& config_str) {
     // Your implementation goes here
     printf("bm_load_new_config\n");
