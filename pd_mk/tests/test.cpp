@@ -202,6 +202,10 @@ int main() {
                                    4096, 0, false,
                                    0, 0, nullptr, 0);
 
+  /* learning */
+  uint64_t timeout_us = 64000;  // 64 ms
+  p4_pd_test_set_learning_timeout(sess_hdl, dev_tgt.device_id, timeout_us);
+
   /* END TEST */
 
   p4_pd_test_remove_device(dev_tgt.device_id);
