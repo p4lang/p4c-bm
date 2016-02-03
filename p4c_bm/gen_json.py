@@ -627,7 +627,9 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         table_dict["actions"] = [a.name for a in table.actions]
 
         next_tables = OrderedDict()
-        if "hit" in table.next_:
+        if "hit" in table.next_:  # pragma: no cover
+            LOG_CRITICAL("hit/miss syntax not supported by bmv2, "
+                         "subsequent tables may be skipped")
             next_tables["__HIT__"] = get_table_name(table.next_["hit"])
             next_tables["__MISS__"] = get_table_name(table.next_["miss"])
         else:
