@@ -627,9 +627,7 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         table_dict["actions"] = [a.name for a in table.actions]
 
         next_tables = OrderedDict()
-        if "hit" in table.next_:  # pragma: no cover
-            LOG_CRITICAL("hit/miss syntax not supported by bmv2, "
-                         "subsequent tables may be skipped")
+        if "hit" in table.next_:
             next_tables["__HIT__"] = get_table_name(table.next_["hit"])
             next_tables["__MISS__"] = get_table_name(table.next_["miss"])
         else:
@@ -801,7 +799,7 @@ def dump_actions(json_dict, hlir):
                     arg_dict["type"] = "expression"
                     arg_dict["value"] = dump_expression(arg)
                 else:  # pragma: no cover
-                    LOG_CRITICAL("action arg type is not supported: ",
+                    LOG_CRITICAL("action arg type is not supported: %s",
                                  type(arg))
 
                 if primitive_name in {"push", "pop"} and\
