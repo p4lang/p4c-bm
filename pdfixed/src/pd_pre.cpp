@@ -104,8 +104,10 @@ p4_pd_status_t p4_pd_mc_dissociate_node(
   p4_pd_sess_hdl_t session, int8_t device,
   p4_pd_entry_hdl_t mgrp_hdl, p4_pd_entry_hdl_t node_hdl
 ) {
-  // TODO: needed ?
-  (void) session; (void) mgrp_hdl; (void) node_hdl;
+  // TODO: needed ? Ohh yes.
+  // (void) session; (void) mgrp_hdl; (void) node_hdl;
+  pd_conn_mgr_mc_client(conn_mgr_state, device)->bm_mc_node_dissociate(
+      0, mgrp_hdl, node_hdl);
   return 0;
 }
 
