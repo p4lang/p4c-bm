@@ -16,7 +16,9 @@ extern "C" {
 
 #include <list>
 #include <map>
-#include <pthread.h>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
 
 using namespace  ::p4_pd_rpc;
 using namespace  ::res_pd_rpc;
@@ -65,6 +67,43 @@ void packets_meter_spec_thrift_to_pd(
 //:: #enddef
 
 class ${p4_prefix}Handler : virtual public ${p4_prefix}If {
+private:
+  class CbWrap {
+    CbWrap() {}
+
+    int wait() {
+      std::unique_lock<std::mutex> lock(cb_mutex);
+      while(cb_status == 0) {
+        cb_condvar.wait(lock);
+      }
+      return 0;
+    }
+
+    void notify() {
+      std::unique_lock<std::mutex> lock(cb_mutex);
+      assert(cb_status == 0);
+      cb_status = 1;
+      cb_condvar.notify_one();
+    }
+
+    static void cb_fn(int device_id, void *cookie) {
+      (void) device_id;
+      CbWrap *inst = static_cast<CbWrap *>(cookie);
+      inst->notify();
+    }
+
+    CbWrap(const CbWrap &other) = delete;
+    CbWrap &operator=(const CbWrap &other) = delete;
+
+    CbWrap(CbWrap &&other) = delete;
+    CbWrap &operator=(CbWrap &&other) = delete;
+
+   private:
+    std::mutex cb_mutex{};
+    std::condition_variable cb_condvar{};
+    int cb_status{0};
+  };
+
 public:
     ${p4_prefix}Handler() {
 //:: for lq_name, lq in learn_quantas.items():
@@ -680,7 +719,7 @@ public:
       pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       int pd_flags = 0;
-      // if(flags.read_hw_sync) pd_flags |= COUNTER_READ_HW_SYNC;
+      if(flags.read_hw_sync) pd_flags |= COUNTER_READ_HW_SYNC;
 
       p4_pd_counter_value_t value = ${pd_name}(sess_hdl, pd_dev_tgt, entry, pd_flags);
       counter_value.packets = value.packets;
@@ -714,7 +753,7 @@ public:
       pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
       int pd_flags = 0;
-      // if(flags.read_hw_sync) pd_flags |= COUNTER_READ_HW_SYNC;
+      if(flags.read_hw_sync) pd_flags |= COUNTER_READ_HW_SYNC;
 
       p4_pd_counter_value_t value = ${pd_name}(sess_hdl, pd_dev_tgt, index, pd_flags);
       counter_value.packets = value.packets;

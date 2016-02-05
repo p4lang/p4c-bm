@@ -39,6 +39,12 @@ public:
     return p4_pd_mc_delete_session(sess_hdl);
   }
 
+  int32_t mc_complete_operations(const SessionHandle_t sess_hdl){
+    std::cerr << "In mc_complete_operations\n";
+
+    return p4_pd_mc_complete_operations(sess_hdl);
+  }
+
   McHandle_t mc_mgrp_create(const SessionHandle_t sess_hdl, const int dev, const int16_t mgid){
     std::cerr << "In mc_mgrp_create\n";
 
@@ -76,7 +82,7 @@ public:
   int32_t mc_associate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){
     std::cerr << "In mc_associate_node\n";
 
-    return p4_pd_mc_associate_node(sess_hdl, dev, grp_hdl, l1_hdl);
+    return p4_pd_mc_associate_node(sess_hdl, dev, grp_hdl, l1_hdl, 0, 0);
   }
 
   int32_t mc_dissociate_node(const SessionHandle_t sess_hdl, const int dev, const McHandle_t grp_hdl, const McHandle_t l1_hdl){

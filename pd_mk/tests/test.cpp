@@ -19,8 +19,9 @@
  */
 
 #include <iostream>
-
 #include <cstring>
+#include <thread>
+#include <chrono>
 
 #include <thrift_endpoint.h>
 
@@ -185,6 +186,11 @@ int main() {
   counter_value.packets = 34;
   p4_pd_test_counter_write_CounterA(sess_hdl, dev_tgt, 17, counter_value);
 
+  p4_pd_test_counter_hw_sync_CounterA(
+      sess_hdl, dev_tgt,
+      [](int d, void *c){ std::cout << "hw_sync_CounterA\n"; }, nullptr);
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
   // direct counter
   p4_pd_test_counter_read_ExactOne_counter(sess_hdl, dev_tgt, 18, 0);
   p4_pd_test_counter_write_ExactOne_counter(sess_hdl, dev_tgt, 18, counter_value);
@@ -195,6 +201,10 @@ int main() {
                                    11, 12,
                                    4096, 0, false,
                                    0, 0, nullptr, 0);
+
+  /* learning */
+  uint64_t timeout_us = 64000;  // 64 ms
+  p4_pd_test_set_learning_timeout(sess_hdl, dev_tgt.device_id, timeout_us);
 
   /* END TEST */
 

@@ -110,6 +110,7 @@ bm_counter_write
 CounterA
 17
 12 34
+hw_sync_CounterA
 bm_mt_read_counter
 ExactOne
 18
@@ -120,3 +121,6 @@ ExactOne
 mirroring_mapping_add
 11
 12
+bm_learning_set_timeout
+1
+64

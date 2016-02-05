@@ -482,6 +482,10 @@ match_types_map = {
 def get_table_match_type(p4_table):
     match_types = []
     for _, m_type, _ in p4_table.match_fields:
+        if m_type == p4.p4_match_type.P4_MATCH_RANGE:  # pragma: no cover
+            LOG_CRITICAL("'range' match type is not supported by bmv2 yet")
+        elif m_type not in match_types_map:  # pragma: no cover
+            LOG_CRITICAL("found invalid match type")
         match_types.append(match_types_map[m_type])
 
     if len(match_types) == 0:
@@ -623,7 +627,9 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         table_dict["actions"] = [a.name for a in table.actions]
 
         next_tables = OrderedDict()
-        if "hit" in table.next_:
+        if "hit" in table.next_:  # pragma: no cover
+            LOG_CRITICAL("hit/miss syntax not supported by bmv2, "
+                         "subsequent tables may be skipped")
             next_tables["__HIT__"] = get_table_name(table.next_["hit"])
             next_tables["__MISS__"] = get_table_name(table.next_["miss"])
         else:
@@ -747,8 +753,12 @@ def dump_actions(json_dict, hlir):
                     "Your P4 program uses the modify_field() action primitive "
                     "with 3 arguments (aka masked modify), bmv2 does not "
                     "support it anymore and this compiler will replace your "
-                    "modify_field(a, b, c) with modify_field(a, b & c)")
-                new_arg = p4.p4_expression(args[1], "&", args[2])
+                    "modify_field(a, b, c) with "
+                    "modify_field(a, (a & ~c) | (b & c))")
+                Lexpr = p4.p4_expression(args[0], "&",
+                                         p4.p4_expression(None, "~", args[2]))
+                Rexpr = p4.p4_expression(args[1], "&", args[2])
+                new_arg = p4.p4_expression(Lexpr, "|", Rexpr)
                 args = [args[0], new_arg]
 
             primitive_args = []

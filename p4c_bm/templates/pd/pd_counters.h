@@ -60,6 +60,16 @@ ${name}
  ${param_str}
 );
 
+//::   name = pd_prefix + "counter_hw_sync_" + ca_name
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt,
+ p4_pd_stat_sync_cb cb_fn,
+ void *cb_cookie
+);
+
 //:: #endfor
 
 #ifdef __cplusplus
