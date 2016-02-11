@@ -11,6 +11,11 @@ recursive-exclude * *.py[co]
 recursive-include p4c_bm *.json
 
 recursive-include p4c_bm *.c
+recursive-include p4c_bm *.cpp
 recursive-include p4c_bm *.h
+
+recursive-include pdfixed *.h
+recursive-include pdfixed/src *.h
+
 
 recursive-include docs *.rst conf.py Makefile make.bat

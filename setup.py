@@ -30,7 +30,7 @@ setup(
     author_email='antonin@barefootnetworks.com',
     url='https://github.com/antoninbas/p4c_bm',
     packages=[
-        'p4c_bm', 'p4c_bm.util',
+        'p4c_bm', 'p4c_bm.util', 'pdfixed'
     ],
     package_dir={'p4c_bm':
                  'p4c_bm'},

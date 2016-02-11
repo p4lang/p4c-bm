@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "pd/pd_types.h"
 #include "pd/pd_static.h"
