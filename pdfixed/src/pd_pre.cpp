@@ -102,7 +102,7 @@ p4_pd_mc_associate_node(p4_pd_sess_hdl_t session, int device,
 }
 
 p4_pd_status_t p4_pd_mc_dissociate_node(
-  p4_pd_sess_hdl_t session, int8_t device,
+  p4_pd_sess_hdl_t session, int device,
   p4_pd_entry_hdl_t mgrp_hdl, p4_pd_entry_hdl_t node_hdl
 ) {
   // TODO: needed ? Ohh yes.

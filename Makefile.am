@@ -78,6 +78,7 @@ pdfixed/pd/pd_common.h
 more_pdf_headers = \
 pdfixed/src/pd_conn_mgr.h \
 pdfixed/src/pd_notifications.h \
+pdfixed/src/pd_helpers.h \
 pdfixed/src/nn.h
 
 lib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
