@@ -77,6 +77,16 @@ libtool
 *.o
 *.la
 *.libs
+py-compile
+
+m4/lib*
+m4/lt*
+
+*thrift_gen
+pd_mk/p4_pd
 
 *.ts
 *.tar.lz
+*.tar.gz
+
+build_setuptools

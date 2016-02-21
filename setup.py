@@ -2,17 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import p4c_bm
+import os
+import sys
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+SETUP_PY_PATH = os.path.dirname(__file__)
+SRC_PATH = os.path.relpath(os.path.join(os.path.dirname(__file__), "p4c_bm"))
 
+from setuptools import setup
 
-with open('README.rst') as readme_file:
+with open(os.path.join(SETUP_PY_PATH, 'README.rst')) as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.rst') as history_file:
+with open(os.path.join(SETUP_PY_PATH, 'HISTORY.rst')) as history_file:
     history = history_file.read().replace('.. :changelog:', '')
 
 requirements = [
@@ -20,6 +21,17 @@ requirements = [
     'p4-hlir',
     'Tenjin'
 ]
+
+from setuptools.command.egg_info import egg_info
+
+class EggInfoCommand(egg_info):
+    def run(self):
+        if "build" in self.distribution.command_obj:
+            build_command = self.distribution.command_obj["build"]
+            self.egg_base = build_command.build_base
+            self.egg_info = os.path.join(self.egg_base,
+                                         os.path.basename(self.egg_info))
+        egg_info.run(self)
 
 setup(
     name='p4c_bm',
@@ -32,14 +44,16 @@ setup(
     packages=[
         'p4c_bm', 'p4c_bm.util',
     ],
-    package_dir={'p4c_bm':
-                 'p4c_bm'},
+    package_dir={'p4c_bm': SRC_PATH},
     include_package_data=True,
     install_requires=requirements,
     entry_points = {
         'console_scripts': [
             'p4c-bmv2=p4c_bm.__main__:main',
         ],
+    },
+    cmdclass={
+        "egg_info": EggInfoCommand,
     },
     license="Apache",
     zip_safe=False,
