@@ -319,6 +319,11 @@ public:
     printf("bm_dev_mgr_remove_port\n");
   }
 
+  void bm_dev_mgr_show_ports(std::vector<DevMgrPortInfo> & _return) {
+    // Your implementation goes here
+    printf("bm_dev_mgr_show_ports\n");
+  }
+
   void bm_dump_table(std::string& _return, const int32_t cxt_id, const std::string& table_name) {
     // Your implementation goes here
     printf("bm_dump_table\n");
