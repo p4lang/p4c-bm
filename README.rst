@@ -28,21 +28,50 @@ Usage
 
 * Compiling the PD
 
-  You can copy the generated C++ PD file to your project directory (and compile
-  them with your app).
+  The repository also comes with autotools support. By using it, you can:
 
-  You can also use the pd_mk directory to compile the PD code:
+  * install the Python p4c-bm code (same as with `setup.py`)
+  * compile and (optionally) install the PD fixed libray (`libpdfixed`) and its
+    headers. PD fixed is the part of the PD which is not program dependent
+    (e.g. multicast interfaces)
+  * auto-generate, compile and (optionally) install the PD library (`libpd`) for
+    a given P4 program
 
-  * :code:`cd pd_mk/`
-  * :code:`./configure --includedir=<target_dir_for_headers> --libdir=<target_dir_for_libraries>`
-  * :code:`make 'P4_PATH=<path_to_p4_program>' 'P4_PREFIX=<prefix_for_apis>'`
-  * :code:`make install`
+  If you are just looking to use p4c-bm to generate the JSON input for bmv2, you
+  are probably better off not using autotools and simply running :code:`sudo
+  python setup.py install`.
 
-  You will find the PD headers (fixed and generated) in *target_dir_for_headers*
-  and the libraries (libpdfixed and libpd) in *target_dir_for_libraries*.
+  The steps are the following:
 
-  If your main project also uses autotools, you may be able to integrate pd_mk
-  directly in your infrastructure with :code:`AC_CONFIG_SUBDIRS`
+  * :code:`./autogen.sh`
+  * :code:`./configure`
+  * :code:`make`
+  * :code:`make install` optionally, as root if needed
+
+  This will compile (and optionally install) the Python code and the PD fixed
+  library. If you also want to compile the PD library for a given P4 program,
+  you will need to pass the `--with-pd-mk` flag to `configure` and provide the
+  `P4_PATH` and `P4_PREFIX` environment variables when calling `make`:
+
+  * :code:`./configure --with-pd-mk`
+  * :code:`make 'P4_PATH=<absolute_path_to_p4_program>'
+    'P4_PREFIX=<prefix_for_apis>'`
+
+  Because the PD library and PD headers location is independent of the P4
+  program you are compiling, generating them for a different P4 program may
+  overwrite previous files. You can avoid this by using a different build
+  directory for each P4 program (see `automake VPATH builds`__) and by
+  installing the compilation products to different locations (e.g. by using the
+  `--includedir` and `--libdir` flags for `configure`).
+
+  __ https://www.gnu.org/software/automake/manual/html_node/VPATH-Builds.html
+
+  Of course, you can always manually generate the C++ PD files using `p4c-bmv2`
+  and manually copy them to your project directory (and compile them with your
+  app).
+
+  If your main project also uses autotools, you may be able to integrate this
+  code directly in your infrastructure with :code:`AC_CONFIG_SUBDIRS`
 
 
 ..

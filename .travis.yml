@@ -33,12 +33,12 @@ addons:
       - libssl-dev
 
 before_install:
-  - bash build/travis/install-thrift.sh
+  - bash CI/travis/install-thrift.sh
   - export PATH=$PATH:$HOME/thrift/bin/
   - export LDFLAGS="$LDFLAGS -L$HOME/thrift/lib"
   - export CPPFLAGS="$CPPFLAGS -I$HOME/thrift/include"
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/thrift/lib
-  - bash build/travis/install-nanomsg.sh
+  - bash CI/travis/install-nanomsg.sh
   - export LDFLAGS="$LDFLAGS -L$HOME/nanomsg/lib"
   - export CPPFLAGS="$CPPFLAGS -I$HOME/nanomsg/include"
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/nanomsg/lib
@@ -52,13 +52,14 @@ cache:
 install:
   - pip install -r requirements.txt
   - pip install tox
-  - cd pd_mk/ && ./autogen.sh && CXX=g++-4.8 ./configure && make 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' && cd ..
+  - ./autogen.sh && CXX=g++-4.8 ./configure --with-pd-mk && make
+# 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' are default values
 
 # command to run tests, e.g. python setup.py test
 script:
   - tox -e $TOX_ENV
-  - cd pd_mk/ && make 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' check
-  - ./tests/test; cd ..
+  - make check
+  - cd pd_mk; ./tests/test; cd ..
 
 after_success:
   # Report coverage results to codecov.io
