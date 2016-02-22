@@ -66,9 +66,32 @@ def test_gen_json(input_p4):
     assert json_dict
 
 
-# def list_files(dirname, ext):
-#     files = os.listdir(dirname)
-#     return [f for f in files if os.path.splitext(f)[1] == ext]
+def list_files(dirname, ext):
+    files = os.listdir(dirname)
+    return [os.path.join(dirname, f)
+            for f in files if os.path.splitext(f)[1] == ext]
+
+
+@pytest.mark.parametrize(
+    "input_aliases",
+    list_files(os.path.join("tests", "testdata", "field_aliases"), ".txt"))
+def test_gen_json_field_aliases(input_aliases):
+    assert os.path.exists(input_aliases)
+
+    input_p4 = os.path.join("tests", "p4_programs", "triv_eth.p4")
+    assert os.path.exists(input_p4)
+    h = HLIR(input_p4)
+    assert h.build()
+
+    if "error" in input_aliases:
+        # make sure that the program exits
+        with pytest.raises(SystemExit):
+            gen_json.json_dict_create(h, input_aliases)
+    else:
+        assert "sample" in input_aliases
+        json_dict = gen_json.json_dict_create(h, input_aliases)
+        assert json_dict
+        assert "field_aliases" in json_dict
 
 
 @pytest.mark.parametrize("input_p4", list_p4_programs())
@@ -112,7 +135,7 @@ def call_main(options):
 
 
 def test_main(tmpdir):
-    input_p4 = "tests/p4_programs/triv_eth.p4"
+    input_p4 = os.path.join("tests", "p4_programs", "triv_eth.p4")
     assert call_main(["-h"]) == 0
     assert call_main(["--help"]) == 0
 
@@ -148,6 +171,11 @@ def test_main(tmpdir):
 
     # preprocessor flag
     assert call_main([input_p4, "-DANTONIN_ON"]) == 0
+
+    # field aliases
+    input_field_aliases = os.path.join("tests", "testdata",
+                                       "field_aliases", "sample_1.txt")
+    assert call_main([input_p4, "--field-aliases", input_field_aliases]) == 0
 
     # invalid option
     assert call_main([input_p4, "--nonsense"]) != 0

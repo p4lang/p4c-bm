@@ -49,6 +49,11 @@ def get_parser():
     parser.add_argument('--p4-prefix', type=str,
                         help='P4 name use for API function prefix',
                         default="prog", required=False)
+    parser.add_argument('--field-aliases', type=str,
+                        help='Path to file containing field aliases. '
+                        'In this file, each line contains a mapping with this '
+                        'format: "<alias> <full name of field>"',
+                        required=False)
     return parser
 
 
@@ -94,6 +99,11 @@ def main():
     if args.json:
         path_json = _validate_path(args.json)
 
+    if args.field_aliases:
+        path_field_aliases = _validate_path(args.field_aliases)
+    else:
+        path_field_aliases = None
+
     from_json = False
     if args.pd:
         path_pd = _validate_dir(args.pd)
@@ -120,7 +130,7 @@ def main():
             print "Error while building HLIR"
             sys.exit(1)
 
-        json_dict = gen_json.json_dict_create(h)
+        json_dict = gen_json.json_dict_create(h, path_field_aliases)
 
         if args.json:
             print "Generating json output to", path_json

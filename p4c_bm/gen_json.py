@@ -1046,7 +1046,40 @@ def dump_force_arith(json_dict, hlir):
     json_dict["force_arith"] = force_arith
 
 
-def json_dict_create(hlir):
+def dump_field_aliases(json_dict, hlir, path_field_aliases):
+    aliases_dict = OrderedDict()
+
+    with open(path_field_aliases, 'r') as f:
+        for l in f.readlines():
+            l = l.strip()  # remove new line character at the end
+            try:
+                alias, field = l.split()
+                header_name, field_name = field.split(".")
+            except:
+                LOG_CRITICAL(
+                    "invalid alias in '{}': '{}'".format(path_field_aliases, l))
+                continue
+
+            if field not in hlir.p4_fields:
+                LOG_CRITICAL(
+                    "file '{}' defines an alias for '{}', "
+                    "which is not a valid field in the P4 program".format(
+                        path_field_aliases, field))
+
+            if alias in aliases_dict:
+                LOG_WARNING(
+                    "file '{}' contains a duplicate alias: '{}'; "
+                    "latest definition will be used".format(
+                        path_field_aliases, alias))
+
+            aliases_dict[alias] = [header_name, field_name]
+
+    # TODO: should I use the dictionary directly instead?
+    field_aliases = [[a, v] for a, v in aliases_dict.items()]
+    json_dict["field_aliases"] = field_aliases
+
+
+def json_dict_create(hlir, path_field_aliases=None):
     # mostly needed for unit tests, I could write a more elegant solution...
     reset_static_vars()
     json_dict = OrderedDict()
@@ -1066,5 +1099,8 @@ def json_dict_create(hlir):
     dump_registers(json_dict, hlir)
 
     dump_force_arith(json_dict, hlir)
+
+    if path_field_aliases:
+        dump_field_aliases(json_dict, hlir, path_field_aliases)
 
     return json_dict

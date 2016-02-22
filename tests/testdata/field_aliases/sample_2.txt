@@ -1,0 +1,2 @@
+egress_port standard_metadata.egress_spec
+egress_port standard_metadata.egress_port
