@@ -195,4 +195,12 @@ p4_pd_mc_dissociate_ecmp(p4_pd_sess_hdl_t session,
   return 0;
 }
 
+p4_pd_status_t
+p4_pd_mc_update_port_prune_table(p4_pd_sess_hdl_t session,
+                                 int device,
+                                 uint16_t yid, uint8_t *port_map) {
+  (void) session; (void) device; (void) yid; (void) port_map;
+  return 0;
+}
+
 }

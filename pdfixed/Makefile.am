@@ -99,8 +99,6 @@ src/pd_notifications.cpp \
 src/pd_helpers.cpp \
 src/pd_pre.cpp \
 src/pd_static.cpp \
-src/pd_conn_mgr.h \
-src/pd_notifications.h \
 src/nn.h
 
 pdf_headers = \
@@ -108,11 +106,23 @@ pd/pd_pre.h \
 pd/pd_static.h \
 pd/pd_common.h
 
+# these are needed when compiling the P4-dependent PD
+pdf_int_headers = \
+src/pd_conn_mgr.h \
+src/pd_helpers.h \
+src/pd_notifications.h
+
 pdfixedpkgincludedir = $(pkgincludedir)/pdfixed
 
 nobase_pdfixedpkginclude_HEADERS = \
 $(pdf_headers) \
-thrift-src/pdfixed_rpc_server.h
+$(pdf_int_headers) \
+thrift-src/pdfixed_rpc_server.h \
+thrift/res.thrift
+
+# install this script in case it is needed
+pdfixedpkgpythondir = $(pkgpythondir)/pdfixed
+pdfixedpkgpython_PYTHON = $(top_srcdir)/pd_mk/split_pd_thrift.py
 
 lib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
 
