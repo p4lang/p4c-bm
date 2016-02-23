@@ -637,6 +637,13 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
 
         table_dict["default_action"] = None
 
+        # TODO: temporary, to ensure backwards compatibility
+        if hasattr(table, "base_default_next"):
+            table_dict["base_default_next"] = get_table_name(
+                table.base_default_next)
+        else:  # pragma: no cover
+            LOG_WARNING("Your 'p4-hlir' is out-of-date, consider updating")
+
         tables.append(table_dict)
 
     pipeline_dict["tables"] = tables
