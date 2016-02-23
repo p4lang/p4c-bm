@@ -26,6 +26,7 @@
 #include "pd/pd_learning.h"
 #include "pd/pd_meters.h"
 #include "pd/pd_counters.h"
+#include "pd/pd_mirroring.h"
 
 #ifdef __cplusplus
 extern "C" {

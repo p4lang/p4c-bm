@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "pd/pd_types.h"
 #include "pd/pd_static.h"
@@ -28,7 +29,7 @@
 
 #define PD_DEBUG 1
 
-// default is disbaled
+// default is disabled
 // #define HOST_BYTE_ORDER_CALLER
 
 extern pd_conn_mgr_t *conn_mgr_state;

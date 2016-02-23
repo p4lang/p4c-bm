@@ -130,6 +130,11 @@ p4_pd_mc_dissociate_ecmp(p4_pd_sess_hdl_t session,
                          p4_pd_entry_hdl_t grp_hdl,
                          p4_pd_entry_hdl_t ecmp_hdl);
 
+p4_pd_status_t
+p4_pd_mc_update_port_prune_table(p4_pd_sess_hdl_t session,
+                                 int device,
+                                 uint16_t yid, uint8_t *port_map);
+
 #ifdef __cplusplus
 }
 #endif
