@@ -16,6 +16,8 @@ Usage
 * To install p4c-bm on your machine:
 
   * :code:`sudo pip install -r requirements.txt`
+  * :code:`sudo pip install -r requirements_v1_1.txt` if you are interested in
+    compiling P4 v1.1 programs
   * :code:`sudo python setup.py install`
 
 
@@ -24,6 +26,7 @@ Usage
   * Try :code:`p4c-bmv2 -h`
   * :code:`--json` to generate a JSON representation of the P4 program
   * :code:`--pd` to generate the PD C++ code
+  * :code:`--p4-v1.1` if your input program is a P4 v1.1 program
 
 
 * Compiling the PD

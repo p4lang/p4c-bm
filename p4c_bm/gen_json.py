@@ -499,7 +499,7 @@ def match_type_to_str(p4_match_type):
         p4.p4_match_type.P4_MATCH_TERNARY: "ternary",
         p4.p4_match_type.P4_MATCH_VALID: "valid"
     }
-    if p4_match_type not in match_types_map:
+    if p4_match_type not in match_types_map:  # pragma: no cover
         LOG_CRITICAL("found invalid match type")
     return match_types_map[p4_match_type]
 
@@ -1095,7 +1095,6 @@ def dump_field_aliases(json_dict, hlir, path_field_aliases):
             except:
                 LOG_CRITICAL(
                     "invalid alias in '{}': '{}'".format(path_field_aliases, l))
-                continue
 
             if field not in hlir.p4_fields:
                 LOG_CRITICAL(
@@ -1129,7 +1128,7 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     reset_static_vars()
     json_dict = OrderedDict()
 
-    if p4_v1_1 and hlir.p4_extern_instances:
+    if p4_v1_1 and hlir.p4_extern_instances:  # pragma: no cover
         LOG_CRITICAL("no extern types supported by bmv2 yet")
         return json_dict
 

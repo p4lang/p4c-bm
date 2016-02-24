@@ -110,7 +110,7 @@ def main():
     if p4_v1_1:
         try:
             import p4_hlir_v1_1  # NOQA
-        except ImportError:
+        except ImportError:  # pragma: no cover
             print "You requested P4 v1.1 but the corresponding p4-hlir",\
                 "package does not seem to be installed"
             sys.exit(1)

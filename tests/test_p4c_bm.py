@@ -44,6 +44,12 @@ from p4c_bm import __main__
 from p4c_bm.util.topo_sorting import Graph
 from p4c_bm.util.tenjin_wrapper import MacroPreprocessor
 
+try:
+    from p4_hlir_v1_1.main import HLIR as HLIRv1_1
+    p4_v1_1_support = True
+except ImportError:
+    p4_v1_1_support = False
+
 
 def list_p4_programs():
     p4_programs_dir = "tests/p4_programs"
@@ -94,6 +100,23 @@ def test_gen_json_field_aliases(input_aliases):
         assert "field_aliases" in json_dict
 
 
+@pytest.mark.skipif(not p4_v1_1_support, reason="No P4 v1.1 support")
+@pytest.mark.parametrize(
+    "input_p4",
+    list_files(os.path.join("tests", "p4_programs", "v1_1"), ".p4"))
+def test_v1_1_gen_json(input_p4):
+    assert os.path.exists(input_p4)
+    h = HLIRv1_1(input_p4)
+    more_primitives = json.loads(
+        resource_string(__name__,
+                        os.path.join('..', 'p4c_bm', 'primitives_v1_1.json'))
+    )
+    h.add_primitives(more_primitives)
+    assert h.build()
+    json_dict = gen_json.json_dict_create(h, p4_v1_1=True)
+    assert json_dict
+
+
 @pytest.mark.parametrize("input_p4", list_p4_programs())
 def test_gen_pd(input_p4, tmpdir):
     assert os.path.exists(input_p4)
@@ -136,6 +159,8 @@ def call_main(options):
 
 def test_main(tmpdir):
     input_p4 = os.path.join("tests", "p4_programs", "triv_eth.p4")
+    input_p4_v1_1 = os.path.join("tests", "p4_programs", "v1_1", "misc.p4")
+
     assert call_main(["-h"]) == 0
     assert call_main(["--help"]) == 0
 
@@ -145,6 +170,9 @@ def test_main(tmpdir):
 
     tmp_json = tempfile.mkstemp(suffix=".json")
     assert call_main([input_p4, "--json", tmp_json[1]]) == 0
+
+    # v1.1
+    assert call_main([input_p4_v1_1, "--json", tmp_json[1], "--p4-v1.1"]) == 0
 
     # not a file, but a directory
     assert call_main([input_p4, "--json", str(tmpdir)]) != 0
