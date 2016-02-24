@@ -21,13 +21,14 @@
 # -*- coding: utf-8 -*-
 
 from collections import defaultdict, OrderedDict
-import p4_hlir.hlir.p4 as p4
 from util.topo_sorting import Graph
 import re
 from copy import copy
 import logging
 import sys
 
+
+p4 = None
 
 _STATIC_VARS = []
 
@@ -190,6 +191,18 @@ def format_field_ref(p4_field):
         return [header.name, p4_field.name]
     else:
         return [header.base_name, p4_field.name]
+
+
+# for p4 v1.1
+def is_register_ref(obj):
+    try:
+        return (type(obj) is p4.p4_register_ref)
+    except AttributeError:
+        return False
+
+
+def format_register_ref(p4_register_ref):
+    return [p4_register_ref.register_name, dump_expression(p4_register_ref.idx)]
 
 
 def build_match_value(widths, value):
@@ -434,6 +447,9 @@ def dump_expression(p4_expression):
     if type(p4_expression) is int:
         expression_dict["type"] = "hexstr"
         expression_dict["value"] = hex(p4_expression)
+    elif type(p4_expression) is p4.p4_sized_integer:
+        expression_dict["type"] = "hexstr"
+        expression_dict["value"] = hex(p4_expression)
     elif type(p4_expression) is bool:
         expression_dict["type"] = "bool"
         expression_dict["value"] = p4_expression
@@ -446,14 +462,19 @@ def dump_expression(p4_expression):
     elif type(p4_expression) is p4.p4_signature_ref:
         expression_dict["type"] = "local"
         expression_dict["value"] = p4_expression.idx
+    elif is_register_ref(p4_expression):
+        expression_dict["type"] = "register"
+        expression_dict["value"] = format_register_ref(p4_expression)
     else:
         expression_dict["type"] = "expression"
         expression_dict["value"] = OrderedDict()
-        expression_dict["value"]["op"] = p4_expression.op
-        expression_dict["value"]["left"] =\
-            dump_expression(p4_expression.left)
-        expression_dict["value"]["right"] =\
-            dump_expression(p4_expression.right)
+        if type(p4_expression.op) is p4.p4_expression:  # ternary operator
+            expression_dict["value"]["op"] = "?"
+            expression_dict["value"]["cond"] = dump_expression(p4_expression.op)
+        else:
+            expression_dict["value"]["op"] = p4_expression.op
+        expression_dict["value"]["left"] = dump_expression(p4_expression.left)
+        expression_dict["value"]["right"] = dump_expression(p4_expression.right)
 
         # expression_dict["op"] = p4_expression.op
         # expression_dict["left"] = dump_expression(p4_expression.left)
@@ -471,12 +492,16 @@ def get_nodes(pipe_ptr, node_set):
         get_nodes(next_node, node_set)
 
 
-match_types_map = {
-    p4.p4_match_type.P4_MATCH_EXACT: "exact",
-    p4.p4_match_type.P4_MATCH_LPM: "lpm",
-    p4.p4_match_type.P4_MATCH_TERNARY: "ternary",
-    p4.p4_match_type.P4_MATCH_VALID: "valid"
-}
+def match_type_to_str(p4_match_type):
+    match_types_map = {
+        p4.p4_match_type.P4_MATCH_EXACT: "exact",
+        p4.p4_match_type.P4_MATCH_LPM: "lpm",
+        p4.p4_match_type.P4_MATCH_TERNARY: "ternary",
+        p4.p4_match_type.P4_MATCH_VALID: "valid"
+    }
+    if p4_match_type not in match_types_map:
+        LOG_CRITICAL("found invalid match type")
+    return match_types_map[p4_match_type]
 
 
 def get_table_match_type(p4_table):
@@ -484,9 +509,7 @@ def get_table_match_type(p4_table):
     for _, m_type, _ in p4_table.match_fields:
         if m_type == p4.p4_match_type.P4_MATCH_RANGE:  # pragma: no cover
             LOG_CRITICAL("'range' match type is not supported by bmv2 yet")
-        elif m_type not in match_types_map:  # pragma: no cover
-            LOG_CRITICAL("found invalid match type")
-        match_types.append(match_types_map[m_type])
+        match_types.append(match_type_to_str(m_type))
 
     if len(match_types) == 0:
         match_type = "exact"
@@ -592,7 +615,7 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         key = []
         for field_ref, m_type, mask in table.match_fields:
             key_field = OrderedDict()
-            match_type = match_types_map[m_type]
+            match_type = match_type_to_str(m_type)
             key_field["match_type"] = match_type
             if(match_type == "valid"):
                 if isinstance(field_ref, p4.p4_field):
@@ -772,6 +795,10 @@ def dump_actions(json_dict, hlir):
                 if type(arg) is int or type(arg) is long:
                     arg_dict["type"] = "hexstr"
                     arg_dict["value"] = hex(arg)
+                elif type(arg) is p4.p4_sized_integer:
+                    # TODO(antonin)
+                    arg_dict["type"] = "hexstr"
+                    arg_dict["value"] = hex(arg)
                 elif type(arg) is p4.p4_field:
                     arg_dict["type"] = "field"
                     arg_dict["value"] = format_field_ref(arg)
@@ -805,6 +832,9 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_expression:
                     arg_dict["type"] = "expression"
                     arg_dict["value"] = dump_expression(arg)
+                elif is_register_ref(arg):
+                    arg_dict["type"] = "register"
+                    arg_dict["value"] = format_register_ref(arg)
                 else:  # pragma: no cover
                     LOG_CRITICAL("action arg type is not supported: %s",
                                  type(arg))
@@ -1086,10 +1116,23 @@ def dump_field_aliases(json_dict, hlir, path_field_aliases):
     json_dict["field_aliases"] = field_aliases
 
 
-def json_dict_create(hlir, path_field_aliases=None):
+def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
+    # a bit hacky: import the correct HLIR based on the P4 version
+    import importlib
+    global p4
+    if p4_v1_1:
+        p4 = importlib.import_module("p4_hlir_v1_1.hlir.p4")
+    else:
+        p4 = importlib.import_module("p4_hlir.hlir.p4")
+
     # mostly needed for unit tests, I could write a more elegant solution...
     reset_static_vars()
     json_dict = OrderedDict()
+
+    if p4_v1_1 and hlir.p4_extern_instances:
+        LOG_CRITICAL("no extern types supported by bmv2 yet")
+        return json_dict
+
     dump_header_types(json_dict, hlir)
     dump_headers(json_dict, hlir)
     dump_header_stacks(json_dict, hlir)
