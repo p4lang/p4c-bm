@@ -16,6 +16,8 @@ Usage
 * To install p4c-bm on your machine:
 
   * :code:`sudo pip install -r requirements.txt`
+  * :code:`sudo pip install -r requirements_v1_1.txt` if you are interested in
+    compiling P4 v1.1 programs
   * :code:`sudo python setup.py install`
 
 
@@ -24,6 +26,7 @@ Usage
   * Try :code:`p4c-bmv2 -h`
   * :code:`--json` to generate a JSON representation of the P4 program
   * :code:`--pd` to generate the PD C++ code
+  * :code:`--p4-v1.1` if your input program is a P4 v1.1 program
 
 
 * Compiling the PD
@@ -56,6 +59,10 @@ Usage
   * :code:`./configure --with-pd-mk`
   * :code:`make 'P4_PATH=<absolute_path_to_p4_program>'
     'P4_PREFIX=<prefix_for_apis>'`
+
+  If you are compiling a P4 v1.1 program, you also need to define the
+  `P4_OPTIONS` environment variable and set it to `--p4-v1.1`. Note that PD
+  support for P4 v1.1 is only experimental.
 
   Because the PD library and PD headers location is independent of the P4
   program you are compiling, generating them for a different P4 program may

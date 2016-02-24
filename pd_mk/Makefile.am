@@ -58,11 +58,12 @@ $(builddir)/p4_pd/thrift-src/pd_rpc_server.h
 # automake does not report it as non-portable
 P4_PREFIX ?= test
 P4_PATH ?= $(top_srcdir)/pd_mk/tests/test.p4
+P4_OPTIONS ?=
 
 pd_files-sanitize :
-	@echo $(AAA)
 	@echo "$(P4_PATH)" > .bmv2-pd-sane.tmp
 	@echo "$(P4_PREFIX)" >> .bmv2-pd-sane.tmp
+	@echo "$(P4_OPTIONS)" >> .bmv2-pd-sane.tmp
 	@if test -f .bmv2-pd-sane; then :; else \
 		touch .bmv2-pd-sane;\
 	fi
@@ -77,7 +78,7 @@ pd_files-sanitize :
 pd_files.ts : $(P4_PATH) $(template_files) | pd_files-sanitize
 	@rm -f pd_files.tmp
 	@touch pd_files.tmp
-	$(top_srcdir)/p4c_bm/__main__.py --pd $(builddir)/p4_pd/ --p4-prefix $(P4_PREFIX) $(P4_PATH)
+	$(top_srcdir)/p4c_bm/__main__.py --pd $(builddir)/p4_pd/ --p4-prefix $(P4_PREFIX) $(P4_OPTIONS) $(P4_PATH)
 	@mv -f pd_files.tmp $@
 $(pd_files) $(pd_p4_IDL) $(pd_p4_src) : pd_files.ts
 ## Recover from the removal of $@

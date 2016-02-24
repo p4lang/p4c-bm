@@ -25,7 +25,6 @@
 import argparse
 import os
 import sys
-from p4_hlir.main import HLIR
 import gen_json
 import gen_pd
 import json
@@ -54,6 +53,9 @@ def get_parser():
                         'In this file, each line contains a mapping with this '
                         'format: "<alias> <full name of field>"',
                         required=False)
+    parser.add_argument('--p4-v1.1', action='store_true',
+                        help='Run the compiler on a p4 v1.1 program',
+                        default=False, required=False)
     return parser
 
 
@@ -104,6 +106,15 @@ def main():
     else:
         path_field_aliases = None
 
+    p4_v1_1 = getattr(args, 'p4_v1.1')
+    if p4_v1_1:
+        try:
+            import p4_hlir_v1_1  # NOQA
+        except ImportError:  # pragma: no cover
+            print "You requested P4 v1.1 but the corresponding p4-hlir",\
+                "package does not seem to be installed"
+            sys.exit(1)
+
     from_json = False
     if args.pd:
         path_pd = _validate_dir(args.pd)
@@ -117,20 +128,25 @@ def main():
         with open(args.source, 'r') as f:
             json_dict = json.load(f)
     else:
+        if p4_v1_1:
+            from p4_hlir_v1_1.main import HLIR
+            primitives_res = 'primitives_v1_1.json'
+        else:
+            from p4_hlir.main import HLIR
+            primitives_res = 'primitives.json'
+
         h = HLIR(args.source)
         h.add_preprocessor_args("-D__TARGET_BMV2__")
         for parg in preprocessor_args:
             h.add_preprocessor_args(parg)
         # in addition to standard P4 primitives
-        more_primitives = json.loads(
-            resource_string(__name__, 'primitives.json')
-        )
+        more_primitives = json.loads(resource_string(__name__, primitives_res))
         h.add_primitives(more_primitives)
         if not h.build(analyze=False):
             print "Error while building HLIR"
             sys.exit(1)
 
-        json_dict = gen_json.json_dict_create(h, path_field_aliases)
+        json_dict = gen_json.json_dict_create(h, path_field_aliases, p4_v1_1)
 
         if args.json:
             print "Generating json output to", path_json
