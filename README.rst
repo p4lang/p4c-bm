@@ -60,6 +60,10 @@ Usage
   * :code:`make 'P4_PATH=<absolute_path_to_p4_program>'
     'P4_PREFIX=<prefix_for_apis>'`
 
+  If you are compiling a P4 v1.1 program, you also need to define the
+  `P4_OPTIONS` environment variable and set it to `--p4-v1.1`. Note that PD
+  support for P4 v1.1 is only experimental.
+
   Because the PD library and PD headers location is independent of the P4
   program you are compiling, generating them for a different P4 program may
   overwrite previous files. You can avoid this by using a different build
