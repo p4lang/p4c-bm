@@ -123,8 +123,12 @@ uninstall_p4c_bm:
 	rm -rf $(PFX)$(libdir)/python$(PYTHON_VERSION)/site-packages/p4c_bm*
 	rm $(PFX)$(datadir)/p4c_bm_install_files.txt
 
-data_DATA = $(builddir)/p4c_bm_install_files.txt
+# Expose the installed python package as a data file to Yocto
+data_DATA = $(builddir)/p4c_bm_install.tar.gz
 
+$(data_DATA):
+	tar cvzf $@ -C $(PFX) $(libdir)/python$(PYTHON_VERSION)/site-packages/p4c_bm* $(bindir)/p4c-bmv2
+	
 .PHONY: uninstall_p4c_bm p4c_bm_install_files.txt
 
 CLEANFILES = \
