@@ -52,10 +52,10 @@ ${name}
 
   // TODO: try / catch block
 //::   if ca.is_direct:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_read_counter(
+  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_mt_read_counter(
       value, 0, "${ca.table}", entry_hdl);
 //::   else:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_counter_read(
+  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_counter_read(
       value, 0, "${ca_name}", index);
 //::   #endif
 
@@ -86,10 +86,10 @@ ${name}
 
   // TODO: try / catch block
 //::   if ca.is_direct:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_mt_write_counter(
+  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_mt_write_counter(
       0, "${ca.table}", entry_hdl, value);
 //::   else:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id)->bm_counter_write(
+  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_counter_write(
       0, "${ca_name}", index, value);
 //::   #endif
 

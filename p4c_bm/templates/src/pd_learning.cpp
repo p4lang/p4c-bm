@@ -158,7 +158,7 @@ p4_pd_status_t ${pd_prefix}set_learning_timeout
     // RPC function is called for each learn list
     // bmv2 also takes a timeout in ms, thus the "/ 1000"
 //:: for lq_name, lq in learn_quantas.items():
-    pd_conn_mgr_client(conn_mgr_state, device_id)->bm_learning_set_timeout(
+    pd_conn_mgr_client(conn_mgr_state, device_id).c->bm_learning_set_timeout(
         0, ${lq.id_}, usecs / 1000);
 //:: #endfor
   } catch (InvalidLearnOperation &ilo) {
@@ -208,7 +208,7 @@ p4_pd_status_t ${pd_prefix}${lq_name}_notify_ack
  ${pd_prefix}${lq_name}_digest_msg_t *msg
 ) {
   assert(my_devices[msg->dev_tgt.device_id]);
-  pd_conn_mgr_client(conn_mgr_state, msg->dev_tgt.device_id)->bm_learning_ack_buffer(
+  pd_conn_mgr_client(conn_mgr_state, msg->dev_tgt.device_id).c->bm_learning_ack_buffer(
       0, ${lq.id_}, msg->buffer_id);
   return 0;
 }

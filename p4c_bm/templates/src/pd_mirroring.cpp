@@ -52,8 +52,8 @@ int ${pd_prefix}mirror_session_create(p4_pd_sess_hdl_t shdl,
   (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos;
   (void) c2c; (void) extract_len; (void) timeout_usec; (void) int_hdr;
   (void) int_hdr_len;
-  SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
-  return client->mirroring_mapping_add(id, egr_port);
+  auto client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
+  return client.c->mirroring_mapping_add(id, egr_port);
 }
 
 int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
@@ -73,8 +73,8 @@ int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
   (void) shdl; (void) type; (void) dir; (void) max_pkt_len; (void) cos;
   (void) c2c; (void) extract_len; (void) timeout_usec; (void) int_hdr;
   (void) int_hdr_len; (void) enable;
-  SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
-  return client->mirroring_mapping_add(id, egr_port);
+  auto client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
+  return client.c->mirroring_mapping_add(id, egr_port);
 }
 
 // TODO: remove
@@ -87,8 +87,8 @@ int ${pd_prefix}mirror_session_delete(p4_pd_sess_hdl_t shdl,
                                       p4_pd_dev_target_t dev_tgt,
                                       p4_pd_mirror_id_t mirror_id) {
   (void) shdl;
-  SSwitchClient *client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
-  return client->mirroring_mapping_delete(mirror_id);
+  auto client = pd_conn_mgr_sswitch_client(conn_mgr_state, dev_tgt.device_id);
+  return client.c->mirroring_mapping_delete(mirror_id);
 }
 
 int ${pd_prefix}mirroring_mapping_get_egress_port(int mirror_id) {

@@ -33,26 +33,26 @@ using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
 
-struct client_t {
-  StandardClient *client;
-  McClient *mc_client;
-  SSwitchClient *sswitch_client;
+struct ClientImp {
+  StandardClient *client{nullptr};
+  SimplePreLAGClient *mc_client{nullptr};
+  SimpleSwitchClient *sswitch_client{nullptr};
+  std::mutex mutex{};
 };
 
-struct pd_conn_mgr_s {
-  client_t clients[NUM_DEVICES];
+struct pd_conn_mgr_t {
+  std::array<ClientImp, NUM_DEVICES> clients;
   boost::shared_ptr<TTransport> transports[NUM_DEVICES];
 };
 
 pd_conn_mgr_t *pd_conn_mgr_create() {
-  pd_conn_mgr_t *conn_mgr_state = (pd_conn_mgr_t *) malloc(sizeof(pd_conn_mgr_t));
-  memset(conn_mgr_state->clients, 0, sizeof(conn_mgr_state->clients));
+  pd_conn_mgr_t *conn_mgr_state = new pd_conn_mgr_t();
   return conn_mgr_state;
 }
 
 void pd_conn_mgr_destroy(pd_conn_mgr_t *conn_mgr_state) {
   // close connections?
-  free(conn_mgr_state);
+  delete conn_mgr_state;
 }
 
 int pd_conn_mgr_client_init(pd_conn_mgr_t *conn_mgr_state,
@@ -74,9 +74,12 @@ int pd_conn_mgr_client_init(pd_conn_mgr_t *conn_mgr_state,
   );
 
   conn_mgr_state->transports[dev_id] = transport;
-  conn_mgr_state->clients[dev_id].client = new StandardClient(standard_protocol);
-  conn_mgr_state->clients[dev_id].mc_client = new McClient(mc_protocol);
-  conn_mgr_state->clients[dev_id].sswitch_client = new SSwitchClient(sswitch_protocol);
+  conn_mgr_state->clients[dev_id].client =
+      new StandardClient(standard_protocol);
+  conn_mgr_state->clients[dev_id].mc_client =
+      new SimplePreLAGClient(mc_protocol);
+  conn_mgr_state->clients[dev_id].sswitch_client =
+      new SimpleSwitchClient(sswitch_protocol);
 
   try {
     transport->open();
@@ -101,17 +104,20 @@ int pd_conn_mgr_client_close(pd_conn_mgr_t *conn_mgr_state, int dev_id) {
   return 0;
 }
 
-Client *pd_conn_mgr_client(pd_conn_mgr_t *conn_mgr_state,
-			   int dev_id) {
-  return conn_mgr_state->clients[dev_id].client;
+Client pd_conn_mgr_client(pd_conn_mgr_t *conn_mgr_state,
+                          int dev_id) {
+  auto &state = conn_mgr_state->clients[dev_id];
+  return {state.client, std::unique_lock<std::mutex>(state.mutex)};
 }
 
-McClient *pd_conn_mgr_mc_client(pd_conn_mgr_t *conn_mgr_state,
-				int dev_id) {
-  return conn_mgr_state->clients[dev_id].mc_client;
+McClient pd_conn_mgr_mc_client(pd_conn_mgr_t *conn_mgr_state,
+                               int dev_id) {
+  auto &state = conn_mgr_state->clients[dev_id];
+  return {state.mc_client, std::unique_lock<std::mutex>(state.mutex)};
 }
 
-SSwitchClient *pd_conn_mgr_sswitch_client(pd_conn_mgr_t *conn_mgr_state,
-					  int dev_id) {
-  return conn_mgr_state->clients[dev_id].sswitch_client;
+SSwitchClient pd_conn_mgr_sswitch_client(pd_conn_mgr_t *conn_mgr_state,
+                                         int dev_id) {
+  auto &state = conn_mgr_state->clients[dev_id];
+  return {state.sswitch_client, std::unique_lock<std::mutex>(state.mutex)};
 }
