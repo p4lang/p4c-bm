@@ -127,7 +127,7 @@ uninstall_p4c_bm:
 data_DATA = $(builddir)/p4c_bm_install.tar.gz
 
 $(data_DATA):
-	tar cvzf $@ -C $(PFX) $(libdir)/python$(PYTHON_VERSION)/site-packages/p4c_bm* $(bindir)/p4c-bmv2
+	-@tar cvzf $@ $(PFX)$(libdir)/python$(PYTHON_VERSION)/site-packages/p4c_bm* $(PFX)$(bindir)/p4c-bmv2
 	
 .PHONY: uninstall_p4c_bm p4c_bm_install_files.txt
 
