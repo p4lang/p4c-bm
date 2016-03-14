@@ -32,7 +32,7 @@ _TENJIN_PREFIX = "//::"  # Use // in prefix for C syntax processing
 _THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 _TEMPLATES_DIR = os.path.join(_THIS_DIR, "templates")
-
+_PLUGIN_BASE_DIR = os.path.join(_THIS_DIR, "plugin/")
 
 TABLES = {}
 ACTIONS = {}
@@ -275,7 +275,7 @@ def gen_file_lists(current_dir, gen_dir):
     return files_out
 
 
-def render_all_files(render_dict, gen_dir):
+def render_all_files(render_dict, gen_dir, plugin_list=[]):
     files = gen_file_lists(_TEMPLATES_DIR, gen_dir)
     for template, target in files:
         path = os.path.dirname(target)
@@ -284,6 +284,18 @@ def render_all_files(render_dict, gen_dir):
         with open(target, "w") as f:
             render_template(f, template, render_dict, _TEMPLATES_DIR,
                             prefix=_TENJIN_PREFIX)
+    if len(plugin_list) > 0:
+        for s in plugin_list:
+            plugin_dir =  _PLUGIN_BASE_DIR + s
+            plugin_files = gen_file_lists(plugin_dir,
+                                          gen_dir+'/plugin/'+s)
+            for template, target in plugin_files:
+                path = os.path.dirname(target)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                with open(target, "w") as f:
+                    render_template(f, template, render_dict, plugin_dir,
+                                    prefix=_TENJIN_PREFIX)
 
 
 def _validate_dir(dir_name):
@@ -353,12 +365,16 @@ def get_thrift_type(byte_width):
         return "binary"
 
 
-def generate_pd_source(json_dict, dest_dir, p4_prefix):
+def generate_pd_source(args):
     TABLES.clear()
     ACTIONS.clear()
     LEARN_QUANTAS.clear()
     METER_ARRAYS.clear()
     COUNTER_ARRAYS.clear()
+
+    json_dict = args.source 
+    dest_dir = args.pd
+    p4_prefix = args.p4_prefix
 
     load_json(json_dict)
     render_dict = {}
@@ -379,4 +395,9 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix):
     render_dict["meter_arrays"] = METER_ARRAYS
     render_dict["counter_arrays"] = COUNTER_ARRAYS
     render_dict["render_dict"] = render_dict
-    render_all_files(render_dict, _validate_dir(dest_dir))
+
+    if args.openflow_mapping_dir and args.openflow_mapping_mod:
+        sys.path.append(args.openflow_mapping_dir)
+        render_dict['openflow_mapping_mod'] = args.openflow_mapping_mod
+
+    render_all_files(render_dict, _validate_dir(dest_dir), args.plugin_list)

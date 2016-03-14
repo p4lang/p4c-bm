@@ -56,6 +56,13 @@ def get_parser():
     parser.add_argument('--p4-v1.1', action='store_true',
                         help='Run the compiler on a p4 v1.1 program',
                         default=False, required=False)
+    parser.add_argument('--plugin', dest='plugin_list', action="append",
+                        default = [],
+                        help="list of plugins to generate templates")
+    parser.add_argument('--openflow-mapping-dir',
+                        help="Directory of openflow mapping files")
+    parser.add_argument('--openflow-mapping-mod',
+                        help="Openflow mapping module name -- not a file name")
     return parser
 
 
@@ -117,7 +124,7 @@ def main():
 
     from_json = False
     if args.pd:
-        path_pd = _validate_dir(args.pd)
+        args.pd = _validate_dir(args.pd)
         if args.pd_from_json:
             if not os.path.exists(args.source):
                 print "Invalid JSON source"
@@ -126,7 +133,7 @@ def main():
 
     if from_json:
         with open(args.source, 'r') as f:
-            json_dict = json.load(f)
+            args.source = json.load(f)
     else:
         if p4_v1_1:
             from p4_hlir_v1_1.main import HLIR
@@ -146,16 +153,16 @@ def main():
             print "Error while building HLIR"
             sys.exit(1)
 
-        json_dict = gen_json.json_dict_create(h, path_field_aliases, p4_v1_1)
+        args.source = gen_json.json_dict_create(h, path_field_aliases, p4_v1_1)
 
         if args.json:
             print "Generating json output to", path_json
             with open(path_json, 'w') as fp:
-                json.dump(json_dict, fp, indent=4, separators=(',', ': '))
+                json.dump(args.source, fp, indent=4, separators=(',', ': '))
 
     if args.pd:
-        print "Generating PD source files in", path_pd
-        gen_pd.generate_pd_source(json_dict, path_pd, args.p4_prefix)
+        print "Generating PD source files in", args.pd 
+        gen_pd.generate_pd_source(args)
 
 
 if __name__ == "__main__":  # pragma: no cover

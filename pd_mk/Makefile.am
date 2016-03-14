@@ -25,11 +25,13 @@ $(top_srcdir)/p4c_bm/templates/thrift/p4_pd_rpc.thrift \
 $(top_srcdir)/p4c_bm/templates/thrift-src/p4_pd_rpc_server.ipp \
 $(top_srcdir)/p4c_bm/templates/thrift-src/pd_rpc_server.cpp
 
+template_plugin_files =
+
 template_files = \
 $(template_cpp_files) \
 $(template_h_files) \
-$(template_thrift_files)
-
+$(template_thrift_files) \
+$(template_plugin_files)
 
 pd_files = \
 p4_pd/src/pd.cpp \
@@ -48,6 +50,9 @@ p4_pd/pd/pd_counters.h \
 p4_pd/pd/pd_tables.h \
 p4_pd/pd/pd_types.h \
 p4_pd/pd/pd_mirroring.h
+
+plugin_files =
+plugin_headers =
 
 pd_p4_IDL = p4_pd/thrift/p4_pd_rpc.thrift
 pd_p4_src = \
@@ -75,12 +80,12 @@ pd_files-sanitize :
 
 .PHONY : pd_files-sanitize
 
-pd_files.ts : $(P4_PATH) $(template_files) | pd_files-sanitize
+pd_files.ts : $(P4_PATH) $(template_files) $(template_plugin_files) | pd_files-sanitize
 	@rm -f pd_files.tmp
 	@touch pd_files.tmp
 	$(top_srcdir)/p4c_bm/__main__.py --pd $(builddir)/p4_pd/ --p4-prefix $(P4_PREFIX) $(P4_OPTIONS) $(P4_PATH)
 	@mv -f pd_files.tmp $@
-$(pd_files) $(pd_p4_IDL) $(pd_p4_src) : pd_files.ts
+$(pd_files) $(plugin_files) $(pd_p4_IDL) $(pd_p4_src) : pd_files.ts
 ## Recover from the removal of $@
 	@if test -f $@; then :; else \
 	  trap 'rm -rf pd_files.lock pd_files.ts' 1 2 13 15; \
@@ -124,7 +129,7 @@ pd_thrift_files.ts: $(pd_files) $(pd_p4_IDL) $(pd_res_IDL)
 	@mv -f pd_thrift_files.tmp $@
 $(pd_thrift_files): pd_thrift_files.ts
 ## Recover from the removal of $@
-	@if test -f $@; then :; else \
+	if test -f $@; then :; else \
 	  trap 'rm -rf pd_thrift_files.lock pd_thrift_files.ts' 1 2 13 15; \
 ## mkdir is a portable test-and-set
 	if mkdir pd_thrift_files.lock 2>/dev/null; then \
@@ -170,6 +175,7 @@ $(thrift_py_lzma)
 
 nobase_pkginclude_HEADERS = \
 $(pd_headers) \
+$(plugin_headers) \
 p4_pd/thrift-src/pd_rpc_server.h
 
 lib_LTLIBRARIES = libpd.la libpdthrift.la
@@ -186,6 +192,49 @@ AM_CPPFLAGS += -I$(top_srcdir)/pdfixed/src/
 AM_CPPFLAGS += -I$(builddir)/pd_thrift_gen/gen-cpp/
 AM_CPPFLAGS += -I$(builddir)/p4_pd/
 AM_CPPFLAGS += -I$(top_builddir)/pdfixed/bmv2_thrift_gen/gen-cpp/
+
+# Openflow plugin
+if COND_PLUGIN_OPENFLOW
+template_plugin_files += \
+$(top_srcdir)/p4c_bm/plugin/of/src/pd_wrappers.c    \
+$(top_srcdir)/p4c_bm/plugin/of/src/ofpat_groups.c   \
+$(top_srcdir)/p4c_bm/plugin/of/src/ofpat_state.c    \
+$(top_srcdir)/p4c_bm/plugin/of/src/ofpat_pipeline.c \
+$(top_srcdir)/p4c_bm/plugin/of/inc/pd_wrappers.h    \
+$(top_srcdir)/p4c_bm/plugin/of/inc/ofpat_groups.h   \
+$(top_srcdir)/p4c_bm/plugin/of/src/ofpat_state.h    \
+$(top_srcdir)/p4c_bm/plugin/of/inc/ofpat_pipeline.h \
+$(top_srcdir)/p4c_bm/plugin/of/inc/openflow.h
+
+of_sources = \
+p4_pd/plugin/of/src/pd_wrappers.c    \
+p4_pd/plugin/of/src/ofpat_groups.c   \
+p4_pd/plugin/of/src/ofpat_state.c    \
+p4_pd/plugin/of/src/ofpat_pipeline.c
+
+of_includes = \
+p4_pd/plugin/of/inc/pd_wrappers.h    \
+p4_pd/plugin/of/inc/ofpat_groups.h   \
+p4_pd/plugin/of/src/ofpat_state.h    \
+p4_pd/plugin/of/inc/ofpat_pipeline.h \
+p4_pd/plugin/of/inc/openflow.h
+
+plugin_files += $(of_sources) $(of_includes)
+plugin_headers += $(of_includes)
+
+lib_LTLIBRARIES += libof.la
+
+libof_la_SOURCES = $(of_sources) $(of_includes)
+
+# Flags for including from p4ofagent/indigo
+AM_CPPFLAGS += -D_BMV2_
+AM_CPPFLAGS += -I $(builddir)/../../p4ofagent
+AM_CPPFLAGS += -I $(builddir)/../../p4ofagent/inc
+AM_CPPFLAGS += -I $(builddir)/../../p4ofagent/submodules/indigo/modules/indigo/module/inc
+AM_CPPFLAGS += -I $(builddir)/../../p4ofagent/submodules/indigo/submodules/loxigen-artifacts/loci/inc
+AM_CPPFLAGS += -I $(builddir)/../../p4ofagent/submodules/indigo/submodules/infra/modules/AIM/module/inc
+AM_CPPFLAGS += -O0 -g
+endif
 
 CLEANFILES = $(BUILT_SOURCES) \
 pd_files.ts pd_thrift_files.ts \

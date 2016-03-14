@@ -23,6 +23,10 @@ AC_ARG_WITH([pd-mk],
 
 AM_CONDITIONAL([COND_PD_MK], [test "$want_pd_mk" = yes])
 
+# Enable Openflow
+AC_WITH([of], [want_of=yes], [])
+AM_CONDITIONAL([COND_PLUGIN_OPENFLOW], [test "$want_of" = yes])
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
