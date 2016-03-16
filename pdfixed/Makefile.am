@@ -124,13 +124,13 @@ thrift/res.thrift
 pdfixedpkgpythondir = $(pkgpythondir)/pdfixed
 pdfixedpkgpython_PYTHON = $(top_srcdir)/pd_mk/split_pd_thrift.py
 
-lib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
+lib_LTLIBRARIES = libbmpdfixed.la libbmpdfixedthrift.la
 
-libpdfixed_la_SOURCES = \
+libbmpdfixed_la_SOURCES = \
 $(pdf_files) \
 $(thrift_files)
 
-libpdfixedthrift_la_SOURCES = \
+libbmpdfixedthrift_la_SOURCES = \
 $(pdfixed_thrift_files) \
 thrift-src/pdfixed_rpc_server.cpp
 

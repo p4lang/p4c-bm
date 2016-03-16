@@ -10,6 +10,6 @@ test_CPPFLAGS += -I$(top_srcdir)/pdfixed/
 test_CPPFLAGS += -I$(top_builddir)/pdfixed/bmv2_thrift_gen/gen-cpp/
 
 test_LDFLAGS = -pthread -lthrift
-test_LDADD = $(top_builddir)/pdfixed/libpdfixed.la $(builddir)/../libpd.la
+test_LDADD = $(top_builddir)/pdfixed/libbmpdfixed.la $(builddir)/../libbmpd.la
 
 TESTS = ./run_tests.sh
