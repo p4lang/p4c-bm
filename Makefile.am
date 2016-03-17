@@ -13,7 +13,17 @@ SUBDIRS = . pdfixed $(MAYBE_PD_MK)
 # not using build, because it may conflict when someone simply runs setup.py
 BUILD_SUBDIR=build_setuptools
 
-all-local:
+# See http://www.gnu.org/software/autoconf/manual/autoconf-2.69/html_node/Installation-Directory-Variables.html
+edit = sed \
+	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
+
+p4c_bm/config.py: $(srcdir)/p4c_bm/config.py.in Makefile
+	rm -f $@ $@.tmp
+	$(edit) $< >$@.tmp
+	chmod a-w $@.tmp
+	mv $@.tmp $@
+
+all-local: p4c_bm/config.py
 	(cd $(srcdir); $(PYTHON) setup.py build \
 		--build-base $(shell readlink -f $(builddir))/$(BUILD_SUBDIR) \
 		--verbose)

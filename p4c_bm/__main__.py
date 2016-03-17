@@ -56,6 +56,10 @@ def get_parser():
     parser.add_argument('--p4-v1.1', action='store_true',
                         help='Run the compiler on a p4 v1.1 program',
                         default=False, required=False)
+    parser.add_argument('--pkgdatadir', action='store_true',
+                        help='Prints the data installation directory for the '
+                        'package, and exits immediately',
+                        default=False, required=False)
     return parser
 
 
@@ -97,6 +101,15 @@ def main():
     # trigger error
     if has_remaining_args:
         parser.parse_args(input_args)
+
+    if args.pkgdatadir:  # pragma: no cover
+        try:
+            import config
+        except ImportError:
+            print "Not supported"
+            sys.exit(1)
+        print config.__pkgdatadir__
+        sys.exit(0)
 
     if args.json:
         path_json = _validate_path(args.json)
