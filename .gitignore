@@ -90,3 +90,5 @@ pd_mk/p4_pd
 *.tar.gz
 
 build_setuptools
+
+p4c_bm/config.py
