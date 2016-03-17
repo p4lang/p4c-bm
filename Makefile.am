@@ -115,6 +115,9 @@ uninstall_p4c_bm:
 	rm -rf $(PFX)$(libdir)/python$(PYTHON_VERSION)/site-packages/p4c_bm*
 	rm $(PFX)$(datadir)/p4c_bm_install_files.txt
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = $(builddir)/p4c-libpdfixed.pc
+
 # Expose the installed python package as a data file to Yocto
 data_DATA = $(builddir)/p4c_bm_install.tar.gz
 

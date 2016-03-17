@@ -52,4 +52,5 @@ AC_LANG_POP(C++)
 
 # Generate makefiles
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([p4c-libpdfixed.pc])
 AC_OUTPUT

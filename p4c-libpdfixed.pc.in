@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: p4c-libpd
+Description: P4 Program Dependend Library
+Version: @VERSION@
+Libs: -L${libdir} -lpdfixed -lpdfixedthrift
+Cflags: -I${includedir}/pdfixed -I${includedir}/pdfixed/pd -I${includedir}/pdfixed/src

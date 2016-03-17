@@ -73,6 +73,7 @@ config.guess
 config.sub
 ltmain.sh
 libtool
+*.pc
 *.lo
 *.o
 *.la
