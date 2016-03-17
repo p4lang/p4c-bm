@@ -106,14 +106,6 @@ AM_CPPFLAGS += -I$(srcdir)/pd_thrift_gen/gen-cpp/
 
 all-local: pdfixed_thrift_files.ts $(lib_LTLIBRARIES) $(nobase_include_HEADERS)
 
-install-exec-hook: p4c_bm_install_files.txt
-
-p4c_bm_install_files.txt:
-	PYTHONPATH=$(PFX)$(libdir)/python$(PYTHON_VERSION)/site-packages \
-	$(PYTHON) ./setup.py install \
-		--prefix $(PFX)$(prefix) \
-		--record $(builddir)/p4c_bm_install_files.txt
-
 uninstall-hook: uninstall_p4c_bm
 clean-hook: uninstall_p4c_bm
 
