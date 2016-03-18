@@ -26,11 +26,14 @@ from setuptools.command.egg_info import egg_info
 
 class EggInfoCommand(egg_info):
     def run(self):
-        if "build" in self.distribution.command_obj:
-            build_command = self.distribution.command_obj["build"]
-            self.egg_base = build_command.build_base
-            self.egg_info = os.path.join(self.egg_base,
-                                         os.path.basename(self.egg_info))
+        # This does not work with older versions of setuptools
+        # See: https://bitbucket.org/pypa/setuptools/pull-requests/85/egg_info-search-egg-base-for-files-to-add/diff
+        # That means that we will fail if the source directory is read-only
+        # if "build" in self.distribution.command_obj:
+        #     build_command = self.distribution.command_obj["build"]
+        #     self.egg_base = build_command.build_base
+        #     self.egg_info = os.path.join(self.egg_base,
+        #                                  os.path.basename(self.egg_info))
         egg_info.run(self)
 
 setup(
