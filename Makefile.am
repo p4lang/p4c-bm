@@ -106,25 +106,8 @@ AM_CPPFLAGS += -I$(srcdir)/pd_thrift_gen/gen-cpp/
 
 all-local: pdfixed_thrift_files.ts $(lib_LTLIBRARIES) $(nobase_include_HEADERS)
 
-uninstall-hook: uninstall_p4c_bm
-clean-hook: uninstall_p4c_bm
-
-uninstall_p4c_bm:
-	cat $(PFX)$(datadir)/p4c_bm_install_files.txt | \
-		xargs rm -rf;
-	rm -rf $(PFX)$(libdir)/python$(PYTHON_VERSION)/site-packages/p4c_bm*
-	rm $(PFX)$(datadir)/p4c_bm_install_files.txt
-
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = $(builddir)/p4c-libpdfixed.pc
-
-# Expose the installed python package as a data file to Yocto
-data_DATA = $(builddir)/p4c_bm_install.tar.gz
-
-$(data_DATA):
-	-@tar cvzf $@ $(PFX)$(libdir)/python$(PYTHON_VERSION)/site-packages/p4c_bm* $(PFX)$(bindir)/p4c-bmv2
-	
-.PHONY: uninstall_p4c_bm p4c_bm_install_files.txt
 
 CLEANFILES = \
 pdfixed_thrift_files.ts $(pdfixed_thrift_files) \
