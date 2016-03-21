@@ -17,16 +17,22 @@ BUILD_SUBDIR=build_setuptools
 edit = sed \
 	-e 's|@pkgdatadir[@]|$(pkgdatadir)|g'
 
-p4c_bm/config.py: $(srcdir)/p4c_bm/config.py.in Makefile
+# This is bad, we generate a file to the source directory
+# However, right now it seems like my only option. I think it is time to make a
+# final decision between autotools and setuptools, because this mix is getting
+# messy.
+$(srcdir)/p4c_bm/config.py: $(srcdir)/p4c_bm/config.py.in Makefile
 	rm -f $@ $@.tmp
 	$(edit) $< >$@.tmp
 	chmod a-w $@.tmp
 	mv $@.tmp $@
 
-all-local: p4c_bm/config.py
+all-local:
 	(cd $(srcdir); $(PYTHON) setup.py build \
 		--build-base $(shell readlink -f $(builddir))/$(BUILD_SUBDIR) \
 		--verbose)
+
+all-local: $(srcdir)/p4c_bm/config.py
 
 # For install and clean, the build command has to be repeated, otherwise -b (or
 # --build-base) will be ignored
