@@ -40,5 +40,11 @@
 		    "data_width" : "field"
 		        }
 	    }
+    },
+    "exit" :
+    {
+	"num_args" : 0,
+	"args" : [],
+	"properties" : { }
     }
 }
