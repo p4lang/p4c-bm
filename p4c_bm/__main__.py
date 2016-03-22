@@ -63,6 +63,10 @@ def get_parser():
                         help="Directory of openflow mapping files")
     parser.add_argument('--openflow-mapping-mod',
                         help="Openflow mapping module name -- not a file name")
+    parser.add_argument('--pkgdatadir', action='store_true',
+                        help='Prints the data installation directory for the '
+                        'package, and exits immediately',
+                        default=False, required=False)
     return parser
 
 
@@ -104,6 +108,15 @@ def main():
     # trigger error
     if has_remaining_args:
         parser.parse_args(input_args)
+
+    if args.pkgdatadir:  # pragma: no cover
+        try:
+            import config
+        except ImportError:
+            print "Not supported"
+            sys.exit(1)
+        print config.__pkgdatadir__
+        sys.exit(0)
 
     if args.json:
         path_json = _validate_path(args.json)

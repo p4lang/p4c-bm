@@ -178,12 +178,12 @@ $(pd_headers) \
 $(plugin_headers) \
 p4_pd/thrift-src/pd_rpc_server.h
 
-lib_LTLIBRARIES = libpd.la libpdthrift.la
+lib_LTLIBRARIES = libbmpd.la libbmpdthrift.la
 
-libpd_la_SOURCES = \
+libbmpd_la_SOURCES = \
 $(pd_files)
 
-libpdthrift_la_SOURCES = \
+libbmpdthrift_la_SOURCES = \
 $(pd_thrift_files) \
 p4_pd/thrift-src/pd_rpc_server.cpp
 

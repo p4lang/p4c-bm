@@ -72,19 +72,20 @@ thrift_py_lzma = $(builddir)/gen-py.tar.lz
 $(thrift_py_lzma) : $(pdfixed_thrift_files)
 	tar --create -C $(builddir)/pd_thrift_gen/ gen-py/ | lzma > $(thrift_py_lzma)
 
-nobase_data_DATA = $(thrift_py_lzma)
+pdfixedpkgdatadir = $(pkgdatadir)/pdfixed
+nobase_pdfixedpkgdata_DATA = $(thrift_py_lzma)
 
 # See http://stackoverflow.com/questions/6395148/install-data-directory-tree-with-massive-number-of-files-using-automake
 
 install-data-hook:
-	cd $(DESTDIR)$(datadir); \
+	cd $(DESTDIR)$(pdfixedpkgdatadir); \
 	cat $(thrift_py_lzma) | unlzma | tar --list > uninstall_manifest.txt; \
 	cat $(thrift_py_lzma) | unlzma | tar --no-same-owner --extract; \
 	rm -f $(thrift_py_lzma); \
 	cat uninstall_manifest.txt | sed --expression='s/^\|$$/"/g' | xargs chmod a=rX,u+w
 
 uninstall-local:
-	cd $(DESTDIR)$(datadir); \
+	cd $(DESTDIR)$(pdfixedpkgdatadir); \
 	cat uninstall_manifest.txt | sed --expression='s/ /\\ /g' | xargs rm -f; \
 	rm -f uninstall_manifest.txt
 
@@ -124,13 +125,13 @@ thrift/res.thrift
 pdfixedpkgpythondir = $(pkgpythondir)/pdfixed
 pdfixedpkgpython_PYTHON = $(top_srcdir)/pd_mk/split_pd_thrift.py
 
-lib_LTLIBRARIES = libpdfixed.la libpdfixedthrift.la
+lib_LTLIBRARIES = libbmpdfixed.la libbmpdfixedthrift.la
 
-libpdfixed_la_SOURCES = \
+libbmpdfixed_la_SOURCES = \
 $(pdf_files) \
 $(thrift_files)
 
-libpdfixedthrift_la_SOURCES = \
+libbmpdfixedthrift_la_SOURCES = \
 $(pdfixed_thrift_files) \
 thrift-src/pdfixed_rpc_server.cpp
 
