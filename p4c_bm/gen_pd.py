@@ -392,8 +392,12 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix, args=None):
     render_dict["counter_arrays"] = COUNTER_ARRAYS
     render_dict["render_dict"] = render_dict
 
-    if args and args.openflow_mapping_dir and args.openflow_mapping_mod:
-        sys.path.append(args.openflow_mapping_dir)
-        render_dict['openflow_mapping_mod'] = args.openflow_mapping_mod
 
-    render_all_files(render_dict, _validate_dir(dest_dir), args.plugin_list)
+    plugin_list = []
+    if args and args.plugin_list:
+        plugin_list = args.plugin_list
+        if args.openflow_mapping_dir and args.openflow_mapping_mod:
+            sys.path.append(args.openflow_mapping_dir)
+            render_dict['openflow_mapping_mod'] = args.openflow_mapping_mod
+
+    render_all_files(render_dict, _validate_dir(dest_dir), plugin_list)
