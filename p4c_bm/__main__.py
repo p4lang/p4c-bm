@@ -137,7 +137,7 @@ def main():
 
     from_json = False
     if args.pd:
-        args.pd = _validate_dir(args.pd)
+        path_pd = _validate_dir(args.pd)
         if args.pd_from_json:
             if not os.path.exists(args.source):
                 print "Invalid JSON source"
@@ -146,7 +146,7 @@ def main():
 
     if from_json:
         with open(args.source, 'r') as f:
-            args.source = json.load(f)
+            json_dict = json.load(f)
     else:
         if p4_v1_1:
             from p4_hlir_v1_1.main import HLIR
@@ -166,16 +166,16 @@ def main():
             print "Error while building HLIR"
             sys.exit(1)
 
-        args.source = gen_json.json_dict_create(h, path_field_aliases, p4_v1_1)
+        json_dict = gen_json.json_dict_create(h, path_field_aliases, p4_v1_1)
 
         if args.json:
             print "Generating json output to", path_json
             with open(path_json, 'w') as fp:
-                json.dump(args.source, fp, indent=4, separators=(',', ': '))
+                json.dump(json_dict, fp, indent=4, separators=(',', ': '))
 
     if args.pd:
         print "Generating PD source files in", args.pd 
-        gen_pd.generate_pd_source(args)
+        gen_pd.generate_pd_source(json_dict, path_pd, args.prefix, args)
 
 
 if __name__ == "__main__":  # pragma: no cover

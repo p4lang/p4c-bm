@@ -365,16 +365,12 @@ def get_thrift_type(byte_width):
         return "binary"
 
 
-def generate_pd_source(args):
+def generate_pd_source(json_dict, dest_dir, p4_prefix, args=None):
     TABLES.clear()
     ACTIONS.clear()
     LEARN_QUANTAS.clear()
     METER_ARRAYS.clear()
     COUNTER_ARRAYS.clear()
-
-    json_dict = args.source 
-    dest_dir = args.pd
-    p4_prefix = args.p4_prefix
 
     load_json(json_dict)
     render_dict = {}
@@ -396,7 +392,7 @@ def generate_pd_source(args):
     render_dict["counter_arrays"] = COUNTER_ARRAYS
     render_dict["render_dict"] = render_dict
 
-    if args.openflow_mapping_dir and args.openflow_mapping_mod:
+    if args and args.openflow_mapping_dir and args.openflow_mapping_mod:
         sys.path.append(args.openflow_mapping_dir)
         render_dict['openflow_mapping_mod'] = args.openflow_mapping_mod
 
