@@ -174,7 +174,7 @@ def main():
                 json.dump(json_dict, fp, indent=4, separators=(',', ': '))
 
     if args.pd:
-        print "Generating PD source files in", args.pd 
+        print "Generating PD source files in", path_pd 
         gen_pd.generate_pd_source(json_dict, path_pd, args.prefix, args)
 
 
