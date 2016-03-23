@@ -57,7 +57,7 @@ def get_parser():
                         help='Run the compiler on a p4 v1.1 program',
                         default=False, required=False)
     parser.add_argument('--plugin', dest='plugin_list', action="append",
-                        default = [],
+                        default=[],
                         help="list of plugins to generate templates")
     parser.add_argument('--openflow-mapping-dir',
                         help="Directory of openflow mapping files")
