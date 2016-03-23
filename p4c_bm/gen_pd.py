@@ -286,7 +286,7 @@ def render_all_files(render_dict, gen_dir, plugin_list=[]):
                             prefix=_TENJIN_PREFIX)
     if len(plugin_list) > 0:
         for s in plugin_list:
-            plugin_dir =  _PLUGIN_BASE_DIR + s
+            plugin_dir = _PLUGIN_BASE_DIR + s
             plugin_files = gen_file_lists(plugin_dir,
                                           gen_dir+'/plugin/'+s)
             for template, target in plugin_files:
@@ -391,7 +391,6 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix, args=None):
     render_dict["meter_arrays"] = METER_ARRAYS
     render_dict["counter_arrays"] = COUNTER_ARRAYS
     render_dict["render_dict"] = render_dict
-
 
     plugin_list = []
     if args and args.plugin_list:
