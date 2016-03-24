@@ -32,7 +32,8 @@ of_match_vals["OFPXMT_OFB_IPV6_DST"] = "match_fields->fields.ipv6_dst"
 of_match_vals["OFPXMT_OFB_IPV6_FLABEL"] = "match_fields->fields.ipv6_flabel"
 of_match_vals["OFPXMT_OFB_ICMPV6_TYPE"] = "match_fields->fields.icmpv6_type"
 of_match_vals["OFPXMT_OFB_ICMPV6_CODE"] = "match_fields->fields.icmpv6_code"
-of_match_vals["OFPXMT_OFB_IPV6_ND_TARGET"] = "match_fields->fields.ipv6_nd_target"
+of_match_vals["OFPXMT_OFB_IPV6_ND_TARGET"] = ("match_fields->"
+                                             + "fields.ipv6_nd_target")
 of_match_vals["OFPXMT_OFB_IPV6_ND_SLL"] = "match_fields->fields.ipv6_nd_sll"
 of_match_vals["OFPXMT_OFB_IPV6_ND_TLL"] = "match_fields->fields.ipv6_nd_tll"
 of_match_vals["OFPXMT_OFB_MPLS_LABEL"] = "match_fields->fields.mpls_label"
@@ -42,7 +43,7 @@ of_match_vals["OFPXMT_OFB_PBB_ISID"] = "match_fields->fields.pbb_uca"
 of_match_vals["OFPXMT_OFB_TUNNEL_ID"] = "match_fields->fields.tunnel_id"
 of_match_vals["OFPXMT_OFB_IPV6_EXTHDR"] = "match_fields->fields.ipv6_exthdr"
 
-#OF Match masks
+# OF Match masks
 
 of_match_masks = {}
 of_match_masks["OFPXMT_OFB_IN_PORT"] = "match_fields->masks.in_port"
@@ -76,7 +77,8 @@ of_match_masks["OFPXMT_OFB_IPV6_DST"] = "match_fields->masks.ipv6_dst"
 of_match_masks["OFPXMT_OFB_IPV6_FLABEL"] = "match_fields->masks.ipv6_flabel"
 of_match_masks["OFPXMT_OFB_ICMPV6_TYPE"] = "match_fields->masks.icmpv6_type"
 of_match_masks["OFPXMT_OFB_ICMPV6_CODE"] = "match_fields->masks.icmpv6_code"
-of_match_masks["OFPXMT_OFB_IPV6_ND_TARGET"] = "match_fields->masks.ipv6_nd_target"
+of_match_masks["OFPXMT_OFB_IPV6_ND_TARGET"] = ("match_fields->"
+                                              + "masks.ipv6_nd_target")
 of_match_masks["OFPXMT_OFB_IPV6_ND_SLL"] = "match_fields->masks.ipv6_nd_sll"
 of_match_masks["OFPXMT_OFB_IPV6_ND_TLL"] = "match_fields->masks.ipv6_nd_tll"
 of_match_masks["OFPXMT_OFB_MPLS_LABEL"] = "match_fields->masks.mpls_label"
