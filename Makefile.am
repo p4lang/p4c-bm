@@ -90,15 +90,13 @@ $(more_pdf_headers)
 libpdfixed_la_SOURCES = \
 $(pdf_files)
 
-PFX ?= 
-BMV2_INC_DIR = $(PFX)/$(includedir)
-libpdfixed_la_CXXFLAGS = -I $(BMV2_INC_DIR) -std=c++11
+libpdfixed_la_CXXFLAGS = -std=c++11
 
 libpdfixedthrift_la_SOURCES = \
 $(pdfixed_thrift_files) \
 pdfixed/thrift-src/pdfixed_rpc_server.cpp
 
-libpdfixedthrift_la_CXXFLAGS = -I $(BMV2_INC_DIR) -std=c++11
+libpdfixedthrift_la_CXXFLAGS = -std=c++11
 
 AM_CPPFLAGS = -I$(srcdir)/pdfixed/
 AM_CPPFLAGS += -I$(srcdir)/pdfixed/src/
