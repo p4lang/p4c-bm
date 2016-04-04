@@ -140,5 +140,9 @@ AM_CPPFLAGS += -I$(srcdir)/src/
 AM_CPPFLAGS += -I$(builddir)/pd_thrift_gen/gen-cpp/
 AM_CPPFLAGS += -I$(builddir)/bmv2_thrift_gen/gen-cpp/
 
+if P4THRIFT
+    AM_CPPFLAGS += -DP4THRIFT
+endif
+
 CLEANFILES += $(BUILT_SOURCES) \
 pdfixed_thrift_files.ts

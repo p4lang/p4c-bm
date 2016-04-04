@@ -9,7 +9,11 @@ test_CPPFLAGS += -I$(top_srcdir)/pdfixed/
 # needed for thrift_endpoint
 test_CPPFLAGS += -I$(top_builddir)/pdfixed/bmv2_thrift_gen/gen-cpp/
 
-test_LDFLAGS = -pthread -lthrift
+if P4THRIFT
+    test_CPPFLAGS += -DP4THRIFT
+endif
+
+test_LDFLAGS = -pthread $(THRIFT_LIB) 
 test_LDADD = $(top_builddir)/pdfixed/libbmpdfixed.la $(builddir)/../libbmpd.la
 
 TESTS = ./run_tests.sh
