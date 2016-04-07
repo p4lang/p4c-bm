@@ -928,15 +928,33 @@ def dump_checksums(json_dict, hlir):
             for calculation in field_instance.calculation:
                 checksum_dict = OrderedDict()
                 type_, calc, if_cond = calculation
-                assert(calc.output_width == field_instance.width)
-                checksum_dict["name"] = field_name
+                if type_ == "verify":  # pragma: no cover
+                    LOG_WARNING(
+                        "The P4 program defines a checksum verification on "
+                        "field '{}'; as of now bmv2 ignores all checksum "
+                        "verifications; checksum updates are processed "
+                        "correctly.".format(field_name))
+                    continue
+                different_width = (calc.output_width != field_instance.width)
+                if different_width:  # pragma: no cover
+                    LOG_CRITICAL(
+                        "For checksum on field '{}', the field width is "
+                        "different from the calulation output width."
+                        .format(field_name))
+                # if we want the name to be unique, it has to (at least) include
+                # the name of teh calculation; however do we really need the
+                # name to be unique
+                checksum_dict["name"] = "|".join([field_name, calc.name])
                 checksum_dict["id"] = id_
                 id_ += 1
                 checksum_dict["target"] = field_ref
                 checksum_dict["type"] = "generic"
                 checksum_dict["calculation"] = calc.name
+                checksum_dict["if_cond"] = None
+                if if_cond is not None:
+                    assert(type(if_cond) is p4.p4_expression)
+                    checksum_dict["if_cond"] = dump_expression(if_cond)
                 checksums.append(checksum_dict)
-                break
 
     json_dict["checksums"] = checksums
 
