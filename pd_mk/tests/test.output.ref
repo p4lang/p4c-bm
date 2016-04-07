@@ -118,6 +118,8 @@ bm_mt_write_counter
 ExactOne
 18
 12 34
+bm_register_reset
+RegisterA
 mirroring_mapping_add
 11
 12

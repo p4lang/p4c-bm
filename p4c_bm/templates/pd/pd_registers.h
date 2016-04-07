@@ -18,30 +18,25 @@
  *
  */
 
-#ifndef _P4_PD_H_
-#define _P4_PD_H_
+#ifndef _P4_PD_REGISTERS_H_
+#define _P4_PD_REGISTERS_H_
 
 #include "pd/pd_static.h"
-#include "pd/pd_tables.h"
-#include "pd/pd_learning.h"
-#include "pd/pd_meters.h"
-#include "pd/pd_counters.h"
-#include "pd/pd_registers.h"
-#include "pd/pd_mirroring.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// I am not using sess_hdl for these functions, right thing to do?
+//:: for ra_name, ra in register_arrays.items():
+//::   name = pd_prefix + "register_reset_" + ra_name
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt
+);
 
-p4_pd_status_t ${pd_prefix}init(void);
-
-p4_pd_status_t ${pd_prefix}assign_device(int dev_id,
-                                         const char *notifications_addr,
-                                         int rpc_port_num);
-
-p4_pd_status_t ${pd_prefix}remove_device(int dev_id);
+//:: #endfor
 
 #ifdef __cplusplus
 }

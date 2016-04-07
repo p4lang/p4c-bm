@@ -232,6 +232,25 @@ table _CounterATable {
         _CounterAAction;
     }
     size: 512;
+}
+
+register RegisterA {
+    width : 32;
+    instance_count : 1024;
+}
+
+action _RegisterAAction() {
+    register_write(RegisterA, 10, 77);
+}
+
+table _RegisterATable {
+    reads {
+         header_test.field32 : exact;
+    }
+    actions {
+        _RegisterAAction;
+    }
+    size: 512;
 }    
 
 control ingress {
@@ -247,6 +266,7 @@ control ingress {
     apply(_MeterATable);
     apply(ExactOneAgeing);
     apply(_CounterATable);
+    apply(_RegisterATable);
 }
 
 control egress {
