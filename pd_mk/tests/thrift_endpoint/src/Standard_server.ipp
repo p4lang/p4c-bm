@@ -334,6 +334,16 @@ public:
     printf("bm_reset_state\n");
   }
 
+  void bm_get_config(std::string& _return) {
+    // Your implementation goes here
+    printf("bm_get_config\n");
+  }
+
+  void bm_get_config_md5(std::string& _return) {
+    // Your implementation goes here
+    printf("bm_get_config_md5\n");
+  }
+
 };
 
 } }
