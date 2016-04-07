@@ -435,6 +435,14 @@ service ${p4_prefix} {
 
 //:: #endfor
 
+    # registers
+
+//:: for ra_name, ra in register_arrays.items():
+//::   name = "register_reset_" + ra_name
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
+
+//:: #endfor
+
     # mirroring api
 
     i32 mirroring_mapping_add(1:i32 mirror_id, 2:i32 egress_port);
