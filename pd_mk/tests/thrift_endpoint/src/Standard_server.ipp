@@ -309,6 +309,16 @@ public:
     printf("bm_register_write\n");
   }
 
+  void bm_register_write_range(const int32_t cxt_id, const std::string& register_array_name, const int32_t from, const int32_t to, const BmRegisterValue value) {
+    // Your implementation goes here
+    printf("bm_register_write_range\n");
+  }
+
+  void bm_register_reset(const int32_t cxt_id, const std::string& register_array_name) {
+    std::cout << "bm_register_reset" << std::endl
+              << register_array_name << std::endl;
+  }
+
   void bm_dev_mgr_add_port(const std::string& iface_name, const int32_t port_num, const std::string& pcap_path) {
     // Your implementation goes here
     printf("bm_dev_mgr_add_port\n");

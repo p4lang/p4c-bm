@@ -28,6 +28,7 @@
 #include <pd/pd_tables.h>
 #include <pd/pd_meters.h>
 #include <pd/pd_counters.h>
+#include <pd/pd_registers.h>
 #include <pd/pd_static.h>
 #include <pd/pd.h>
 #include <pd/pd_pre.h>
@@ -194,6 +195,10 @@ int main() {
   // direct counter
   p4_pd_test_counter_read_ExactOne_counter(sess_hdl, dev_tgt, 18, 0);
   p4_pd_test_counter_write_ExactOne_counter(sess_hdl, dev_tgt, 18, counter_value);
+
+  /* registers */
+
+  p4_pd_test_register_reset_RegisterA(sess_hdl, dev_tgt);
 
   /* mirroring */
   p4_pd_test_mirror_session_create(sess_hdl, dev_tgt,
