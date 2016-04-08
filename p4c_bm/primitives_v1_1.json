@@ -5,20 +5,18 @@
         "args" : ["field", "value1", "value2"],
         "properties" : {
                 "field" : {
-                    "type" : ["field"],
+                    "type" : "int",
                     "access" : "write"
                 },
                 "value1" : {
-                    "type" : ["field", "int", "table_entry_data"],
-                    "access" : "read",
-                    "data_width" : "field"
+                    "type" : "int",
+                    "access" : "read"
                 },
                 "value2" : {
-                    "type" : ["field", "int", "table_entry_data"],
-                    "access" : "read",
-                    "data_width" : "field"
+                    "type" : "int",
+                    "access" : "read"
                 }
-            }
+        }
     },
     "shift_right" :
     {
@@ -26,20 +24,18 @@
         "args" : ["field", "value1", "value2"],
         "properties" : {
                 "field" : {
-                    "type" : ["field"],
+                    "type" : "int",
                     "access" : "write"
                 },
                 "value1" : {
-                    "type" : ["field", "int", "table_entry_data"],
-                    "access" : "read",
-                    "data_width" : "field"
+                    "type" : "int",
+                    "access" : "read"
                 },
                 "value2" : {
-                    "type" : ["field", "int", "table_entry_data"],
-                    "access" : "read",
-                    "data_width" : "field"
+                    "type" : "int",
+                    "access" : "read"
                 }
-            }
+        }
     },
     "exit" :
     {
@@ -53,18 +49,16 @@
         "args" : ["dst", "begin", "end"],
         "properties" : {
             "dst" : {
-                "type" : ["field"],
+                "type" : "int",
                 "access" : "write"
             },
             "begin" : {
-                "type" : ["field", "int", "table_entry_data"],
-                "access" : "read",
-                "data_width" : "dst"
+                "type" : "int",
+                "access" : "read"
             },
             "end" : {
-                "type" : ["field", "int", "table_entry_data"],
-                "access" : "read",
-                "data_width" : "dst"
+                "type" : "int",
+                "access" : "read"
             }
         }
     }
