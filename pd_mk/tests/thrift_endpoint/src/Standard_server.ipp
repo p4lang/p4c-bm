@@ -354,6 +354,11 @@ public:
     printf("bm_get_config_md5\n");
   }
 
+  void bm_serialize_state(std::string& _return) {
+    // Your implementation goes here
+    printf("bm_serialize_state\n");
+  }
+
 };
 
 } }
