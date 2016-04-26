@@ -56,6 +56,13 @@ def get_parser():
     parser.add_argument('--p4-v1.1', action='store_true',
                         help='Run the compiler on a p4 v1.1 program',
                         default=False, required=False)
+    parser.add_argument('--plugin', dest='plugin_list', action="append",
+                        default=[],
+                        help="list of plugins to generate templates")
+    parser.add_argument('--openflow-mapping-dir',
+                        help="Directory of openflow mapping files")
+    parser.add_argument('--openflow-mapping-mod',
+                        help="Openflow mapping module name -- not a file name")
     parser.add_argument('--pkgdatadir', action='store_true',
                         help='Prints the data installation directory for the '
                         'package, and exits immediately',
@@ -168,7 +175,7 @@ def main():
 
     if args.pd:
         print "Generating PD source files in", path_pd
-        gen_pd.generate_pd_source(json_dict, path_pd, args.p4_prefix)
+        gen_pd.generate_pd_source(json_dict, path_pd, args.p4_prefix, args)
 
 
 if __name__ == "__main__":  # pragma: no cover
