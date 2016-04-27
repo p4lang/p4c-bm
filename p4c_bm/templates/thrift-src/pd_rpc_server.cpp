@@ -3,10 +3,17 @@
 //:: pd_prefix = "p4_pd_" + p4_prefix + "_"
 //:: pd_static_prefix = "p4_pd_"
 //:: api_prefix = p4_prefix + "_"
+#ifdef P4THRIFT
+#include <p4thrift/processor/TMultiplexedProcessor.h>
 
+namespace thrift_provider = p4::thrift;
+#else
 #include <thrift/processor/TMultiplexedProcessor.h>
 
-using namespace ::apache::thrift;
+namespace thrift_provider = apache::thrift;
+#endif
+
+using namespace ::thrift_provider;
 
 using boost::shared_ptr;
 

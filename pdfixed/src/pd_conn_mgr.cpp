@@ -20,18 +20,29 @@
 
 #include <iostream>
 
+#ifdef P4THRIFT
+#include <p4thrift/protocol/TBinaryProtocol.h>
+#include <p4thrift/transport/TSocket.h>
+#include <p4thrift/transport/TTransportUtils.h>
+#include <p4thrift/protocol/TMultiplexedProtocol.h>
+
+namespace thrift_provider = p4::thrift;
+#else
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TTransportUtils.h>
 #include <thrift/protocol/TMultiplexedProtocol.h>
 
+namespace thrift_provider = apache::thrift;
+#endif
+
 #include "pd_conn_mgr.h"
 
 #define NUM_DEVICES 256
 
-using namespace ::apache::thrift;
-using namespace ::apache::thrift::protocol;
-using namespace ::apache::thrift::transport;
+using namespace ::thrift_provider;
+using namespace ::thrift_provider::protocol;
+using namespace ::thrift_provider::transport;
 
 struct ClientImp {
   StandardClient *client{nullptr};

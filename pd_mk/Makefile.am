@@ -191,6 +191,11 @@ AM_CPPFLAGS += -I$(builddir)/pd_thrift_gen/gen-cpp/
 AM_CPPFLAGS += -I$(builddir)/p4_pd/
 AM_CPPFLAGS += -I$(top_builddir)/pdfixed/bmv2_thrift_gen/gen-cpp/
 
+if P4THRIFT
+    AM_CPPFLAGS += -DP4THRIFT
+endif
+
+
 CLEANFILES = $(BUILT_SOURCES) \
 pd_files.ts pd_thrift_files.ts \
 .bmv2-pd-sane
