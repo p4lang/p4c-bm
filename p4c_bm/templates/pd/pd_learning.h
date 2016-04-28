@@ -21,8 +21,9 @@
 #ifndef _P4_PD_LEARNING_H_
 #define _P4_PD_LEARNING_H_
 
-#include "pd/pd_types.h"
-#include "pd/pd_common.h"
+#include <bm/pdfixed/pd_common.h>
+
+#include "pd_types.h"
 
 #ifdef __cplusplus
 extern "C" {

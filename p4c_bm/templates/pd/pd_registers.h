@@ -21,7 +21,7 @@
 #ifndef _P4_PD_REGISTERS_H_
 #define _P4_PD_REGISTERS_H_
 
-#include "pd/pd_static.h"
+#include <bm/pdfixed/pd_static.h>
 
 #ifdef __cplusplus
 extern "C" {

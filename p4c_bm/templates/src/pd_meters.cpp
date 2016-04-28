@@ -18,12 +18,11 @@
  *
  */
 
-#include <vector>
+#include <bm/pdfixed/pd_static.h>
+#include <bm/pdfixed/int/pd_conn_mgr.h>
+#include <bm/pdfixed/int/pd_helpers.h>
 
-#include "pd/pd_types.h"
-#include "pd/pd_static.h"
-#include "pd_conn_mgr.h"
-#include "pd_helpers.h"
+#include <vector>
 
 extern pd_conn_mgr_t *conn_mgr_state;
 extern int *my_devices;
