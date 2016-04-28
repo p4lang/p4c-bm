@@ -22,24 +22,10 @@ requirements = [
     'Tenjin'
 ]
 
-from setuptools.command.egg_info import egg_info
-
-class EggInfoCommand(egg_info):
-    def run(self):
-        # This does not work with older versions of setuptools
-        # See: https://bitbucket.org/pypa/setuptools/pull-requests/85/egg_info-search-egg-base-for-files-to-add/diff
-        # That means that we will fail if the source directory is read-only
-        # if "build" in self.distribution.command_obj:
-        #     build_command = self.distribution.command_obj["build"]
-        #     self.egg_base = build_command.build_base
-        #     self.egg_info = os.path.join(self.egg_base,
-        #                                  os.path.basename(self.egg_info))
-        egg_info.run(self)
-
 setup(
     name='p4c_bm',
     version=p4c_bm.__version__,
-    description="Generates the JSON configuration for the behavioral-model, as well as the PD C/C++ files if needed",
+    description="Generates the JSON configuration for the behavioral-model",
     long_description=readme + '\n\n' + history,
     author="Antonin Bas",
     author_email='antonin@barefootnetworks.com',
@@ -54,9 +40,6 @@ setup(
         'console_scripts': [
             'p4c-bmv2=p4c_bm.__main__:main',
         ],
-    },
-    cmdclass={
-        "egg_info": EggInfoCommand,
     },
     license="Apache",
     zip_safe=False,
