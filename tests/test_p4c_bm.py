@@ -208,9 +208,6 @@ def test_main(tmpdir):
     # invalid option
     assert call_main([input_p4, "--nonsense"]) != 0
 
-    # coverage only, no real check performed
-    call_main([input_p4, "--pkgdatadir"])
-
     os.remove(tmp_json[1])
 
 

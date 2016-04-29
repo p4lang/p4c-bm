@@ -91,4 +91,4 @@ pd_mk/p4_pd
 
 build_setuptools
 
-p4c_bm/config.py
+install_files.txt

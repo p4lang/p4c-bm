@@ -34,6 +34,13 @@ Usage
   * :code:`--p4-v1.1` if your input program is a P4 v1.1 program
 
 
+* To install in a non-default location, you can use:
+
+  * :code:`python setup.py build install --prefix <your_path>
+    [--single-version-externally-managed] --record install_files.txt`
+  * :code:`cat install_files.txt | xargs rm -rf` if you need to uninstall later
+    on
+
 ..
    Apache license
    --------------
