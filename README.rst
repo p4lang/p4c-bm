@@ -7,8 +7,13 @@ p4c-bm
 
 
 Generates the JSON configuration for the `behavioral-model (bmv2)
-<https://github.com/p4lang/behavioral-model>`_, as well as the PD (Protocol
-Dependent) library C/C++ files, if needed.
+<https://github.com/p4lang/behavioral-model>`_.
+
+Important: the PD has been moved out of this repository and split between the
+`bmv2 repository <https://github.com/p4lang/behavioral-model>`_ (for fixed part
+of the PD) and the new `p4-build repository
+<https://github.com/p4lang/p4-build>`_ (build infrastructure for the
+auto-generated / program-dependent part of the PD).
 
 Usage
 -----
