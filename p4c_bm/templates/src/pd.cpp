@@ -18,12 +18,12 @@
  *
  */
 
+#include <bm/pdfixed/int/pd_conn_mgr.h>
+#include <bm/pdfixed/int/pd_notifications.h>
+
 #include <cstring>
 
 #include "pd/pd.h"
-
-#include "pd_conn_mgr.h"
-#include "pd_notifications.h"
 
 extern pd_conn_mgr_t *conn_mgr_state;
 

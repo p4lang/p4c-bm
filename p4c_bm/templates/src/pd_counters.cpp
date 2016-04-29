@@ -18,9 +18,8 @@
  *
  */
 
-#include "pd/pd_types.h"
-#include "pd/pd_static.h"
-#include "pd_conn_mgr.h"
+#include <bm/pdfixed/pd_static.h>
+#include <bm/pdfixed/int/pd_conn_mgr.h>
 
 #include <thread>
 

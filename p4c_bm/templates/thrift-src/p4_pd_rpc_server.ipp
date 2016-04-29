@@ -8,11 +8,9 @@
 
 #include <string.h>
 
-extern "C" {
-#include <pd/pd_static.h>
-#include <pd/pd.h>
-#include <pd/pd_mirroring.h>
-}
+#include <bm/pdfixed/pd_static.h>
+#include "pd/pd.h"
+#include "pd/pd_mirroring.h"
 
 #include <list>
 #include <map>

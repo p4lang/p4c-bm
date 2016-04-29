@@ -18,12 +18,14 @@
  *
  */
 
-#include "pd/pd_learning.h"
-#include "pd_conn_mgr.h"
+#include <bm/pdfixed/int/pd_conn_mgr.h>
+
 #include <iostream>
 #include <mutex>
 #include <map>
 #include <cstring>
+
+#include "pd/pd_learning.h"
 
 #define NUM_DEVICES 256
 
