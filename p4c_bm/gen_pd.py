@@ -185,7 +185,9 @@ def load_json(json_str):
         for h in j_header_types:
             if h["name"] != header_type:
                 continue
-            for f, bw in h["fields"]:
+            for t in h["fields"]:
+                # t can have a third element (field signedness)
+                f, bw = t[0], t[1]
                 if f == field_name:
                     return bw
         assert(0)
