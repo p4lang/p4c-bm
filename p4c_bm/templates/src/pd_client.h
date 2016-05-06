@@ -18,33 +18,19 @@
  *
  */
 
-#ifndef _P4_PD_H_
-#define _P4_PD_H_
+#ifndef _P4_SRC_PD_CLIENT_H_
+#define _P4_SRC_PD_CLIENT_H_
 
-#include <bm/pdfixed/pd_common.h>
+#include <bm/Standard.h>
 
-#include "pd_tables.h"
-#include "pd_learning.h"
-#include "pd_meters.h"
-#include "pd_counters.h"
-#include "pd_registers.h"
+#include <bm/pdfixed/int/pd_conn_mgr.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+using namespace  ::bm_runtime::standard;
 
-// I am not using sess_hdl for these functions, right thing to do?
+extern PdConnMgr *conn_mgr_state;
 
-p4_pd_status_t ${pd_prefix}init(void);
-
-p4_pd_status_t ${pd_prefix}assign_device(int dev_id,
-                                         const char *notifications_addr,
-                                         int rpc_port_num);
-
-p4_pd_status_t ${pd_prefix}remove_device(int dev_id);
-
-#ifdef __cplusplus
+inline StandardClient *pd_client(int device) {
+  return conn_mgr_state->get<StandardClient>(device).c;
 }
-#endif
 
 #endif

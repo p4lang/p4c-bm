@@ -18,13 +18,12 @@
  *
  */
 
-#include <bm/pdfixed/pd_static.h>
-#include <bm/pdfixed/int/pd_conn_mgr.h>
 #include <bm/pdfixed/int/pd_helpers.h>
 
 #include <vector>
 
-extern pd_conn_mgr_t *conn_mgr_state;
+#include "pd_client.h"
+
 extern int *my_devices;
 
 extern "C" {
@@ -60,10 +59,10 @@ ${param_str}
   assert(my_devices[dev_tgt.device_id]);
 
 //::   if ma.is_direct:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_mt_set_meter_rates(
+  pd_client(dev_tgt.device_id)->bm_mt_set_meter_rates(
       0, "${ma.table}", entry_hdl, rates);
 //::   else:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_meter_set_rates(
+  pd_client(dev_tgt.device_id)->bm_meter_set_rates(
       0, "${ma_name}", index, rates);
 //::   #endif
 
