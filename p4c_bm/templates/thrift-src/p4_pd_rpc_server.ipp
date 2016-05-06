@@ -1,5 +1,4 @@
 //:: pd_prefix = "p4_pd_" + p4_prefix + "_"
-//:: pd_static_prefix = "p4_pd_"
 //:: api_prefix = p4_prefix + "_"
 
 #include "p4_prefix.h"
@@ -8,9 +7,7 @@
 
 #include <string.h>
 
-#include <bm/pdfixed/pd_static.h>
 #include "pd/pd.h"
-#include "pd/pd_mirroring.h"
 
 #include <list>
 #include <map>
@@ -847,40 +844,6 @@ public:
     }
 
 //:: #endfor
-
-  // mirroring api
-
-//:: name = "mirroring_mapping_add"
-  int32_t ${name}(const int32_t mirror_id, const int32_t egress_port) {
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id, egress_port);
-  }
-
-//:: name = "mirroring_mapping_delete"
-  int32_t ${name}(const int32_t mirror_id) {
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id);
-  }
-
-//:: name = "mirroring_mapping_get_egress_port"
-  int32_t ${name}(int32_t mirror_id) {
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id);
-  }
-
-  // coalescing api
-
-//:: name = "mirroring_set_coalescing_sessions_offset"
-  int32_t ${name}(const int16_t coalescing_sessions_offset) {
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(coalescing_sessions_offset);
-  }
-
-//:: name = "mirroring_add_coalescing_session"
-  int32_t ${name}(const int32_t mirror_id, const int32_t egress_port, const std::vector<int8_t> &header, const int16_t min_pkt_size, const int8_t timeout){
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id, egress_port, &header[0], (const int8_t)header.size(), min_pkt_size, timeout);
-  }
 
   void set_learning_timeout(const SessionHandle_t sess_hdl, const int8_t dev_id, const int32_t msecs) {
       ${pd_prefix}set_learning_timeout(sess_hdl, (const uint8_t)dev_id, msecs);

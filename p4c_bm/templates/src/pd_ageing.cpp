@@ -18,18 +18,14 @@
  *
  */
 
-#include <bm/pdfixed/int/pd_conn_mgr.h>
-
 #include <iostream>
 #include <mutex>
 #include <unordered_map>
+#include <cassert>
 
 #include "pd/pd_learning.h"
 
 #define NUM_DEVICES 256
-
-extern pd_conn_mgr_t *conn_mgr_state;
-extern int *my_devices;
 
 namespace {
 

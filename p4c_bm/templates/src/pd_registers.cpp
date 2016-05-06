@@ -18,10 +18,10 @@
  *
  */
 
-#include <bm/pdfixed/pd_static.h>
-#include <bm/pdfixed/int/pd_conn_mgr.h>
+#include <bm/pdfixed/pd_common.h>
 
-extern pd_conn_mgr_t *conn_mgr_state;
+#include "pd_client.h"
+
 extern int *my_devices;
 
 extern "C" {
@@ -36,8 +36,7 @@ ${name}
 ) {
   assert(my_devices[dev_tgt.device_id]);
   try {
-    pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_register_reset(
-        0, "${ra_name}");
+    pd_client(dev_tgt.device_id)->bm_register_reset(0, "${ra_name}");
   } catch (InvalidRegisterOperation &iro) {
     const char *what =
       _RegisterOperationErrorCode_VALUES_TO_NAMES.find(iro.code)->second;

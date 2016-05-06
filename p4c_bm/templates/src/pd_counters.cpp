@@ -18,12 +18,12 @@
  *
  */
 
-#include <bm/pdfixed/pd_static.h>
-#include <bm/pdfixed/int/pd_conn_mgr.h>
+#include <bm/pdfixed/pd_common.h>
 
 #include <thread>
 
-extern pd_conn_mgr_t *conn_mgr_state;
+#include "pd_client.h"
+
 extern int *my_devices;
 
 extern "C" {
@@ -51,10 +51,10 @@ ${name}
 
   // TODO: try / catch block
 //::   if ca.is_direct:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_mt_read_counter(
+  pd_client(dev_tgt.device_id)->bm_mt_read_counter(
       value, 0, "${ca.table}", entry_hdl);
 //::   else:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_counter_read(
+  pd_client(dev_tgt.device_id)->bm_counter_read(
       value, 0, "${ca_name}", index);
 //::   #endif
 
@@ -85,10 +85,10 @@ ${name}
 
   // TODO: try / catch block
 //::   if ca.is_direct:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_mt_write_counter(
+  pd_client(dev_tgt.device_id)->bm_mt_write_counter(
       0, "${ca.table}", entry_hdl, value);
 //::   else:
-  pd_conn_mgr_client(conn_mgr_state, dev_tgt.device_id).c->bm_counter_write(
+  pd_client(dev_tgt.device_id)->bm_counter_write(
       0, "${ca_name}", index, value);
 //::   #endif
 
@@ -106,6 +106,7 @@ ${name}
 ) {
   std::thread cb_thread(cb_fn, dev_tgt.device_id, cb_cookie);
   cb_thread.detach();
+  return 0;
 }
 
 //:: #endfor

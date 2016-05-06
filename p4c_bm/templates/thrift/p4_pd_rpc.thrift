@@ -443,12 +443,6 @@ service ${p4_prefix} {
 
 //:: #endfor
 
-    # mirroring api
-
-    i32 mirroring_mapping_add(1:i32 mirror_id, 2:i32 egress_port);
-    i32 mirroring_mapping_delete(1:i32 mirror_id);
-    i32 mirroring_mapping_get_egress_port(1:i32 mirror_id);
-
     void set_learning_timeout(1: res.SessionHandle_t sess_hdl, 2: byte dev_id, 3: i32 msecs);
 
 //:: for lq_name, lq in learn_quantas.items():
