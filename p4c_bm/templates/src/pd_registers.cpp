@@ -36,7 +36,7 @@ ${name}
 ) {
   assert(my_devices[dev_tgt.device_id]);
   try {
-    pd_client(dev_tgt.device_id)->bm_register_reset(0, "${ra_name}");
+    pd_client(dev_tgt.device_id).c->bm_register_reset(0, "${ra_name}");
   } catch (InvalidRegisterOperation &iro) {
     const char *what =
       _RegisterOperationErrorCode_VALUES_TO_NAMES.find(iro.code)->second;

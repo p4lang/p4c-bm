@@ -59,10 +59,10 @@ ${param_str}
   assert(my_devices[dev_tgt.device_id]);
 
 //::   if ma.is_direct:
-  pd_client(dev_tgt.device_id)->bm_mt_set_meter_rates(
+  pd_client(dev_tgt.device_id).c->bm_mt_set_meter_rates(
       0, "${ma.table}", entry_hdl, rates);
 //::   else:
-  pd_client(dev_tgt.device_id)->bm_meter_set_rates(
+  pd_client(dev_tgt.device_id).c->bm_meter_set_rates(
       0, "${ma_name}", index, rates);
 //::   #endif
 

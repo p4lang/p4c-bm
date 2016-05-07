@@ -29,8 +29,8 @@ using namespace  ::bm_runtime::standard;
 
 extern PdConnMgr *conn_mgr_state;
 
-inline StandardClient *pd_client(int device) {
-  return conn_mgr_state->get<StandardClient>(device).c;
+inline Client<StandardClient> pd_client(int device) {
+  return conn_mgr_state->get<StandardClient>(device);
 }
 
 #endif
