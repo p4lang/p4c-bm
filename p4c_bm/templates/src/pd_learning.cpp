@@ -117,22 +117,24 @@ void ${lq_name}_handle_learn_msg(const learn_hdr_t *hdr, const char *data) {
   ${pd_prefix}${lq_name}_digest_msg_t msg;
   msg.dev_tgt.device_id = static_cast<uint8_t>(hdr->switch_id);
   msg.num_entries = hdr->num_samples;
-  std::unique_ptr<char []> buf(
-    new char[hdr->num_samples * sizeof(${pd_prefix}${lq_name}_digest_entry_t)]
-  );
-  char *buf_ = buf.get();
+  std::unique_ptr<${pd_prefix}${lq_name}_digest_entry_t []> buf(
+      new ${pd_prefix}${lq_name}_digest_entry_t[hdr->num_samples]);
   const char *data_ = data;
+  char *buf_;
   for(size_t i = 0; i < hdr->num_samples; i++){
 //::   for name, bit_width in lq.fields:
 //::     c_name = get_c_name(name)
 //::     width = (bit_width + 7) / 8
-//::     field_width = width if width != 3 else 4 
+//::     if width > 4:
+    buf_ = reinterpret_cast<char *>(buf[i].${c_name});
+//::     else:
+    buf_ = reinterpret_cast<char *>(&buf[i].${c_name});
+//::     #endif
     bytes_to_field<${width}>(data_, buf_);
     data_ += ${width};
-    buf_ += ${field_width};
 //::   #endfor	
   }
-  msg.entries = (${pd_prefix}${lq_name}_digest_entry_t *) buf.get();
+  msg.entries = buf.get();
   msg.buffer_id = hdr->buffer_id;
   for(const auto &it : state->${lq_name}_clients) {
     it.second.cb_fn(it.first, &msg, it.second.cb_cookie);
