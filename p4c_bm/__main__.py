@@ -136,7 +136,9 @@ def main():
             primitives_res = 'primitives.json'
 
         h = HLIR(args.source)
-        h.add_preprocessor_args("-D__TARGET_BMV2__")
+        # if no -D__TARGET_* flag defined, we add a default bmv2 one
+        if True not in map(lambda f: "-D__TARGET_" in f, preprocessor_args):
+            h.add_preprocessor_args("-D__TARGET_BMV2__")
         for parg in preprocessor_args:
             h.add_preprocessor_args(parg)
         # in addition to standard P4 primitives
