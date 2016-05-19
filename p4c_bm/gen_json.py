@@ -541,7 +541,7 @@ def get_table_type(p4_table):
 @static_var("pipeline_id", 0)
 @static_var("table_id", 0)
 @static_var("condition_id", 0)
-def dump_one_pipeline(name, pipe_ptr, hlir):
+def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
     def get_table_name(p4_table):
         if not p4_table:
             return None
@@ -658,7 +658,20 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
                 next_tables[a.name] = get_table_name(nt)
         table_dict["next_tables"] = next_tables
 
-        table_dict["default_action"] = None
+        # temporarily not covered by tests, because not part of P4 spec
+        if hasattr(table, "default_action"):  # pragma: no cover
+            LOG_INFO("you are using the default_entry table attribute, "
+                     "this is still an experimental feature")
+            action, data = table.default_action
+            default_entry = OrderedDict()
+            for j_action in json_dict["actions"]:
+                if j_action["name"] == action.name:
+                    default_entry["action_id"] = j_action["id"]
+            default_entry["action_const"] = True
+            if data is not None:
+                default_entry["action_data"] = [hex(i) for i in data]
+                default_entry["action_entry_const"] = False
+            table_dict["default_entry"] = default_entry
 
         # TODO: temporary, to ensure backwards compatibility
         if hasattr(table, "base_default_next"):
@@ -698,10 +711,10 @@ def dump_pipelines(json_dict, hlir):
     # 2 pipelines: ingress and egress
     assert(len(hlir.p4_ingress_ptr) == 1 and "only one ingress ptr supported")
     ingress_ptr = hlir.p4_ingress_ptr.keys()[0]
-    pipelines.append(dump_one_pipeline("ingress", ingress_ptr, hlir))
+    pipelines.append(dump_one_pipeline(json_dict, "ingress", ingress_ptr, hlir))
 
     egress_ptr = hlir.p4_egress_ptr
-    pipelines.append(dump_one_pipeline("egress", egress_ptr, hlir))
+    pipelines.append(dump_one_pipeline(json_dict, "egress", egress_ptr, hlir))
 
     json_dict["pipelines"] = pipelines
 
