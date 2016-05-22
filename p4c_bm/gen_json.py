@@ -659,7 +659,8 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
         table_dict["next_tables"] = next_tables
 
         # temporarily not covered by tests, because not part of P4 spec
-        if hasattr(table, "default_action"):  # pragma: no cover
+        if hasattr(table, "default_action") and\
+           table.default_action is not None:  # pragma: no cover
             LOG_INFO("you are using the default_entry table attribute, "
                      "this is still an experimental feature")
             action, data = table.default_action
