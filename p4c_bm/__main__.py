@@ -29,6 +29,7 @@ import gen_json
 import gen_pd
 import json
 from pkg_resources import resource_string
+import version
 
 
 def get_parser():
@@ -56,6 +57,8 @@ def get_parser():
     parser.add_argument('--p4-v1.1', action='store_true',
                         help='Run the compiler on a p4 v1.1 program',
                         default=False, required=False)
+    parser.add_argument('--version', '-v', action='version',
+                        version=version.get_version_str())
     return parser
 
 

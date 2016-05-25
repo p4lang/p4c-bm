@@ -164,6 +164,9 @@ def test_main(tmpdir):
     assert call_main(["-h"]) == 0
     assert call_main(["--help"]) == 0
 
+    assert call_main(["-v"]) == 0
+    assert call_main(["--version"]) == 0
+
     assert call_main([]) != 0
 
     assert call_main([input_p4]) == 0
