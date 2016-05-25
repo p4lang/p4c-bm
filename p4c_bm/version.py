@@ -20,10 +20,16 @@
 
 # -*- coding: utf-8 -*-
 
-from version import get_version_str
+import _version
 
-__author__ = 'Antonin Bas'
-__email__ = 'antonin@barefootnetworks.com'
-__version__ = get_version_str()
 
-del get_version_str
+def get_version_str():
+    build_version = _version.build_version
+    if build_version is None:
+        try:
+            import subprocess
+            build_version = subprocess.check_output(["git", "rev-parse", "@"])
+            build_version = build_version[:8]
+        except:  # pragma: no cover
+            build_version = 'unknown'
+    return "-".join([_version.version, build_version])

@@ -20,10 +20,5 @@
 
 # -*- coding: utf-8 -*-
 
-from version import get_version_str
-
-__author__ = 'Antonin Bas'
-__email__ = 'antonin@barefootnetworks.com'
-__version__ = get_version_str()
-
-del get_version_str
+version = '0.9.0'
+build_version = None
