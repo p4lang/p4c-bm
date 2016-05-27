@@ -59,6 +59,9 @@ def get_parser():
                         default=False, required=False)
     parser.add_argument('--version', '-v', action='version',
                         version=version.get_version_str())
+    parser.add_argument('--primitives', action='append', default=[],
+                        help="A JSON file which contains additional primitive \
+                        declarations")
     return parser
 
 
@@ -68,7 +71,10 @@ def _validate_path(path):
         print path, "is not a valid path because",\
             os.path.dirname(path), "is not a valid directory"
         sys.exit(1)
-    if os.path.exists(path) and not os.path.isfile(path):
+    if not os.path.exists(path):
+        print path, "does not exist"
+        sys.exit(1)
+    if not os.path.isfile(path):
         print path, "exists and is not a file"
         sys.exit(1)
     return path
@@ -139,14 +145,23 @@ def main():
             primitives_res = 'primitives.json'
 
         h = HLIR(args.source)
+
         # if no -D__TARGET_* flag defined, we add a default bmv2 one
         if True not in map(lambda f: "-D__TARGET_" in f, preprocessor_args):
             h.add_preprocessor_args("-D__TARGET_BMV2__")
         for parg in preprocessor_args:
             h.add_preprocessor_args(parg)
+
         # in addition to standard P4 primitives
         more_primitives = json.loads(resource_string(__name__, primitives_res))
         h.add_primitives(more_primitives)
+
+        # user-provided primitives
+        for primitive_path in args.primitives:
+            _validate_path(primitive_path)
+            with open(primitive_path, 'r') as f:
+                h.add_primitives(json.load(f))
+
         if not h.build(analyze=False):
             print "Error while building HLIR"
             sys.exit(1)
