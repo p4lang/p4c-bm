@@ -211,7 +211,32 @@ def test_main(tmpdir):
     # invalid option
     assert call_main([input_p4, "--nonsense"]) != 0
 
+    # extra primitives file
+    primitive_dir = os.path.join("tests", "testdata", "extra_primitives")
+    primitive = os.path.join(primitive_dir, "unknown_primitive.json")
+    primitive_1 = os.path.join(primitive_dir, "unknown_primitive_1.json")
+
+    assert call_main([input_p4, "--primitives", "plop.json"]) != 0
+
+    assert call_main([input_p4, "--primitives", primitive]) == 0
+
+    assert call_main([input_p4, "--primitives", primitive,
+                      "--primitives", primitive_1]) == 0
+
     os.remove(tmp_json[1])
+
+
+def test_extra_primitives():
+    primitive_dir = os.path.join("tests", "testdata", "extra_primitives")
+    primitive_json = os.path.join(primitive_dir, "unknown_primitive.json")
+    assert os.path.exists(primitive_json)
+
+    input_p4 = os.path.join(primitive_dir, "unknown_primitive.p4")
+    assert os.path.exists(input_p4)
+
+    assert call_main([input_p4]) != 0
+
+    assert call_main([input_p4, "--primitives", primitive_json]) == 0
 
 
 def test_topo_sorting_good():
