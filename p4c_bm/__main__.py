@@ -65,19 +65,25 @@ def get_parser():
     return parser
 
 
+# to be used for a destination file
 def _validate_path(path):
     path = os.path.abspath(path)
     if not os.path.isdir(os.path.dirname(path)):
         print path, "is not a valid path because",\
             os.path.dirname(path), "is not a valid directory"
         sys.exit(1)
-    if not os.path.exists(path):
-        print path, "does not exist"
-        sys.exit(1)
-    if not os.path.isfile(path):
+    if os.path.exists(path) and not os.path.isfile(path):
         print path, "exists and is not a file"
         sys.exit(1)
     return path
+
+
+# to be used for a source file
+def _validate_file(path):
+    _validate_path(path)
+    if not os.path.exists(path):
+        print path, "does not exist"
+        sys.exit(1)
 
 
 def _validate_dir(path):
@@ -111,7 +117,7 @@ def main():
         path_json = _validate_path(args.json)
 
     if args.field_aliases:
-        path_field_aliases = _validate_path(args.field_aliases)
+        path_field_aliases = _validate_file(args.field_aliases)
     else:
         path_field_aliases = None
 
@@ -158,7 +164,7 @@ def main():
 
         # user-provided primitives
         for primitive_path in args.primitives:
-            _validate_path(primitive_path)
+            _validate_file(primitive_path)
             with open(primitive_path, 'r') as f:
                 h.add_primitives(json.load(f))
 
