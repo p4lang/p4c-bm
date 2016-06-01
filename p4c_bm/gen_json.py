@@ -193,6 +193,12 @@ def format_field_ref(p4_field):
         return [header.base_name, p4_field.name]
 
 
+def format_hexstr(i):
+    # Python appends a L at the end of a long number representation, which we
+    # need to remove
+    return hex(i).rstrip("L")
+
+
 # for p4 v1.1
 def is_register_ref(obj):
     try:
@@ -264,7 +270,7 @@ def dump_parsers(json_dict, hlir):
                 parameters.append(dest_dict)
                 if type(src) is int or type(src) is long:
                     src_dict["type"] = "hexstr"
-                    src_dict["value"] = hex(src)
+                    src_dict["value"] = format_hexstr(src)
                 elif type(src) is p4.p4_field:
                     src_dict["type"] = "field"
                     src_dict["value"] = format_field_ref(src)
@@ -446,10 +452,10 @@ def dump_expression(p4_expression):
     expression_dict = OrderedDict()
     if type(p4_expression) is int:
         expression_dict["type"] = "hexstr"
-        expression_dict["value"] = hex(p4_expression)
+        expression_dict["value"] = format_hexstr(p4_expression)
     elif type(p4_expression) is p4.p4_sized_integer:
         expression_dict["type"] = "hexstr"
-        expression_dict["value"] = hex(p4_expression)
+        expression_dict["value"] = format_hexstr(p4_expression)
     elif type(p4_expression) is bool:
         expression_dict["type"] = "bool"
         expression_dict["value"] = p4_expression
@@ -670,7 +676,7 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
                     default_entry["action_id"] = j_action["id"]
             default_entry["action_const"] = True
             if data is not None:
-                default_entry["action_data"] = [hex(i) for i in data]
+                default_entry["action_data"] = [format_hexstr(i) for i in data]
                 default_entry["action_entry_const"] = False
             table_dict["default_entry"] = default_entry
 
@@ -808,11 +814,11 @@ def dump_actions(json_dict, hlir):
                 arg_dict = OrderedDict()
                 if type(arg) is int or type(arg) is long:
                     arg_dict["type"] = "hexstr"
-                    arg_dict["value"] = hex(arg)
+                    arg_dict["value"] = format_hexstr(arg)
                 elif type(arg) is p4.p4_sized_integer:
                     # TODO(antonin)
                     arg_dict["type"] = "hexstr"
-                    arg_dict["value"] = hex(arg)
+                    arg_dict["value"] = format_hexstr(arg)
                 elif type(arg) is p4.p4_field:
                     arg_dict["type"] = "field"
                     arg_dict["value"] = format_field_ref(arg)
@@ -830,7 +836,7 @@ def dump_actions(json_dict, hlir):
                          primitive_name in {"resubmit", "recirculate"}:
                         id_ = field_list_to_id(arg)
                     arg_dict["type"] = "hexstr"
-                    arg_dict["value"] = hex(id_)
+                    arg_dict["value"] = format_hexstr(id_)
                 elif type(arg) is p4.p4_field_list_calculation:
                     arg_dict["type"] = "calculation"
                     arg_dict["value"] = arg.name
