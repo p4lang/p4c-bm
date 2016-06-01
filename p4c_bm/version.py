@@ -28,7 +28,14 @@ def get_version_str():
     if build_version is None:
         try:
             import subprocess
-            build_version = subprocess.check_output(["git", "rev-parse", "@"])
+            import os
+            p = subprocess.Popen(["git", "rev-parse", "@"],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 cwd=os.path.dirname(os.path.abspath(__file__)))
+            out, _ = p.communicate()  # ignore stderr
+            if p.returncode:  # pragma: no cover
+                raise subprocess.CalledProcessError
+            build_version = out
             build_version = build_version[:8]
         except:  # pragma: no cover
             build_version = 'unknown'
