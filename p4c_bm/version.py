@@ -38,5 +38,10 @@ def get_version_str():
             build_version = out
             build_version = build_version[:8]
         except:  # pragma: no cover
-            build_version = 'unknown'
+            # we try to find a cached version
+            try:
+                import _version_str
+                return _version_str.version_str
+            except:
+                build_version = 'unknown'
     return "-".join([_version.version, build_version])
