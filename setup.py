@@ -16,6 +16,10 @@ with open(os.path.join(SETUP_PY_PATH, 'README.rst')) as readme_file:
 with open(os.path.join(SETUP_PY_PATH, 'HISTORY.rst')) as history_file:
     history = history_file.read().replace('.. :changelog:', '')
 
+with open(os.path.join(SRC_PATH, "_version_str.py"), 'w') as version_f:
+    version_f.write("# This file is auto-generated\n")
+    version_f.write("version_str = '{}'\n".format(p4c_bm.__version__))
+
 requirements = [
     # TODO: put package requirements here
     'p4-hlir',
