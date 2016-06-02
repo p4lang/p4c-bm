@@ -825,6 +825,9 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_header_instance:
                     arg_dict["type"] = "header"
                     arg_dict["value"] = arg.name
+                elif type(arg) is p4.p4_header_stack:
+                    arg_dict["type"] = "header_stack"
+                    arg_dict["value"] = re.sub(r'\[.*\]', '', arg.name)
                 elif type(arg) is p4.p4_signature_ref:
                     arg_dict["type"] = "runtime_data"
                     arg_dict["value"] = arg.idx
