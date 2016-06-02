@@ -80,10 +80,11 @@ def _validate_path(path):
 
 # to be used for a source file
 def _validate_file(path):
-    _validate_path(path)
+    path = _validate_path(path)
     if not os.path.exists(path):
         print path, "does not exist"
         sys.exit(1)
+    return path
 
 
 def _validate_dir(path):
