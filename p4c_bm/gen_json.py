@@ -758,7 +758,7 @@ def field_list_to_id(p4_field_list):
     return idx
 
 
-def dump_actions(json_dict, hlir):
+def dump_actions(json_dict, hlir, p4_v1_1=False):
     actions = []
     action_id = 0
 
@@ -825,7 +825,7 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_header_instance:
                     arg_dict["type"] = "header"
                     arg_dict["value"] = arg.name
-                elif type(arg) is p4.p4_header_stack:
+                elif p4_v1_1 and type(arg) is p4.p4_header_stack:
                     arg_dict["type"] = "header_stack"
                     arg_dict["value"] = re.sub(r'\[.*\]', '', arg.name)
                 elif type(arg) is p4.p4_signature_ref:
@@ -1179,7 +1179,7 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     dump_parsers(json_dict, hlir)
     dump_deparsers(json_dict, hlir)
     dump_meters(json_dict, hlir)
-    dump_actions(json_dict, hlir)
+    dump_actions(json_dict, hlir, p4_v1_1=p4_v1_1)
     dump_pipelines(json_dict, hlir)
     dump_calculations(json_dict, hlir)
     dump_checksums(json_dict, hlir)
