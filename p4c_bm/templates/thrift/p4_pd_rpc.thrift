@@ -159,7 +159,7 @@ service ${p4_prefix} {
 //::     if has_match_spec:
 //::       params += [api_prefix + t_name + "_match_spec_t match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["i32 priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -341,7 +341,7 @@ service ${p4_prefix} {
 //::   if has_match_spec:
 //::     params += [api_prefix + t_name + "_match_spec_t match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["i32 priority"]
 //::   #endif
 //::
