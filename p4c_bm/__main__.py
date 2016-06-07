@@ -107,6 +107,9 @@ def main():
         if a[:2] == "-D":
             input_args.remove(a)
             preprocessor_args.append(a)
+        elif a[:2] == "-I":
+            input_args.remove(a)
+            preprocessor_args.append(a)
         else:
             has_remaining_args = True
 
