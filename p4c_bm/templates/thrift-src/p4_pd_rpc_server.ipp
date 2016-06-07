@@ -123,7 +123,7 @@ public:
 //::     if has_match_spec:
 //::       params += ["const " + api_prefix + t_name + "_match_spec_t &match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["const int32_t priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -175,7 +175,7 @@ public:
 //::     if has_match_spec:
 //::       pd_params += ["&pd_match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       pd_params += ["priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -566,7 +566,7 @@ public:
 //::   if has_match_spec:
 //::     params += ["const " + api_prefix + t_name + "_match_spec_t &match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["const int32_t priority"]
 //::   #endif
 //::   params_wo = params + ["const MemberHandle_t mbr"]
@@ -599,7 +599,7 @@ public:
 //::   if has_match_spec:
 //::     pd_params += ["&pd_match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     pd_params += ["priority"]
 //::   #endif
 //::   pd_params += ["mbr", "&pd_entry"]
@@ -639,7 +639,7 @@ public:
 //::   if has_match_spec:
 //::     pd_params += ["&pd_match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     pd_params += ["priority"]
 //::   #endif
 //::   pd_params += ["grp", "&pd_entry"]

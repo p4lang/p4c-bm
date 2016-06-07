@@ -503,7 +503,8 @@ def match_type_to_str(p4_match_type):
         p4.p4_match_type.P4_MATCH_EXACT: "exact",
         p4.p4_match_type.P4_MATCH_LPM: "lpm",
         p4.p4_match_type.P4_MATCH_TERNARY: "ternary",
-        p4.p4_match_type.P4_MATCH_VALID: "valid"
+        p4.p4_match_type.P4_MATCH_VALID: "valid",
+        p4.p4_match_type.P4_MATCH_RANGE: "range"
     }
     if p4_match_type not in match_types_map:  # pragma: no cover
         LOG_CRITICAL("found invalid match type")
@@ -513,12 +514,12 @@ def match_type_to_str(p4_match_type):
 def get_table_match_type(p4_table):
     match_types = []
     for _, m_type, _ in p4_table.match_fields:
-        if m_type == p4.p4_match_type.P4_MATCH_RANGE:  # pragma: no cover
-            LOG_CRITICAL("'range' match type is not supported by bmv2 yet")
         match_types.append(match_type_to_str(m_type))
 
     if len(match_types) == 0:
         match_type = "exact"
+    elif "range" in match_types:
+        match_type = "range"
     elif "ternary" in match_types:
         match_type = "ternary"
     elif match_types.count("lpm") >= 2:  # pragma: no cover
