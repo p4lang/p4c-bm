@@ -62,6 +62,13 @@ def get_parser():
     parser.add_argument('--primitives', action='append', default=[],
                         help="A JSON file which contains additional primitive \
                         declarations")
+    parser.add_argument('--plugin', dest='plugin_list', action="append",
+                        default=[],
+                        help="list of plugins to generate templates")
+    parser.add_argument('--openflow-mapping-dir',
+                        help="Directory of openflow mapping files")
+    parser.add_argument('--openflow-mapping-mod',
+                        help="Openflow mapping module name -- not a file name")
     return parser
 
 
@@ -182,7 +189,7 @@ def main():
 
     if args.pd:
         print "Generating PD source files in", path_pd
-        gen_pd.generate_pd_source(json_dict, path_pd, args.p4_prefix)
+        gen_pd.generate_pd_source(json_dict, path_pd, args.p4_prefix, args)
 
 
 if __name__ == "__main__":  # pragma: no cover
