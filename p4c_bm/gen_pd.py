@@ -307,9 +307,11 @@ def render_all_files(render_dict, gen_dir, plugin_list=[]):
                             prefix=_TENJIN_PREFIX)
     if len(plugin_list) > 0:
         for s in plugin_list:
-            plugin_dir = _PLUGIN_BASE_DIR + s
+            plugin_dir = os.path.join(_PLUGIN_BASE_DIR, s)
             plugin_files = gen_file_lists(plugin_dir,
-                                          gen_dir+'/plugin/'+s)
+                                          os.path.join(gen_dir,
+                                                       '/plugin/',
+                                                       s))
             for template, target in plugin_files:
                 path = os.path.dirname(target)
                 if not os.path.exists(path):
