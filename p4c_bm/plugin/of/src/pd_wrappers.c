@@ -49,6 +49,7 @@ ${name}
 ) {
 //::   if match_params:
     ${pd_prefix + table_name + "_match_spec_t match_spec"};
+    memset (&match_spec, 0, sizeof(match_spec));
 //::     args_list.append("&match_spec")
 //::   #endif
 //::   if table.match_type == MatchType.TERNARY:
@@ -56,6 +57,7 @@ ${name}
 //::   #endif
 //::   args_list.append("&action_spec")
     ${pd_prefix + "openflow_apply_action_spec_t action_spec"};
+    memset(&action_spec, 0, sizeof(action_spec));
 //::   if table.support_timeout:
 //::     args_list.append("*ttl")
 //::   #endif
@@ -123,6 +125,7 @@ ${name}
         JLG (pv, *action_args, OFPAT_OUTPUT);
         if (*(uint32_t *) *pv == OFPP_CONTROLLER) {
             ${pd_prefix + "openflow_miss_action_spec_t miss_spec"};
+            memset(&miss_spec, 0, sizeof(miss_spec));
             miss_spec.action_table_id = ${map_mod.openflow_tables[table_name].id};
             miss_spec.action_reason = OFPR_ACTION;
             *signal = 1;
@@ -162,6 +165,7 @@ ${name}
 ) {
 //::       args_list += ["&action_spec"]
     ${pd_prefix + "openflow_apply_action_spec_t action_spec"};
+    memset(&action_spec, 0, sizeof(action_spec));
 
     PWord_t pv;
     int rc;
@@ -179,6 +183,7 @@ ${name}
         JLG (pv, *action_args, OFPAT_OUTPUT);
         if (*(uint32_t *) *pv == OFPP_CONTROLLER) {
             ${pd_prefix + "openflow_miss_action_spec_t miss_spec"};
+            memset(&miss_spec, 0, sizeof(miss_spec));
             miss_spec.action_table_id = ${map_mod.openflow_tables[table_name].id};
             miss_spec.action_reason = OFPR_ACTION;
             *signal = 1;
@@ -218,6 +223,7 @@ ${name}
 ) {
 //::       args_list.append("&action_spec")
     ${pd_prefix + "openflow_apply_action_spec_t action_spec"};
+    memset(&action_spec, 0, sizeof(action_spec));
 //::       args_list += ["entry_hdl"]
 
     PWord_t pv;
@@ -236,6 +242,7 @@ ${name}
         JLG (pv, *action_args, OFPAT_OUTPUT);
         if (*(uint32_t *) *pv == OFPP_CONTROLLER) {
             ${pd_prefix + "openflow_miss_action_spec_t miss_spec"};
+            memset(&miss_spec, 0, sizeof(miss_spec));
             miss_spec.action_table_id = ${map_mod.openflow_tables[table_name].id};
             miss_spec.action_reason = OFPR_ACTION;
             *signal = 1;
