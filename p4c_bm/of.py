@@ -1,3 +1,5 @@
+# variables var1 and var2 are needed solely to appease the style checker
+
 # OF Match fields
 
 of_match_vals = {}
@@ -32,8 +34,10 @@ of_match_vals["OFPXMT_OFB_IPV6_DST"] = "match_fields->fields.ipv6_dst"
 of_match_vals["OFPXMT_OFB_IPV6_FLABEL"] = "match_fields->fields.ipv6_flabel"
 of_match_vals["OFPXMT_OFB_ICMPV6_TYPE"] = "match_fields->fields.icmpv6_type"
 of_match_vals["OFPXMT_OFB_ICMPV6_CODE"] = "match_fields->fields.icmpv6_code"
-of_match_vals["OFPXMT_OFB_IPV6_ND_TARGET"] = ("match_fields->"
-                                             + "fields.ipv6_nd_target")
+
+var1 = "match_fields->match_fields->fields.ipv6_nd_target"
+of_match_vals["OFPXMT_OFB_IPV6_ND_TARGET"] = var1
+
 of_match_vals["OFPXMT_OFB_IPV6_ND_SLL"] = "match_fields->fields.ipv6_nd_sll"
 of_match_vals["OFPXMT_OFB_IPV6_ND_TLL"] = "match_fields->fields.ipv6_nd_tll"
 of_match_vals["OFPXMT_OFB_MPLS_LABEL"] = "match_fields->fields.mpls_label"
@@ -77,8 +81,10 @@ of_match_masks["OFPXMT_OFB_IPV6_DST"] = "match_fields->masks.ipv6_dst"
 of_match_masks["OFPXMT_OFB_IPV6_FLABEL"] = "match_fields->masks.ipv6_flabel"
 of_match_masks["OFPXMT_OFB_ICMPV6_TYPE"] = "match_fields->masks.icmpv6_type"
 of_match_masks["OFPXMT_OFB_ICMPV6_CODE"] = "match_fields->masks.icmpv6_code"
-of_match_masks["OFPXMT_OFB_IPV6_ND_TARGET"] = ("match_fields->"
-                                              + "masks.ipv6_nd_target")
+
+var2 = "match_fields->masks.ipv6_nd_target"
+of_match_masks["OFPXMT_OFB_IPV6_ND_TARGET"] = var2
+
 of_match_masks["OFPXMT_OFB_IPV6_ND_SLL"] = "match_fields->masks.ipv6_nd_sll"
 of_match_masks["OFPXMT_OFB_IPV6_ND_TLL"] = "match_fields->masks.ipv6_nd_tll"
 of_match_masks["OFPXMT_OFB_MPLS_LABEL"] = "match_fields->masks.mpls_label"
