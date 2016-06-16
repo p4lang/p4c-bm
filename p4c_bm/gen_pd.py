@@ -32,7 +32,7 @@ _TENJIN_PREFIX = "//::"  # Use // in prefix for C syntax processing
 _THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 _TEMPLATES_DIR = os.path.join(_THIS_DIR, "templates")
-_PLUGIN_BASE_DIR = os.path.join(_THIS_DIR, "plugin/")
+_PLUGIN_BASE_DIR = os.path.join(_THIS_DIR, "plugin")
 
 TABLES = {}
 ACTIONS = {}
