@@ -159,20 +159,10 @@ def test_gen_of_pd(tmpdir):
     assert json_dict
 
     # hack the args
-    import argparse
-    parser = argparse.ArgumentParser(description='p4c-bm arguments')
-    parser.add_argument('--plugin', dest='plugin_list', action="append",
-                        default=[],
-                        help="list of plugins to generate templates")
-    parser.add_argument('--openflow-mapping-dir',
-                        help="Directory of openflow mapping files")
-    parser.add_argument('--openflow-mapping-mod',
-                        help="Openflow mapping module name -- not a file name")
-    parser.plugin_list = ["of"]
-    parser.openflow_mapping_dir = os.path.join("tests", "of_mapping")
-    parser.openflow_mapping_mod = "l2_openflow"
+    from argparse import Namespace
+    args = Namespace(plugin_list=["of"], openflow_mapping_dir=os.path.join("tests", "of_mapping"), openflow_mapping_mod="l2_openflow")
 
-    gen_pd.generate_pd_source(json_dict, p, "pref", parser)
+    gen_pd.generate_pd_source(json_dict, p, "pref", args)
     # now we check for all generated files
     of_path = tmpdir.join("plugin", "of")
     inc_path = of_path.join("inc")
