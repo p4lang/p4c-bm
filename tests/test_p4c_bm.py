@@ -143,9 +143,9 @@ def test_gen_pd(input_p4, tmpdir):
     assert set(expected_inc) == set([f.basename for f in inc_path.listdir()])
     assert set(expected_src) == set([f.basename for f in src_path.listdir()])
 
+
 def test_gen_of_pd(tmpdir):
-    cwd = os.getcwd()
-    input_p4 = os.path.join(cwd, "tests", "p4_programs", "l2_openflow.p4")
+    input_p4 = os.path.join("tests", "p4_programs", "l2_openflow.p4")
     assert os.path.exists(input_p4)
     p = str(tmpdir)
     h = HLIR(input_p4)
@@ -169,7 +169,7 @@ def test_gen_of_pd(tmpdir):
     parser.add_argument('--openflow-mapping-mod',
                         help="Openflow mapping module name -- not a file name")
     parser.plugin_list = ["of"]
-    parser.openflow_mapping_dir = os.path.join(cwd, "tests", "of_mapping")
+    parser.openflow_mapping_dir = os.path.join("tests", "of_mapping")
     parser.openflow_mapping_mod = "l2_openflow"
 
     gen_pd.generate_pd_source(json_dict, p, "pref", parser)
@@ -185,6 +185,7 @@ def test_gen_of_pd(tmpdir):
     expected_src = [f for f in os.listdir(expected_src_path)]
     assert set(expected_inc) == set([f.basename for f in inc_path.listdir()])
     assert set(expected_src) == set([f.basename for f in src_path.listdir()])
+
 
 def call_main(options):
     argv_save = list(sys.argv)
