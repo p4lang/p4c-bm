@@ -143,6 +143,47 @@ def test_gen_pd(input_p4, tmpdir):
     assert set(expected_inc) == set([f.basename for f in inc_path.listdir()])
     assert set(expected_src) == set([f.basename for f in src_path.listdir()])
 
+def test_gen_of_pd(tmpdir):
+    input_p4 = "tests/p4_programs/l2_openflow.p4"
+    assert os.path.exists(input_p4)
+    p = str(tmpdir)
+    h = HLIR(input_p4)
+    more_primitives = json.loads(
+        resource_string(__name__,
+                        os.path.join('..', 'p4c_bm', 'primitives.json'))
+    )
+    h.add_primitives(more_primitives)
+    assert h.build()
+    json_dict = gen_json.json_dict_create(h)
+    assert json_dict
+
+    # hack the args
+    import argparse
+    parser = argparse.ArgumentParser(description='p4c-bm arguments')
+    parser.add_argument('--plugin', dest='plugin_list', action="append",
+                        default=[],
+                        help="list of plugins to generate templates")
+    parser.add_argument('--openflow-mapping-dir',
+                        help="Directory of openflow mapping files")
+    parser.add_argument('--openflow-mapping-mod',
+                        help="Openflow mapping module name -- not a file name")
+    parser.plugin_list = ["of"]
+    parser.openflow_mapping_dir = os.path.join(os.getcwd(), "tests", "of_mapping")
+    parser.openflow_mapping_mod = "l2_openflow"
+
+    gen_pd.generate_pd_source(json_dict, p, "pref", parser)
+    # now we check for all generated files
+    of_path = tmpdir.join("plugin", "of")
+    inc_path = of_path.join("inc")
+    src_path = of_path.join("src")
+    assert inc_path.ensure_dir()
+    assert src_path.ensure_dir()
+    expected_inc_path = "p4c_bm/plugin/of/inc"
+    expected_inc = [f for f in os.listdir(expected_inc_path)]
+    expected_src_path = "p4c_bm/plugin/of/src/"
+    expected_src = [f for f in os.listdir(expected_src_path)]
+    assert set(expected_inc) == set([f.basename for f in inc_path.listdir()])
+    assert set(expected_src) == set([f.basename for f in src_path.listdir()])
 
 def call_main(options):
     argv_save = list(sys.argv)

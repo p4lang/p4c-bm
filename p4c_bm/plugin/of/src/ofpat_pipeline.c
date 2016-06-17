@@ -68,7 +68,7 @@ typedef struct ofpat_group_egress_match_ {
  * Pipelines *
  *************/
 
-//:: from of import *
+//:: from p4c_bm.of import *
 //:: 
 //:: def is_ofpat_table(table_name):
 //::   return table_name[:6] == "ofpat_"

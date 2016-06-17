@@ -1,6 +1,6 @@
 //:: import sys
 //:: import os
-//:: from of import *
+//:: from p4c_bm.of import *
 //::
 //:: map_mod = __import__(openflow_mapping_mod)
 //::
