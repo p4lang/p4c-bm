@@ -88,6 +88,7 @@ std::vector<BmMatchParam> build_key_${t_name} (
   BmMatchParamLPM param_lpm; (void) param_lpm;
   BmMatchParamTernary param_ternary; (void) param_ternary;
   BmMatchParamValid param_valid; (void) param_valid;
+  BmMatchParamRange param_range; (void) param_range;
 
   // TODO: 3-byte fields (mapped to uint32) are probably handled incorrectly
 
@@ -119,6 +120,13 @@ std::vector<BmMatchParam> build_key_${t_name} (
   param = BmMatchParam();
   param.type = BmMatchParamType::type::VALID;
   param.__set_valid(param_valid); // does a copy of param_valid
+  key.push_back(std::move(param));
+//::     elif field_match_type == MatchType.RANGE:
+  param_range.start = string_from_field<${width}>((char *) &(match_spec->${field_name}_start));
+  param_range.end_ = string_from_field<${width}>((char *) &(match_spec->${field_name}_end));
+  param = BmMatchParam();
+  param.type = BmMatchParamType::type::RANGE;
+  param.__set_range(param_range); // does a copy of param_range
   key.push_back(std::move(param));
 //::     else:
 //::       assert(0)
@@ -185,7 +193,7 @@ extern "C" {
 //::     if has_match_spec:
 //::       params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["int priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -215,7 +223,7 @@ ${name}
   std::vector<std::string> action_data = build_action_data_${a_name}(action_spec);
 //::     #endif
   BmAddEntryOptions options;
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
   options.__set_priority(priority);
 //::     #endif
   try {
@@ -259,7 +267,7 @@ ${name}
 //::   if has_match_spec:
 //::     params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["int priority"]
 //::   #endif
 //::
@@ -278,7 +286,7 @@ ${name}
   std::vector<BmMatchParam> match_key = build_key_${t_name}(match_spec);
 //::   #endif
   BmAddEntryOptions options;
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
   options.__set_priority(priority);
 //::   #endif
   try {
@@ -310,7 +318,7 @@ ${name}
   std::vector<BmMatchParam> match_key = build_key_${t_name}(match_spec);
 //::   #endif
   BmAddEntryOptions options;
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
   options.__set_priority(priority);
 //::   #endif
   try {

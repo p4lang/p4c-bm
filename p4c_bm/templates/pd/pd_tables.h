@@ -62,7 +62,7 @@ extern "C" {
 //::     if has_match_spec:
 //::       params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["int priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -96,7 +96,7 @@ ${name}
 //::   if has_match_spec:
 //::     params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["int priority"]
 //::   #endif
 //::

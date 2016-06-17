@@ -59,7 +59,7 @@ def enum(type_name, *sequential, **named):
     enums['from_str'] = from_str
     return type(type_name, (), enums)
 
-MatchType = enum('MatchType', 'EXACT', 'LPM', 'TERNARY', 'VALID')
+MatchType = enum('MatchType', 'EXACT', 'LPM', 'TERNARY', 'VALID', 'RANGE')
 TableType = enum('TableType', 'SIMPLE', 'INDIRECT', 'INDIRECT_WS')
 MeterType = enum('MeterType', 'PACKETS', 'BYTES')
 
@@ -342,7 +342,11 @@ def gen_match_params(key):
     params = []
     for field, match_type, bitwidth in key:
         bytes_needed = bits_to_bytes(bitwidth)
-        params += [(field, bytes_needed)]
+        if match_type == MatchType.RANGE:
+            params += [(field + "_start", bytes_needed)]
+            params += [(field + "_end", bytes_needed)]
+        else:
+            params += [(field, bytes_needed)]
         if match_type == MatchType.LPM:
             params += [(field + "_prefix_length", 2)]
         if match_type == MatchType.TERNARY:
