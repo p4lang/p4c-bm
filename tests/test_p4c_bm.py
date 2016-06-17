@@ -144,6 +144,41 @@ def test_gen_pd(input_p4, tmpdir):
     assert set(expected_src) == set([f.basename for f in src_path.listdir()])
 
 
+def test_gen_of_pd(tmpdir):
+    input_p4 = os.path.join("tests", "p4_programs", "l2_openflow.p4")
+    assert os.path.exists(input_p4)
+    p = str(tmpdir)
+    h = HLIR(input_p4)
+    more_primitives = json.loads(
+        resource_string(__name__,
+                        os.path.join('..', 'p4c_bm', 'primitives.json'))
+    )
+    h.add_primitives(more_primitives)
+    assert h.build()
+    json_dict = gen_json.json_dict_create(h)
+    assert json_dict
+
+    # hack the args
+    from argparse import Namespace
+    args = Namespace(plugin_list=["of"],
+                     openflow_mapping_dir=os.path.join("tests", "of_mapping"),
+                     openflow_mapping_mod="l2_openflow")
+
+    gen_pd.generate_pd_source(json_dict, p, "pref", args)
+    # now we check for all generated files
+    of_path = tmpdir.join("plugin", "of")
+    inc_path = of_path.join("inc")
+    src_path = of_path.join("src")
+    assert inc_path.ensure_dir()
+    assert src_path.ensure_dir()
+    expected_inc_path = "p4c_bm/plugin/of/inc"
+    expected_inc = [f for f in os.listdir(expected_inc_path)]
+    expected_src_path = "p4c_bm/plugin/of/src/"
+    expected_src = [f for f in os.listdir(expected_src_path)]
+    assert set(expected_inc) == set([f.basename for f in inc_path.listdir()])
+    assert set(expected_src) == set([f.basename for f in src_path.listdir()])
+
+
 def call_main(options):
     argv_save = list(sys.argv)
     sys.argv = ["p4c-bmv2"] + options
