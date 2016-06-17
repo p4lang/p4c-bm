@@ -235,6 +235,7 @@ def test_main(tmpdir):
 
     # preprocessor flag
     assert call_main([input_p4, "-DANTONIN_ON"]) == 0
+    assert call_main([input_p4, "-I/home/"]) == 0
 
     # field aliases
     input_field_aliases = os.path.join("tests", "testdata",
