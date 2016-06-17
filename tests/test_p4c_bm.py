@@ -160,7 +160,9 @@ def test_gen_of_pd(tmpdir):
 
     # hack the args
     from argparse import Namespace
-    args = Namespace(plugin_list=["of"], openflow_mapping_dir=os.path.join("tests", "of_mapping"), openflow_mapping_mod="l2_openflow")
+    args = Namespace(plugin_list=["of"],
+                     openflow_mapping_dir=os.path.join("tests", "of_mapping"),
+                     openflow_mapping_mod="l2_openflow")
 
     gen_pd.generate_pd_source(json_dict, p, "pref", args)
     # now we check for all generated files
@@ -235,7 +237,6 @@ def test_main(tmpdir):
 
     # preprocessor flag
     assert call_main([input_p4, "-DANTONIN_ON"]) == 0
-    assert call_main([input_p4, "-I/home/"]) == 0
 
     # field aliases
     input_field_aliases = os.path.join("tests", "testdata",
