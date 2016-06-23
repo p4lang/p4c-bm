@@ -322,6 +322,66 @@ ${name}
 //:: #endfor
 
 
+/* ENTRY RETRIEVAL */
+
+//:: for t_name, t in tables.items():
+//::   t_name = get_c_name(t_name)
+//::   match_type = t.match_type
+//::   name = pd_prefix + t_name + "_get_entry"
+//::   common_params = ["p4_pd_sess_hdl_t sess_hdl", "uint8_t dev_id",
+//::                    "p4_pd_entry_hdl_t entry_hdl", "bool read_from_hw"]
+//::   has_match_spec = len(t.key) > 0
+//::   if has_match_spec:
+//::     common_params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
+//::   #endif
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
+//::     common_params += ["int *priority"]
+//::   #endif
+//::   t_type = t.type_
+//::   if t_type == TableType.SIMPLE:
+//::     params = common_params + ["char **action_name", "uint8_t *action_data",
+//::                               "int *num_action_bytes"] # action_data has to be large enough
+//::     param_str = ",\n ".join(params)
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+);
+//::   else:
+//::     # indirect tables
+//::     params = common_params + ["p4_pd_mbr_hdl_t *mbr_hdls",
+//::                               "int *num_mbrs"] # has to be large enough
+//::     param_str = ",\n ".join(params)
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+);
+//::   #endif
+
+//:: #endfor
+
+//:: for t_name, t in tables.items():
+//::   t_type = t.type_
+//::   if t_type == TableType.SIMPLE: continue
+//::   t_name = get_c_name(t_name)
+//::   act_prof_name = get_c_name(t.act_prof)
+//::   params = ["p4_pd_sess_hdl_t sess_hdl", "uint8_t dev_id",
+//::             "p4_pd_mbr_hdl_t mbr_hdl", "bool read_from_hw",
+//::             "char **action_name",
+//::             "uint8_t *action_data", # has to be large enough
+//::             "int *num_action_bytes"]
+//::   param_str = ",\n ".join(params)
+//::   name = pd_prefix + act_prof_name + "_get_member"
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+);
+
+//:: #endfor
+
+
 /* DIRECT COUNTERS */
 
 //:: for t_name, t in tables.items():

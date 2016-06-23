@@ -51,7 +51,7 @@ template <>
 std::string string_from_field<2>(char *field) {
   uint16_t tmp = *(uint16_t *) field;
 #ifdef HOST_BYTE_ORDER_CALLER
-  tmp = ntohs(tmp);
+  tmp = htons(tmp);
 #endif
   return std::string((char *) &tmp, 2);
 }
@@ -60,7 +60,7 @@ template <>
 std::string string_from_field<3>(char *field) {
   uint32_t tmp = *(uint32_t *) field;
 #ifdef HOST_BYTE_ORDER_CALLER
-  tmp = ntohl(tmp);
+  tmp = htonl(tmp);
 #endif
   return std::string(((char *) &tmp) + 1, 3);
 }
@@ -69,9 +69,59 @@ template <>
 std::string string_from_field<4>(char *field) {
   uint32_t tmp = *(uint32_t *) field;
 #ifdef HOST_BYTE_ORDER_CALLER
-  tmp = ntohl(tmp);
+  tmp = htonl(tmp);
 #endif
   return std::string((char *) &tmp, 4);
+}
+
+template <int L>
+void string_to_field(const std::string &s, char *field) {
+  assert(s.size() <= L);
+  size_t offset = L - s.size();
+  std::memset(field, 0, offset);
+  std::memcpy(field + offset, s.data(), s.size());
+}
+
+template <>
+void string_to_field<1>(const std::string &s, char *field) {
+  assert(s.size() <= 1);
+  if (s.size() == 1) *field = s[0];
+}
+
+template <>
+void string_to_field<2>(const std::string &s, char *field) {
+  uint16_t *tmp = (uint16_t *) field;
+  *tmp = 0;
+  assert(s.size() <= 2);
+  size_t offset = 2 - s.size();
+  std::memcpy(field, s.data(), s.size());
+#ifdef HOST_BYTE_ORDER_CALLER
+  *tmp = ntohs(*tmp);
+#endif
+}
+
+template <>
+void string_to_field<3>(const std::string &s, char *field) {
+  uint32_t *tmp = (uint32_t *) field;
+  *tmp = 0;
+  assert(s.size() <= 3);
+  size_t offset = 3 - s.size();
+  std::memcpy(field, s.data(), s.size());
+#ifdef HOST_BYTE_ORDER_CALLER
+  *tmp = ntohl(*tmp);
+#endif
+}
+
+template <>
+void string_to_field<4>(const std::string &s, char *field) {
+  uint32_t *tmp = (uint32_t *) field;
+  *tmp = 0;
+  assert(s.size() <= 4);
+  size_t offset = 4 - s.size();
+  std::memcpy(field, s.data(), s.size());
+#ifdef HOST_BYTE_ORDER_CALLER
+  *tmp = ntohl(*tmp);
+#endif
 }
 
 //:: for t_name, t in tables.items():
@@ -89,8 +139,6 @@ std::vector<BmMatchParam> build_key_${t_name} (
   BmMatchParamTernary param_ternary; (void) param_ternary;
   BmMatchParamValid param_valid; (void) param_valid;
   BmMatchParamRange param_range; (void) param_range;
-
-  // TODO: 3-byte fields (mapped to uint32) are probably handled incorrectly
 
 //::   for field_name, field_match_type, field_bw in t.key:
 //::     field_name = get_c_name(field_name)
@@ -136,6 +184,42 @@ std::vector<BmMatchParam> build_key_${t_name} (
   return key;
 }
 
+void unbuild_key_${t_name} (
+    const std::vector<BmMatchParam> &key,
+    ${pd_prefix}${t_name}_match_spec_t *match_spec
+) {
+  size_t i = 0;
+//::   for field_name, field_match_type, field_bw in t.key:
+  {
+    const BmMatchParam &param = key.at(i++);
+//::     field_name = get_c_name(field_name)
+//::     width = bits_to_bytes(field_bw)
+//::     if field_match_type == MatchType.EXACT:
+    assert(param.type == BmMatchParamType::type::EXACT);
+    string_to_field<${width}>(param.exact.key, (char *) &(match_spec->${field_name}));
+//::     elif field_match_type == MatchType.LPM:
+    assert(param.type == BmMatchParamType::type::LPM);
+    string_to_field<${width}>(param.lpm.key, (char *) &(match_spec->${field_name}));
+    match_spec->${field_name}_prefix_length = param.lpm.prefix_length;
+//::     elif field_match_type == MatchType.TERNARY:
+    assert(param.type == BmMatchParamType::type::TERNARY);
+    string_to_field<${width}>(param.ternary.key, (char *) &(match_spec->${field_name}));
+    string_to_field<${width}>(param.ternary.mask, (char *) &(match_spec->${field_name}_mask));
+//::     elif field_match_type == MatchType.VALID:
+    assert(param.type == BmMatchParamType::type::VALID);
+    match_spec->${field_name} = (param.valid.key) ? 1 : 0;
+//::     elif field_match_type == MatchType.RANGE:
+    assert(param.type == BmMatchParamType::type::RANGE);
+    string_to_field<${width}>(param.range.start, (char *) &(match_spec->${field_name}_start));
+    string_to_field<${width}>(param.range.end_, (char *) &(match_spec->${field_name}_end));
+//::     else:
+//::       assert(0)
+//::     #endif
+  }
+
+//::   #endfor
+}
+
 //:: #endfor
 //::
 
@@ -154,6 +238,16 @@ std::vector<std::string> build_action_data_${a_name} (
   return action_data;
 }
 
+void unbuild_action_data_${a_name} (
+    const std::vector<std::string> &action_data,
+    ${pd_prefix}${a_name}_action_spec_t *action_spec
+) {
+  size_t i = 0;
+//::   for name, width in action_params:
+//::     name = get_c_name(name)
+  string_to_field<${width}>(action_data.at(i++), (char *) &(action_spec->${name}));
+//::   #endfor
+}
 //:: #endfor
 
 }
@@ -725,6 +819,185 @@ ${name}
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
+  return 0;
+}
+
+//:: #endfor
+
+/* ENTRY RETRIEVAL */
+
+//:: for t_name, t in tables.items():
+//::   t_name = get_c_name(t_name)
+//::   match_type = t.match_type
+//::   name = pd_prefix + t_name + "_get_entry"
+//::   common_params = ["p4_pd_sess_hdl_t sess_hdl", "uint8_t dev_id",
+//::                    "p4_pd_entry_hdl_t entry_hdl", "bool read_from_hw"]
+//::   has_match_spec = len(t.key) > 0
+//::   if has_match_spec:
+//::     common_params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
+//::   #endif
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
+//::     common_params += ["int *priority"]
+//::   #endif
+//::   t_type = t.type_
+//::   if t_type == TableType.SIMPLE:
+//::     params = common_params + ["char **action_name", "uint8_t *action_data",
+//::                               "int *num_action_bytes"] # action_data has to be large enough
+//::     param_str = ",\n ".join(params)
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+) {
+  assert(my_devices[dev_id]);
+  BmMtEntry entry;
+  try {
+    pd_client(dev_id).c->bm_mt_get_entry(entry, 0, "${t_name}", entry_hdl);
+  } catch (InvalidTableOperation &ito) {
+    const char *what =
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
+    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
+  }
+//::     if has_match_spec:
+  unbuild_key_${t_name}(entry.match_key, match_spec);
+//::     #endif
+
+  const BmActionEntry &action_entry = entry.action_entry;
+  assert(action_entry.action_type == BmActionEntryType::ACTION_DATA);
+  *num_action_bytes = 0;
+  // not efficient, but who cares
+//::     for a_name, a in t.actions.items():
+//::       a_name = get_c_name(a_name)
+//::       has_action_spec = len(a.runtime_data) > 0
+//::       if not has_action_spec: continue
+  if (action_entry.action_name == "${a_name}") {
+    unbuild_action_data_${a_name}(
+        action_entry.action_data,
+        (${pd_prefix}${a_name}_action_spec_t *) action_data);
+    *num_action_bytes = sizeof(${pd_prefix}${a_name}_action_spec_t);
+    // not valid in C++, hence the cast, but I have no choice (can't change the
+    // signature of the method)
+    *action_name = (char *) "${a_name}";
+  }
+//::     #endfor
+
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
+  *priority = entry.options.priority;
+//::     #endif
+
+  return 0;
+}
+//::   else:
+//::     # indirect tables
+//::     params = common_params + ["p4_pd_mbr_hdl_t *mbr_hdls",
+//::                               "int *num_mbrs"] # has to be large enough
+//::     param_str = ",\n ".join(params)
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+) {
+  assert(my_devices[dev_id]);
+  BmMtEntry entry;
+  try {
+    pd_client(dev_id).c->bm_mt_get_entry(entry, 0, "${t_name}", entry_hdl);
+  } catch (InvalidTableOperation &ito) {
+    const char *what =
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
+    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
+  }
+//::     if has_match_spec:
+  unbuild_key_${t_name}(entry.match_key, match_spec);
+//::     #endif
+
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
+  *priority = entry.options.priority;
+//::     #endif
+
+  const BmActionEntry &action_entry = entry.action_entry;
+//::     if t_type == TableType.INDIRECT:
+  assert(action_entry.action_type == BmActionEntryType::MBR_HANDLE);
+//::     #endif
+
+  if (action_entry.action_type == BmActionEntryType::MBR_HANDLE) {
+    *num_mbrs = 1;
+    *mbr_hdls = action_entry.mbr_handle;
+  } else {
+    assert(action_entry.action_type == BmActionEntryType::GRP_HANDLE);
+    BmMtIndirectWsGroup group;
+    try {
+      pd_client(dev_id).c->bm_mt_indirect_ws_get_group(group, 0, "${t_name}",
+                                                       action_entry.grp_handle);
+    } catch (InvalidTableOperation &ito) {
+      const char *what =
+          _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
+      std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+                << ito.code << "): " << what << std::endl;
+      return ito.code;
+    }
+    for (const auto mbr: group.mbr_handles) {
+      mbr_hdls[*num_mbrs] = mbr;
+      (*num_mbrs)++;
+    }
+  }
+
+  return 0;
+}
+//::   #endif
+
+//:: #endfor
+
+//:: for t_name, t in tables.items():
+//::   t_type = t.type_
+//::   if t_type == TableType.SIMPLE: continue
+//::   t_name = get_c_name(t_name)
+//::   act_prof_name = get_c_name(t.act_prof)
+//::   params = ["p4_pd_sess_hdl_t sess_hdl", "uint8_t dev_id",
+//::             "p4_pd_mbr_hdl_t mbr_hdl", "bool read_from_hw",
+//::             "char **action_name",
+//::             "uint8_t *action_data", # has to be large enough
+//::             "int *num_action_bytes"]
+//::   param_str = ",\n ".join(params)
+//::   name = pd_prefix + act_prof_name + "_get_member"
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+) {
+  assert(my_devices[dev_id]);
+  BmMtIndirectMember member;
+  try {
+    pd_client(dev_id).c->bm_mt_indirect_get_member(member, 0, "${t_name}",
+                                                   mbr_hdl);
+  } catch (InvalidTableOperation &ito) {
+    const char *what =
+        _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
+    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+              << ito.code << "): " << what << std::endl;
+    return ito.code;
+  }
+
+  *num_action_bytes = 0;
+  // not efficient, but who cares
+//::   for a_name, a in t.actions.items():
+//::     a_name = get_c_name(a_name)
+//::     has_action_spec = len(a.runtime_data) > 0
+//::     if not has_action_spec: continue
+  if (member.action_name == "${a_name}") {
+    unbuild_action_data_${a_name}(
+        member.action_data,
+        (${pd_prefix}${a_name}_action_spec_t *) action_data);
+    *num_action_bytes = sizeof(${pd_prefix}${a_name}_action_spec_t);
+    // not valid in C++, hence the cast, but I have no choice (can't change the
+    // signature of the method)
+    *action_name = (char *) "${a_name}";
+  }
+//::     #endfor
+
   return 0;
 }
 
