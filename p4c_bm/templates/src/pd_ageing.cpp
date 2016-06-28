@@ -80,10 +80,13 @@ void ${pd_prefix}ageing_notification_cb(const char *hdr, const char *data) {
   std::cout << "I received " << ageing_hdr->num_entries << " expired handles "
             << "for table " << ageing_hdr->table_id << std::endl;
     const AgeingState *state = device_state[ageing_hdr->switch_id];
-    const AgeingCb &cb = state->cbs.find(ageing_hdr->table_id)->second;
-    const uint32_t *handles = reinterpret_cast<const uint32_t *>(data);
-    for(unsigned int i = 0; i < ageing_hdr->num_entries; i++) {
-      cb.cb_fn(handles[i], cb.cb_cookie);
+    const auto it = state->cbs.find(ageing_hdr->table_id);
+    if (it != state->cbs.end()) {
+      const AgeingCb &cb = it->second;
+      const uint32_t *handles = reinterpret_cast<const uint32_t *>(data);
+      for(unsigned int i = 0; i < ageing_hdr->num_entries; i++) {
+        cb.cb_fn(handles[i], cb.cb_cookie);
+      }
     }
 }
 
