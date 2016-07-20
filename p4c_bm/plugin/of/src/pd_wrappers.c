@@ -272,27 +272,7 @@ openflow_module_init () {
     p4_pd_device.device_id = device;
     p4_pd_device.dev_pipe_id = dev_pip_id;
 
-    // packet_out miss
-    status = ${pd_prefix}packet_out_set_default_action_nop (
-        P4_PD_SESSION,
-        p4_pd_device,
-        &entry_hdl);
-
-    // packet_out unicast
-    ${pd_prefix}packet_out_match_spec_t packet_out_ms;
-    packet_out_ms.fabric_header_packetType = 5;
-    packet_out_ms.fabric_header_cpu_reasonCode = 1;
-    status |= ${pd_prefix}packet_out_table_add_with_packet_out_unicast (
-        P4_PD_SESSION,
-        p4_pd_device,
-        &packet_out_ms,
-        &entry_hdl);
-
 #define PRE_PORT_MAP_ARRAY_SIZE ((PRE_PORTS_MAX + 7)/8)
-
-    // packet_out multicast
-    packet_out_ms.fabric_header_packetType = 5;
-    packet_out_ms.fabric_header_cpu_reasonCode = 2;
 
     static uint8_t port_list[PRE_PORT_MAP_ARRAY_SIZE];
     static uint8_t lag_map[PRE_PORT_MAP_ARRAY_SIZE];
@@ -311,12 +291,6 @@ openflow_module_init () {
     p4_pd_mc_associate_node (P4_PRE_SESSION, P4_DEVICE_ID, mgrp_hdl, node_hdl, 0, 0);
 
     AGENT_ETHERNET_FLOOD_MC_HDL = mgrp_hdl;
-
-    status |= ${pd_prefix}packet_out_table_add_with_packet_out_eth_flood (
-        P4_PD_SESSION,
-        p4_pd_device,
-        &packet_out_ms,
-        &entry_hdl);
 
     // set pipeline defaults
     status |= ofpat_pipeline_set_default_nop ();
