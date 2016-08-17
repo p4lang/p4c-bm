@@ -1081,6 +1081,7 @@ def dump_counters(json_dict, hlir):
         if p4_counter.binding and (p4_counter.binding[0] == p4.P4_DIRECT):
             counter_dict["is_direct"] = True
             counter_dict["binding"] = p4_counter.binding[1].name
+            counter_dict["size"] = p4_counter.binding[1].max_size
         else:
             counter_dict["is_direct"] = False
             counter_dict["size"] = p4_counter.instance_count
