@@ -222,6 +222,11 @@ def build_match_value(widths, value):
     return "0x" + res
 
 
+def get_match_value_width(widths):
+    return sum([(width + 7) / 8 for width in widths])
+
+
+@static_var("vset_widths", {})
 def dump_parsers(json_dict, hlir):
     parsers = []
     parser_id = 0
@@ -316,17 +321,34 @@ def dump_parsers(json_dict, hlir):
         transitions = []
         for branch_case, next_state in p4_parse_state.branch_to.items():
             transition_dict = OrderedDict()
-            value, mask = None, None
+            value, mask, type_ = None, None, None
             if branch_case == p4.P4_DEFAULT:
-                value = "default"
+                type_ = "default"
             elif type(branch_case) is int:
+                type_ = "hexstr"
                 value = build_match_value(field_widths, branch_case)
             elif type(branch_case) is tuple:
+                type_ = "hexstr"
                 value, mask = (build_match_value(field_widths, branch_case[0]),
                                build_match_value(field_widths, branch_case[1]))
+            elif type(branch_case) is p4.p4_parse_value_set:
+                type_ = "parse_vset"
+                value = branch_case.name
+                # mask not supported yet in compiler, even though it is
+                # supported in bmv2
+                mask = None
+                vset_bits = sum(field_widths)
+                if value in dump_parsers.vset_widths:
+                    curr_bits = dump_parsers.vset_widths[value]
+                    if curr_bits != vset_bits:  # pragma: no cover
+                        LOG_CRITICAL("when parser value set used multiple "
+                                     "times, widths cannot clash")
+                else:
+                    dump_parsers.vset_widths[value] = vset_bits
             else:  # pragma: no cover
-                LOG_CRITICAL("value sets not supported in parser")
+                LOG_CRITICAL("invalid parser branching")
 
+            transition_dict["type"] = type_
             transition_dict["value"] = value
             transition_dict["mask"] = mask
 
@@ -347,6 +369,25 @@ def dump_parsers(json_dict, hlir):
     parsers.append(parser_dict)
 
     json_dict["parsers"] = parsers
+
+
+def dump_parse_vsets(json_dict, hlir):
+    vsets = []
+    vset_id = 0
+
+    for name, vset in hlir.p4_parse_value_sets.items():
+        if name not in dump_parsers.vset_widths:  # pragma: no cover
+            LOG_WARNING("Parser value set {} not used, cannot infer width; "
+                        "removing it".format(name))
+        vset_dict = OrderedDict()
+        vset_dict["name"] = name
+        vset_dict["id"] = vset_id
+        vset_id += 1
+        vset_dict["compressed_bitwidth"] = dump_parsers.vset_widths[name]
+
+        vsets.append(vset_dict)
+
+    json_dict["parse_vsets"] = vsets
 
 
 def process_forced_header_ordering(hlir, ordering):
@@ -1179,6 +1220,7 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     dump_headers(json_dict, hlir)
     dump_header_stacks(json_dict, hlir)
     dump_parsers(json_dict, hlir)
+    dump_parse_vsets(json_dict, hlir)
     dump_deparsers(json_dict, hlir)
     dump_meters(json_dict, hlir)
     dump_actions(json_dict, hlir, p4_v1_1=p4_v1_1)
