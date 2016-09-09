@@ -19,6 +19,8 @@
 #
 
 # -*- coding: utf-8 -*-
+# JSON format documentation available at:
+# https://github.com/p4lang/behavioral-model/blob/master/docs/JSON_format.md
 
 from collections import defaultdict, OrderedDict
 from util.topo_sorting import Graph
@@ -867,10 +869,15 @@ def dump_actions(json_dict, hlir, p4_v1_1=False):
         for call in action.flat_call_sequence:
             primitive_dict = OrderedDict()
 
-            primitive_name = call[0].name
-            primitive_dict["op"] = primitive_name
-
-            args = call[1]
+            if p4_v1_1 and type(call[0]) is p4.p4_extern_method:
+                primitive_name = "_" + call[0].parent.extern_type.name \
+                                 + "_" + call[0].name
+                primitive_dict["op"] = primitive_name
+                args = [call[0].parent.name] + call[1]
+            else:
+                primitive_name = call[0].name
+                primitive_dict["op"] = primitive_name
+                args = call[1]
 
             # backwards compatibility with older P4 programs
             if primitive_name == "modify_field" and len(args) == 3:
@@ -935,6 +942,10 @@ def dump_actions(json_dict, hlir, p4_v1_1=False):
                 elif is_register_ref(arg):
                     arg_dict["type"] = "register"
                     arg_dict["value"] = format_register_ref(arg)
+                elif p4_v1_1 and type(call[0]) is p4.p4_extern_method:
+                    if arg == call[0].parent.name:
+                        arg_dict["type"] = "extern"
+                        arg_dict["value"] = arg
                 else:  # pragma: no cover
                     LOG_CRITICAL("action arg type is not supported: %s",
                                  type(arg))
@@ -1237,6 +1248,39 @@ def dump_field_aliases(json_dict, hlir, path_field_aliases):
     json_dict["field_aliases"] = field_aliases
 
 
+def dump_extern_instances(json_dict, hlir):
+    extern_instances = []
+    id_ = 0
+    for name, p4_extern_instance in hlir.p4_extern_instances.items():
+        extern_instance_dict = OrderedDict()
+        extern_instance_dict["name"] = name
+        extern_instance_dict["id"] = id_
+        extern_instance_dict["type"] = p4_extern_instance.extern_type.name
+
+        id_ += 1
+
+        attributes = []
+        for attribute, attr in p4_extern_instance.attributes.items():
+            attr_type = p4_extern_instance.extern_type.attributes[attribute].\
+                        value_type.type_name
+            if attr_type != "bit" and attr_type != "int":  # pragma: no cover
+                LOG_CRITICAL(
+                    "Attribute type '{}' not supported for the "
+                    "extern type '{}'. Supported values are bit and int".
+                    format(attr_type, p4_extern_instance.extern_type.name))
+            attribute_dict = OrderedDict()
+            attribute_dict["name"] = attribute
+            attribute_dict["type"] = "hexstr"
+            attribute_dict["value"] = hex(attr)
+
+            attributes.append(attribute_dict)
+
+        extern_instance_dict["attribute_values"] = attributes
+        extern_instances.append(extern_instance_dict)
+
+    json_dict["extern_instances"] = extern_instances
+
+
 def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     # a bit hacky: import the correct HLIR based on the P4 version
     import importlib
@@ -1249,10 +1293,6 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     # mostly needed for unit tests, I could write a more elegant solution...
     reset_static_vars()
     json_dict = OrderedDict()
-
-    if p4_v1_1 and hlir.p4_extern_instances:  # pragma: no cover
-        LOG_CRITICAL("no extern types supported by bmv2 yet")
-        return json_dict
 
     dump_header_types(json_dict, hlir)
     dump_headers(json_dict, hlir)
@@ -1269,8 +1309,11 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     dump_field_lists(json_dict, hlir)
     dump_counters(json_dict, hlir)
     dump_registers(json_dict, hlir)
-
     dump_force_arith(json_dict, hlir)
+
+    if p4_v1_1 and hlir.p4_extern_instances:
+        LOG_WARNING("Initial support for extern types: be aware!")
+        dump_extern_instances(json_dict, hlir)
 
     if path_field_aliases:
         dump_field_aliases(json_dict, hlir, path_field_aliases)
