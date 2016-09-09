@@ -30,13 +30,13 @@ extern int *my_devices;
 extern "C" {
 
 // TODO: remove
-int ${pd_prefix}mirroring_mapping_add(p4_pd_mirror_id_t mirror_id,
+int p4_pd_mirroring_mapping_add(p4_pd_mirror_id_t mirror_id,
                                       uint16_t egress_port) {
   (void) mirror_id; (void) egress_port;
   return 0;
 }
 
-int ${pd_prefix}mirror_session_create(p4_pd_sess_hdl_t shdl,
+int p4_pd_mirror_session_create(p4_pd_sess_hdl_t shdl,
                                       p4_pd_dev_target_t dev_tgt,
                                       p4_pd_mirror_type_e type,
                                       p4_pd_direction_t dir,
@@ -56,7 +56,7 @@ int ${pd_prefix}mirror_session_create(p4_pd_sess_hdl_t shdl,
   return client->mirroring_mapping_add(id, egr_port);
 }
 
-int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
+int p4_pd_mirror_session_update(p4_pd_sess_hdl_t shdl,
                                       p4_pd_dev_target_t dev_tgt,
                                       p4_pd_mirror_type_e type,
                                       p4_pd_direction_t dir,
@@ -78,7 +78,7 @@ int ${pd_prefix}mirror_session_update(p4_pd_sess_hdl_t shdl,
 }
 
 // TODO: remove
-int ${pd_prefix}mirroring_mapping_delete(p4_pd_mirror_id_t mirror_id) {
+int p4_pd_mirroring_mapping_delete(p4_pd_mirror_id_t mirror_id) {
   (void) mirror_id;
   return 0;
 }
@@ -91,12 +91,12 @@ int ${pd_prefix}mirror_session_delete(p4_pd_sess_hdl_t shdl,
   return client->mirroring_mapping_delete(mirror_id);
 }
 
-int ${pd_prefix}mirroring_mapping_get_egress_port(int mirror_id) {
+int p4_pd_mirroring_mapping_get_egress_port(int mirror_id) {
   (void) mirror_id;
   return 0;
 }
 
-int ${pd_prefix}mirroring_add_coalescing_session(const int mirror_id,
+int p4_pd_mirroring_add_coalescing_session(const int mirror_id,
                                                  const int egress_port,
                                                  const int8_t *header,
                                                  const int8_t header_length,
@@ -111,7 +111,7 @@ int ${pd_prefix}mirroring_add_coalescing_session(const int mirror_id,
   return 0;
 }
 
-int ${pd_prefix}mirroring_set_coalescing_sessions_offset(const uint16_t offset) {
+int p4_pd_mirroring_set_coalescing_sessions_offset(const uint16_t offset) {
   (void) offset;
   return 0;
 }
