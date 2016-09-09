@@ -29,11 +29,11 @@ public:
     p4_pd_cleanup();
   }
 
-  SessionHandle_t client_init(const int32_t max_txn_size){
+  SessionHandle_t client_init(){
     std::cerr << "In client_init\n";
 
     p4_pd_sess_hdl_t sess_hdl;
-    p4_pd_client_init(&sess_hdl, max_txn_size);
+    p4_pd_client_init(&sess_hdl);
     return sess_hdl;
   }
 

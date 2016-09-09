@@ -48,7 +48,7 @@ int main() {
   p4_pd_test_assign_device(dev_tgt.device_id, NULL, DEVICE_THRIFT_PORT);
   
   p4_pd_sess_hdl_t sess_hdl;
-  p4_pd_client_init(&sess_hdl, 16);
+  p4_pd_client_init(&sess_hdl);
   
   std::cerr << "session handle is " << sess_hdl << std::endl;
     
