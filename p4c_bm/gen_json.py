@@ -832,9 +832,9 @@ def dump_actions(json_dict, hlir, p4_v1_1=False):
         for call in action.flat_call_sequence:
             primitive_dict = OrderedDict()
 
-            if type(call[0]) is p4.p4_extern_method:
+            if p4_v1_1 and type(call[0]) is p4.p4_extern_method:
                 # Ref: extern.h, line: 75
-                primitive_name = "_"+ call[0].parent.extern_type.name \
+                primitive_name = "_" + call[0].parent.extern_type.name \
                                  + "_" + call[0].name
                 primitive_dict["op"] = primitive_name
                 # Ref: P4Objects.cpp, lines: 703-707
@@ -907,7 +907,7 @@ def dump_actions(json_dict, hlir, p4_v1_1=False):
                 elif is_register_ref(arg):
                     arg_dict["type"] = "register"
                     arg_dict["value"] = format_register_ref(arg)
-                elif type(call[0]) is p4.p4_extern_method:
+                elif p4_v1_1 and type(call[0]) is p4.p4_extern_method:
                     # Ref: P4Objects.cpp, lines: 703-707
                     if arg == call[0].parent.name:
                         arg_dict["type"] = "extern"
@@ -1210,6 +1210,7 @@ def dump_field_aliases(json_dict, hlir, path_field_aliases):
     field_aliases = [[a, v] for a, v in aliases_dict.items()]
     json_dict["field_aliases"] = field_aliases
 
+
 def dump_extern_instances(json_dict, hlir):
     extern_instances = []
     id_ = 0
@@ -1223,10 +1224,17 @@ def dump_extern_instances(json_dict, hlir):
 
         attributes = []
         for attribute, attr in p4_extern_instance.attributes.items():
+            attr_type = p4_extern_instance.extern_type.attributes[attribute].\
+                        value_type.type_name
+            if attr_type != "bit" and attr_type != "int":
+                LOG_CRITICAL(
+                    "Attribute type '{}' not supported for the "
+                    "extern type '{}'. Supported values are bit and int".
+                    format(attr_type, p4_extern_instance.extern_type.name))
             attribute_dict = OrderedDict()
             attribute_dict["name"] = attribute
-            attribute_dict["type"] = "hexstr" # Ref: P4Objects.cpp, line 264
-            attribute_dict["value"] = attr.strip()
+            attribute_dict["type"] = "hexstr"  # Ref: P4Objects.cpp, line 264
+            attribute_dict["value"] = hex(attr)
 
             attributes.append(attribute_dict)
 
@@ -1234,6 +1242,7 @@ def dump_extern_instances(json_dict, hlir):
         extern_instances.append(extern_instance_dict)
 
     json_dict["extern_instances"] = extern_instances
+
 
 def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     # a bit hacky: import the correct HLIR based on the P4 version
@@ -1247,9 +1256,6 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     # mostly needed for unit tests, I could write a more elegant solution...
     reset_static_vars()
     json_dict = OrderedDict()
-
-    if p4_v1_1 and hlir.p4_extern_instances:  # pragma: no cover
-        LOG_WARNING("Initial support for extern types: be aware!")
 
     dump_header_types(json_dict, hlir)
     dump_headers(json_dict, hlir)
@@ -1266,9 +1272,11 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     dump_field_lists(json_dict, hlir)
     dump_counters(json_dict, hlir)
     dump_registers(json_dict, hlir)
-
     dump_force_arith(json_dict, hlir)
-    dump_extern_instances(json_dict, hlir)
+
+    if p4_v1_1 and hlir.p4_extern_instances:  # pragma: no cover
+        LOG_WARNING("Initial support for extern types: be aware!")
+        dump_extern_instances(json_dict, hlir)
 
     if path_field_aliases:
         dump_field_aliases(json_dict, hlir, path_field_aliases)
