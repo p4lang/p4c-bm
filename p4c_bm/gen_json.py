@@ -19,6 +19,8 @@
 #
 
 # -*- coding: utf-8 -*-
+# JSON format documentation available at:
+# https://github.com/p4lang/behavioral-model/blob/master/docs/JSON_format.md
 
 from collections import defaultdict, OrderedDict
 from util.topo_sorting import Graph
@@ -833,11 +835,9 @@ def dump_actions(json_dict, hlir, p4_v1_1=False):
             primitive_dict = OrderedDict()
 
             if p4_v1_1 and type(call[0]) is p4.p4_extern_method:
-                # Ref: extern.h, line: 75
                 primitive_name = "_" + call[0].parent.extern_type.name \
                                  + "_" + call[0].name
                 primitive_dict["op"] = primitive_name
-                # Ref: P4Objects.cpp, lines: 703-707
                 args = [call[0].parent.name] + call[1]
             else:
                 primitive_name = call[0].name
@@ -908,7 +908,6 @@ def dump_actions(json_dict, hlir, p4_v1_1=False):
                     arg_dict["type"] = "register"
                     arg_dict["value"] = format_register_ref(arg)
                 elif p4_v1_1 and type(call[0]) is p4.p4_extern_method:
-                    # Ref: P4Objects.cpp, lines: 703-707
                     if arg == call[0].parent.name:
                         arg_dict["type"] = "extern"
                         arg_dict["value"] = arg
@@ -1226,14 +1225,14 @@ def dump_extern_instances(json_dict, hlir):
         for attribute, attr in p4_extern_instance.attributes.items():
             attr_type = p4_extern_instance.extern_type.attributes[attribute].\
                         value_type.type_name
-            if attr_type != "bit" and attr_type != "int":
+            if attr_type != "bit" and attr_type != "int":  # pragma: no cover
                 LOG_CRITICAL(
                     "Attribute type '{}' not supported for the "
                     "extern type '{}'. Supported values are bit and int".
                     format(attr_type, p4_extern_instance.extern_type.name))
             attribute_dict = OrderedDict()
             attribute_dict["name"] = attribute
-            attribute_dict["type"] = "hexstr"  # Ref: P4Objects.cpp, line 264
+            attribute_dict["type"] = "hexstr"
             attribute_dict["value"] = hex(attr)
 
             attributes.append(attribute_dict)
@@ -1274,7 +1273,7 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     dump_registers(json_dict, hlir)
     dump_force_arith(json_dict, hlir)
 
-    if p4_v1_1 and hlir.p4_extern_instances:  # pragma: no cover
+    if p4_v1_1 and hlir.p4_extern_instances:
         LOG_WARNING("Initial support for extern types: be aware!")
         dump_extern_instances(json_dict, hlir)
 
