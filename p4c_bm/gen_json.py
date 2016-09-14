@@ -187,10 +187,14 @@ def dump_header_stacks(json_dict, hlir):
 
 def format_field_ref(p4_field):
     header = p4_field.instance
-    if not header.virtual:
-        return [header.name, p4_field.name]
-    else:
-        return [header.base_name, p4_field.name]
+    suffix = p4_field.name
+    prefix = header.name
+    if header.virtual:
+        prefix = header.base_name
+    # not handled by compiler frontend (HLIR) yet
+    if suffix == "valid":  # pragma: no cover
+        suffix = "$valid$"
+    return [prefix, suffix]
 
 
 def format_hexstr(i):
