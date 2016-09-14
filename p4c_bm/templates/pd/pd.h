@@ -21,11 +21,13 @@
 #ifndef _P4_PD_H_
 #define _P4_PD_H_
 
-#include "pd/pd_static.h"
-#include "pd/pd_tables.h"
-#include "pd/pd_learning.h"
-#include "pd/pd_meters.h"
-#include "pd/pd_counters.h"
+#include <bm/pdfixed/pd_common.h>
+
+#include "pd_tables.h"
+#include "pd_learning.h"
+#include "pd_meters.h"
+#include "pd_counters.h"
+#include "pd_registers.h"
 
 #ifdef __cplusplus
 extern "C" {

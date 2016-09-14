@@ -159,7 +159,7 @@ service ${p4_prefix} {
 //::     if has_match_spec:
 //::       params += [api_prefix + t_name + "_match_spec_t match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["i32 priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -341,7 +341,7 @@ service ${p4_prefix} {
 //::   if has_match_spec:
 //::     params += [api_prefix + t_name + "_match_spec_t match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["i32 priority"]
 //::   #endif
 //::
@@ -435,11 +435,13 @@ service ${p4_prefix} {
 
 //:: #endfor
 
-    # mirroring api
+    # registers
 
-    i32 mirroring_mapping_add(1:i32 mirror_id, 2:i32 egress_port);
-    i32 mirroring_mapping_delete(1:i32 mirror_id);
-    i32 mirroring_mapping_get_egress_port(1:i32 mirror_id);
+//:: for ra_name, ra in register_arrays.items():
+//::   name = "register_reset_" + ra_name
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
+
+//:: #endfor
 
     void set_learning_timeout(1: res.SessionHandle_t sess_hdl, 2: byte dev_id, 3: i32 msecs);
 

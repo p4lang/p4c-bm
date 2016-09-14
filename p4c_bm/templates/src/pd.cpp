@@ -18,14 +18,12 @@
  *
  */
 
+#include <bm/pdfixed/int/pd_notifications.h>
+
 #include <cstring>
 
 #include "pd/pd.h"
-
-#include "pd_conn_mgr.h"
-#include "pd_notifications.h"
-
-extern pd_conn_mgr_t *conn_mgr_state;
+#include "pd_client.h"
 
 #define NUM_DEVICES 256
 
@@ -56,7 +54,7 @@ p4_pd_status_t ${pd_prefix}assign_device(int dev_id,
                               ${pd_prefix}ageing_notification_cb,
                               ${pd_prefix}learning_notification_cb);
   my_devices[dev_id] = 1;
-  return pd_conn_mgr_client_init(conn_mgr_state, dev_id, rpc_port_num);
+  return conn_mgr_state->client_init(dev_id, rpc_port_num);
 }
 
 p4_pd_status_t ${pd_prefix}remove_device(int dev_id) {
@@ -65,7 +63,7 @@ p4_pd_status_t ${pd_prefix}remove_device(int dev_id) {
   ${pd_prefix}learning_remove_device(dev_id);
   ${pd_prefix}ageing_remove_device(dev_id);
   my_devices[dev_id] = 0;
-  return pd_conn_mgr_client_close(conn_mgr_state, dev_id);
+  return conn_mgr_state->client_close(dev_id);
 }
 
 }

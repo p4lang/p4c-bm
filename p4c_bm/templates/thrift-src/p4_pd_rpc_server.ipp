@@ -1,5 +1,4 @@
 //:: pd_prefix = "p4_pd_" + p4_prefix + "_"
-//:: pd_static_prefix = "p4_pd_"
 //:: api_prefix = p4_prefix + "_"
 
 #include "p4_prefix.h"
@@ -8,11 +7,7 @@
 
 #include <string.h>
 
-extern "C" {
-#include <pd/pd_static.h>
-#include <pd/pd.h>
-#include <pd/pd_mirroring.h>
-}
+#include "pd/pd.h"
 
 #include <list>
 #include <map>
@@ -128,7 +123,7 @@ public:
 //::     if has_match_spec:
 //::       params += ["const " + api_prefix + t_name + "_match_spec_t &match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["const int32_t priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -180,7 +175,7 @@ public:
 //::     if has_match_spec:
 //::       pd_params += ["&pd_match_spec"]
 //::     #endif
-//::     if match_type == MatchType.TERNARY:
+//::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       pd_params += ["priority"]
 //::     #endif
 //::     if has_action_spec:
@@ -571,7 +566,7 @@ public:
 //::   if has_match_spec:
 //::     params += ["const " + api_prefix + t_name + "_match_spec_t &match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["const int32_t priority"]
 //::   #endif
 //::   params_wo = params + ["const MemberHandle_t mbr"]
@@ -604,7 +599,7 @@ public:
 //::   if has_match_spec:
 //::     pd_params += ["&pd_match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     pd_params += ["priority"]
 //::   #endif
 //::   pd_params += ["mbr", "&pd_entry"]
@@ -644,7 +639,7 @@ public:
 //::   if has_match_spec:
 //::     pd_params += ["&pd_match_spec"]
 //::   #endif
-//::   if match_type == MatchType.TERNARY:
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     pd_params += ["priority"]
 //::   #endif
 //::   pd_params += ["grp", "&pd_entry"]
@@ -833,39 +828,22 @@ public:
 
 //:: #endfor
 
-  // mirroring api
+  // REGISTERS
 
-//:: name = "mirroring_mapping_add"
-  int32_t ${name}(const int32_t mirror_id, const int32_t egress_port) {
+//:: for ra_name, ra in register_arrays.items():
+//::   name = "register_reset_" + ra_name
+//::   pd_name = pd_prefix + name
+    int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
       std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id, egress_port);
-  }
 
-//:: name = "mirroring_mapping_delete"
-  int32_t ${name}(const int32_t mirror_id) {
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id);
-  }
+      p4_pd_dev_target_t pd_dev_tgt;
+      pd_dev_tgt.device_id = dev_tgt.dev_id;
+      pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
-//:: name = "mirroring_mapping_get_egress_port"
-  int32_t ${name}(int32_t mirror_id) {
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id);
-  }
+      return ${pd_name}(sess_hdl, pd_dev_tgt);
+    }
 
-  // coalescing api
-
-//:: name = "mirroring_set_coalescing_sessions_offset"
-  int32_t ${name}(const int16_t coalescing_sessions_offset) {
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(coalescing_sessions_offset);
-  }
-
-//:: name = "mirroring_add_coalescing_session"
-  int32_t ${name}(const int32_t mirror_id, const int32_t egress_port, const std::vector<int8_t> &header, const int16_t min_pkt_size, const int8_t timeout){
-      std::cerr << "In ${name}\n";
-      return ${pd_prefix}${name}(mirror_id, egress_port, &header[0], (const int8_t)header.size(), min_pkt_size, timeout);
-  }
+//:: #endfor
 
   void set_learning_timeout(const SessionHandle_t sess_hdl, const int8_t dev_id, const int32_t msecs) {
       ${pd_prefix}set_learning_timeout(sess_hdl, (const uint8_t)dev_id, msecs);

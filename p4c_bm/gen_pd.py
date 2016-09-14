@@ -32,13 +32,14 @@ _TENJIN_PREFIX = "//::"  # Use // in prefix for C syntax processing
 _THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 _TEMPLATES_DIR = os.path.join(_THIS_DIR, "templates")
-
+_PLUGIN_BASE_DIR = os.path.join(_THIS_DIR, "plugin")
 
 TABLES = {}
 ACTIONS = {}
 LEARN_QUANTAS = {}
 METER_ARRAYS = {}
 COUNTER_ARRAYS = {}
+REGISTER_ARRAYS = {}
 
 
 def enum(type_name, *sequential, **named):
@@ -58,7 +59,7 @@ def enum(type_name, *sequential, **named):
     enums['from_str'] = from_str
     return type(type_name, (), enums)
 
-MatchType = enum('MatchType', 'EXACT', 'LPM', 'TERNARY', 'VALID')
+MatchType = enum('MatchType', 'EXACT', 'LPM', 'TERNARY', 'VALID', 'RANGE')
 TableType = enum('TableType', 'SIMPLE', 'INDIRECT', 'INDIRECT_WS')
 MeterType = enum('MeterType', 'PACKETS', 'BYTES')
 
@@ -160,6 +161,19 @@ class CounterArray:
         return "{0:30} [{1}, {2}]".format(self.name, self.is_direct)
 
 
+class RegisterArray:
+    def __init__(self, name, id_):
+        self.name = name
+        self.id_ = id_
+        self.bitwidth = None
+        self.size = None
+
+        REGISTER_ARRAYS[name] = self
+
+    def register_str(self):
+        return "{0:30} [{1}, {2}]".format(self.name, self.size)
+
+
 def load_json(json_str):
     def get_header_type(header_name, j_headers):
         for h in j_headers:
@@ -171,7 +185,9 @@ def load_json(json_str):
         for h in j_header_types:
             if h["name"] != header_type:
                 continue
-            for f, bw in h["fields"]:
+            for t in h["fields"]:
+                # t can have a third element (field signedness)
+                f, bw = t[0], t[1]
                 if f == field_name:
                     return bw
         assert(0)
@@ -250,6 +266,11 @@ def load_json(json_str):
         else:
             counter_array.size = j_counter["size"]
 
+    for j_register in json_["register_arrays"]:
+        register_array = RegisterArray(j_register["name"], j_register["id"])
+        register_array.bitwidth = j_register["bitwidth"]
+        register_array.size = j_register["size"]
+
 
 def ignore_template_file(filename):
     """
@@ -275,7 +296,7 @@ def gen_file_lists(current_dir, gen_dir):
     return files_out
 
 
-def render_all_files(render_dict, gen_dir):
+def render_all_files(render_dict, gen_dir, plugin_list=[]):
     files = gen_file_lists(_TEMPLATES_DIR, gen_dir)
     for template, target in files:
         path = os.path.dirname(target)
@@ -284,6 +305,18 @@ def render_all_files(render_dict, gen_dir):
         with open(target, "w") as f:
             render_template(f, template, render_dict, _TEMPLATES_DIR,
                             prefix=_TENJIN_PREFIX)
+    if len(plugin_list) > 0:
+        for s in plugin_list:
+            plugin_dir = os.path.join(_PLUGIN_BASE_DIR, s)
+            plugin_files = gen_file_lists(plugin_dir,
+                                          os.path.join(gen_dir, 'plugin', s))
+            for template, target in plugin_files:
+                path = os.path.dirname(target)
+                if not os.path.exists(path):
+                    os.makedirs(path)
+                with open(target, "w") as f:
+                    render_template(f, template, render_dict, plugin_dir,
+                                    prefix=_TENJIN_PREFIX)
 
 
 def _validate_dir(dir_name):
@@ -309,7 +342,11 @@ def gen_match_params(key):
     params = []
     for field, match_type, bitwidth in key:
         bytes_needed = bits_to_bytes(bitwidth)
-        params += [(field, bytes_needed)]
+        if match_type == MatchType.RANGE:
+            params += [(field + "_start", bytes_needed)]
+            params += [(field + "_end", bytes_needed)]
+        else:
+            params += [(field, bytes_needed)]
         if match_type == MatchType.LPM:
             params += [(field + "_prefix_length", 2)]
         if match_type == MatchType.TERNARY:
@@ -353,12 +390,13 @@ def get_thrift_type(byte_width):
         return "binary"
 
 
-def generate_pd_source(json_dict, dest_dir, p4_prefix):
+def generate_pd_source(json_dict, dest_dir, p4_prefix, args=None):
     TABLES.clear()
     ACTIONS.clear()
     LEARN_QUANTAS.clear()
     METER_ARRAYS.clear()
     COUNTER_ARRAYS.clear()
+    REGISTER_ARRAYS.clear()
 
     load_json(json_dict)
     render_dict = {}
@@ -378,5 +416,14 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix):
     render_dict["learn_quantas"] = LEARN_QUANTAS
     render_dict["meter_arrays"] = METER_ARRAYS
     render_dict["counter_arrays"] = COUNTER_ARRAYS
+    render_dict["register_arrays"] = REGISTER_ARRAYS
     render_dict["render_dict"] = render_dict
-    render_all_files(render_dict, _validate_dir(dest_dir))
+
+    plugin_list = []
+    if args and args.plugin_list:
+        plugin_list = args.plugin_list
+        if args.openflow_mapping_dir and args.openflow_mapping_mod:
+            sys.path.append(args.openflow_mapping_dir)
+            render_dict['openflow_mapping_mod'] = args.openflow_mapping_mod
+
+    render_all_files(render_dict, _validate_dir(dest_dir), plugin_list)

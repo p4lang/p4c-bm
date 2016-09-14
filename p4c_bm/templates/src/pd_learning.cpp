@@ -18,16 +18,16 @@
  *
  */
 
-#include "pd/pd_learning.h"
-#include "pd_conn_mgr.h"
 #include <iostream>
 #include <mutex>
 #include <map>
 #include <cstring>
 
+#include "pd/pd_learning.h"
+#include "pd_client.h"
+
 #define NUM_DEVICES 256
 
-extern pd_conn_mgr_t *conn_mgr_state;
 extern int *my_devices;
 
 namespace {
@@ -117,22 +117,24 @@ void ${lq_name}_handle_learn_msg(const learn_hdr_t *hdr, const char *data) {
   ${pd_prefix}${lq_name}_digest_msg_t msg;
   msg.dev_tgt.device_id = static_cast<uint8_t>(hdr->switch_id);
   msg.num_entries = hdr->num_samples;
-  std::unique_ptr<char []> buf(
-    new char[hdr->num_samples * sizeof(${pd_prefix}${lq_name}_digest_entry_t)]
-  );
-  char *buf_ = buf.get();
+  std::unique_ptr<${pd_prefix}${lq_name}_digest_entry_t []> buf(
+      new ${pd_prefix}${lq_name}_digest_entry_t[hdr->num_samples]);
   const char *data_ = data;
+  char *buf_;
   for(size_t i = 0; i < hdr->num_samples; i++){
 //::   for name, bit_width in lq.fields:
 //::     c_name = get_c_name(name)
 //::     width = (bit_width + 7) / 8
-//::     field_width = width if width != 3 else 4 
+//::     if width > 4:
+    buf_ = reinterpret_cast<char *>(buf[i].${c_name});
+//::     else:
+    buf_ = reinterpret_cast<char *>(&buf[i].${c_name});
+//::     #endif
     bytes_to_field<${width}>(data_, buf_);
     data_ += ${width};
-    buf_ += ${field_width};
 //::   #endfor	
   }
-  msg.entries = (${pd_prefix}${lq_name}_digest_entry_t *) buf.get();
+  msg.entries = buf.get();
   msg.buffer_id = hdr->buffer_id;
   for(const auto &it : state->${lq_name}_clients) {
     it.second.cb_fn(it.first, &msg, it.second.cb_cookie);
@@ -158,8 +160,7 @@ p4_pd_status_t ${pd_prefix}set_learning_timeout
     // RPC function is called for each learn list
     // bmv2 also takes a timeout in ms, thus the "/ 1000"
 //:: for lq_name, lq in learn_quantas.items():
-    pd_conn_mgr_client(conn_mgr_state, device_id)->bm_learning_set_timeout(
-        0, ${lq.id_}, usecs / 1000);
+    pd_client(device_id).c->bm_learning_set_timeout(0, ${lq.id_}, usecs / 1000);
 //:: #endfor
   } catch (InvalidLearnOperation &ilo) {
     const char *what =
@@ -208,7 +209,7 @@ p4_pd_status_t ${pd_prefix}${lq_name}_notify_ack
  ${pd_prefix}${lq_name}_digest_msg_t *msg
 ) {
   assert(my_devices[msg->dev_tgt.device_id]);
-  pd_conn_mgr_client(conn_mgr_state, msg->dev_tgt.device_id)->bm_learning_ack_buffer(
+  pd_client(msg->dev_tgt.device_id).c->bm_learning_ack_buffer(
       0, ${lq.id_}, msg->buffer_id);
   return 0;
 }

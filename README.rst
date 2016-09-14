@@ -7,8 +7,13 @@ p4c-bm
 
 
 Generates the JSON configuration for the `behavioral-model (bmv2)
-<https://github.com/p4lang/behavioral-model>`_, as well as the PD (Protocol
-Dependent) library C/C++ files, if needed.
+<https://github.com/p4lang/behavioral-model>`_.
+
+Important: the PD has been moved out of this repository and split between the
+`bmv2 repository <https://github.com/p4lang/behavioral-model>`_ (for fixed part
+of the PD) and the new `p4-build repository
+<https://github.com/p4lang/p4-build>`_ (build infrastructure for the
+auto-generated / program-dependent part of the PD).
 
 Usage
 -----
@@ -16,6 +21,8 @@ Usage
 * To install p4c-bm on your machine:
 
   * :code:`sudo pip install -r requirements.txt`
+  * :code:`sudo pip install -r requirements_v1_1.txt` if you are interested in
+    compiling P4 v1.1 programs
   * :code:`sudo python setup.py install`
 
 
@@ -24,26 +31,15 @@ Usage
   * Try :code:`p4c-bmv2 -h`
   * :code:`--json` to generate a JSON representation of the P4 program
   * :code:`--pd` to generate the PD C++ code
+  * :code:`--p4-v1.1` if your input program is a P4 v1.1 program
 
 
-* Compiling the PD
+* To install in a non-default location, you can use:
 
-  You can copy the generated C++ PD file to your project directory (and compile
-  them with your app).
-
-  You can also use the pd_mk directory to compile the PD code:
-
-  * :code:`cd pd_mk/`
-  * :code:`./configure --includedir=<target_dir_for_headers> --libdir=<target_dir_for_libraries>`
-  * :code:`make 'P4_PATH=<path_to_p4_program>' 'P4_PREFIX=<prefix_for_apis>'`
-  * :code:`make install`
-
-  You will find the PD headers (fixed and generated) in *target_dir_for_headers*
-  and the libraries (libpdfixed and libpd) in *target_dir_for_libraries*.
-
-  If your main project also uses autotools, you may be able to integrate pd_mk
-  directly in your infrastructure with :code:`AC_CONFIG_SUBDIRS`
-
+  * :code:`python setup.py build install --prefix <your_path>
+    [--single-version-externally-managed] --record install_files.txt`
+  * :code:`cat install_files.txt | xargs rm -rf` if you need to uninstall later
+    on
 
 ..
    Apache license

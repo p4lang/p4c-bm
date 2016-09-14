@@ -11,54 +11,19 @@ env:
   - TOX_ENV=py27
   - TOX_ENV=flake8
 
-addons:
-  apt:
-    sources:
-      - boost-latest
-      - ubuntu-toolchain-r-test
-    packages:
-      - libjudy-dev
-      - libboost1.55-dev
-      - libboost-test1.55-dev
-      - libboost-program-options1.55-dev
-      - libboost-system1.55-dev
-      - libboost-filesystem1.55-dev
-      - libevent-dev
-      - automake
-      - libtool
-      - flex 
-      - bison
-      - pkg-config
-      - g++-4.8
-      - libssl-dev
-
-before_install:
-  - bash build/travis/install-thrift.sh
-  - export PATH=$PATH:$HOME/thrift/bin/
-  - export LDFLAGS="$LDFLAGS -L$HOME/thrift/lib"
-  - export CPPFLAGS="$CPPFLAGS -I$HOME/thrift/include"
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/thrift/lib
-  - bash build/travis/install-nanomsg.sh
-  - export LDFLAGS="$LDFLAGS -L$HOME/nanomsg/lib"
-  - export CPPFLAGS="$CPPFLAGS -I$HOME/nanomsg/include"
-  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/nanomsg/lib
-
 cache:
   directories:
     - $HOME/thrift
     - $HOME/nanomsg
 
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+# command to install dependencies
 install:
   - pip install -r requirements.txt
   - pip install tox
-  - cd pd_mk/ && ./autogen.sh && CXX=g++-4.8 ./configure && make 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' && cd ..
 
-# command to run tests, e.g. python setup.py test
+# command to run tests
 script:
   - tox -e $TOX_ENV
-  - cd pd_mk/ && make 'P4_PATH=tests/test.p4' 'P4_PREFIX=test' check
-  - ./tests/test; cd ..
 
 after_success:
   # Report coverage results to codecov.io

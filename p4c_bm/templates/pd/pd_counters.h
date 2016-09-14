@@ -21,7 +21,7 @@
 #ifndef _P4_PD_COUNTERS_H_
 #define _P4_PD_COUNTERS_H_
 
-#include "pd/pd_static.h"
+#include <bm/pdfixed/pd_common.h>
 
 #ifdef __cplusplus
 extern "C" {

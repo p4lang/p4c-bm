@@ -21,13 +21,14 @@
 # -*- coding: utf-8 -*-
 
 from collections import defaultdict, OrderedDict
-import p4_hlir.hlir.p4 as p4
 from util.topo_sorting import Graph
 import re
 from copy import copy
 import logging
 import sys
 
+
+p4 = None
 
 _STATIC_VARS = []
 
@@ -186,10 +187,32 @@ def dump_header_stacks(json_dict, hlir):
 
 def format_field_ref(p4_field):
     header = p4_field.instance
-    if not header.virtual:
-        return [header.name, p4_field.name]
-    else:
-        return [header.base_name, p4_field.name]
+    suffix = p4_field.name
+    prefix = header.name
+    if header.virtual:
+        prefix = header.base_name
+    # not handled by compiler frontend (HLIR) yet
+    if suffix == "valid":  # pragma: no cover
+        suffix = "$valid$"
+    return [prefix, suffix]
+
+
+def format_hexstr(i):
+    # Python appends a L at the end of a long number representation, which we
+    # need to remove
+    return hex(i).rstrip("L")
+
+
+# for p4 v1.1
+def is_register_ref(obj):
+    try:
+        return (type(obj) is p4.p4_register_ref)
+    except AttributeError:
+        return False
+
+
+def format_register_ref(p4_register_ref):
+    return [p4_register_ref.register_name, dump_expression(p4_register_ref.idx)]
 
 
 def build_match_value(widths, value):
@@ -203,6 +226,11 @@ def build_match_value(widths, value):
     return "0x" + res
 
 
+def get_match_value_width(widths):
+    return sum([(width + 7) / 8 for width in widths])
+
+
+@static_var("vset_widths", {})
 def dump_parsers(json_dict, hlir):
     parsers = []
     parser_id = 0
@@ -251,7 +279,7 @@ def dump_parsers(json_dict, hlir):
                 parameters.append(dest_dict)
                 if type(src) is int or type(src) is long:
                     src_dict["type"] = "hexstr"
-                    src_dict["value"] = hex(src)
+                    src_dict["value"] = format_hexstr(src)
                 elif type(src) is p4.p4_field:
                     src_dict["type"] = "field"
                     src_dict["value"] = format_field_ref(src)
@@ -297,17 +325,34 @@ def dump_parsers(json_dict, hlir):
         transitions = []
         for branch_case, next_state in p4_parse_state.branch_to.items():
             transition_dict = OrderedDict()
-            value, mask = None, None
+            value, mask, type_ = None, None, None
             if branch_case == p4.P4_DEFAULT:
-                value = "default"
+                type_ = "default"
             elif type(branch_case) is int:
+                type_ = "hexstr"
                 value = build_match_value(field_widths, branch_case)
             elif type(branch_case) is tuple:
+                type_ = "hexstr"
                 value, mask = (build_match_value(field_widths, branch_case[0]),
                                build_match_value(field_widths, branch_case[1]))
+            elif type(branch_case) is p4.p4_parse_value_set:
+                type_ = "parse_vset"
+                value = branch_case.name
+                # mask not supported yet in compiler, even though it is
+                # supported in bmv2
+                mask = None
+                vset_bits = sum(field_widths)
+                if value in dump_parsers.vset_widths:
+                    curr_bits = dump_parsers.vset_widths[value]
+                    if curr_bits != vset_bits:  # pragma: no cover
+                        LOG_CRITICAL("when parser value set used multiple "
+                                     "times, widths cannot clash")
+                else:
+                    dump_parsers.vset_widths[value] = vset_bits
             else:  # pragma: no cover
-                LOG_CRITICAL("value sets not supported in parser")
+                LOG_CRITICAL("invalid parser branching")
 
+            transition_dict["type"] = type_
             transition_dict["value"] = value
             transition_dict["mask"] = mask
 
@@ -328,6 +373,25 @@ def dump_parsers(json_dict, hlir):
     parsers.append(parser_dict)
 
     json_dict["parsers"] = parsers
+
+
+def dump_parse_vsets(json_dict, hlir):
+    vsets = []
+    vset_id = 0
+
+    for name, vset in hlir.p4_parse_value_sets.items():
+        if name not in dump_parsers.vset_widths:  # pragma: no cover
+            LOG_WARNING("Parser value set {} not used, cannot infer width; "
+                        "removing it".format(name))
+        vset_dict = OrderedDict()
+        vset_dict["name"] = name
+        vset_dict["id"] = vset_id
+        vset_id += 1
+        vset_dict["compressed_bitwidth"] = dump_parsers.vset_widths[name]
+
+        vsets.append(vset_dict)
+
+    json_dict["parse_vsets"] = vsets
 
 
 def process_forced_header_ordering(hlir, ordering):
@@ -433,7 +497,10 @@ def dump_expression(p4_expression):
     expression_dict = OrderedDict()
     if type(p4_expression) is int:
         expression_dict["type"] = "hexstr"
-        expression_dict["value"] = hex(p4_expression)
+        expression_dict["value"] = format_hexstr(p4_expression)
+    elif type(p4_expression) is p4.p4_sized_integer:
+        expression_dict["type"] = "hexstr"
+        expression_dict["value"] = format_hexstr(p4_expression)
     elif type(p4_expression) is bool:
         expression_dict["type"] = "bool"
         expression_dict["value"] = p4_expression
@@ -446,14 +513,19 @@ def dump_expression(p4_expression):
     elif type(p4_expression) is p4.p4_signature_ref:
         expression_dict["type"] = "local"
         expression_dict["value"] = p4_expression.idx
+    elif is_register_ref(p4_expression):
+        expression_dict["type"] = "register"
+        expression_dict["value"] = format_register_ref(p4_expression)
     else:
         expression_dict["type"] = "expression"
         expression_dict["value"] = OrderedDict()
-        expression_dict["value"]["op"] = p4_expression.op
-        expression_dict["value"]["left"] =\
-            dump_expression(p4_expression.left)
-        expression_dict["value"]["right"] =\
-            dump_expression(p4_expression.right)
+        if type(p4_expression.op) is p4.p4_expression:  # ternary operator
+            expression_dict["value"]["op"] = "?"
+            expression_dict["value"]["cond"] = dump_expression(p4_expression.op)
+        else:
+            expression_dict["value"]["op"] = p4_expression.op
+        expression_dict["value"]["left"] = dump_expression(p4_expression.left)
+        expression_dict["value"]["right"] = dump_expression(p4_expression.right)
 
         # expression_dict["op"] = p4_expression.op
         # expression_dict["left"] = dump_expression(p4_expression.left)
@@ -471,25 +543,28 @@ def get_nodes(pipe_ptr, node_set):
         get_nodes(next_node, node_set)
 
 
-match_types_map = {
-    p4.p4_match_type.P4_MATCH_EXACT: "exact",
-    p4.p4_match_type.P4_MATCH_LPM: "lpm",
-    p4.p4_match_type.P4_MATCH_TERNARY: "ternary",
-    p4.p4_match_type.P4_MATCH_VALID: "valid"
-}
+def match_type_to_str(p4_match_type):
+    match_types_map = {
+        p4.p4_match_type.P4_MATCH_EXACT: "exact",
+        p4.p4_match_type.P4_MATCH_LPM: "lpm",
+        p4.p4_match_type.P4_MATCH_TERNARY: "ternary",
+        p4.p4_match_type.P4_MATCH_VALID: "valid",
+        p4.p4_match_type.P4_MATCH_RANGE: "range"
+    }
+    if p4_match_type not in match_types_map:  # pragma: no cover
+        LOG_CRITICAL("found invalid match type")
+    return match_types_map[p4_match_type]
 
 
 def get_table_match_type(p4_table):
     match_types = []
     for _, m_type, _ in p4_table.match_fields:
-        if m_type == p4.p4_match_type.P4_MATCH_RANGE:  # pragma: no cover
-            LOG_CRITICAL("'range' match type is not supported by bmv2 yet")
-        elif m_type not in match_types_map:  # pragma: no cover
-            LOG_CRITICAL("found invalid match type")
-        match_types.append(match_types_map[m_type])
+        match_types.append(match_type_to_str(m_type))
 
     if len(match_types) == 0:
         match_type = "exact"
+    elif "range" in match_types:
+        match_type = "range"
     elif "ternary" in match_types:
         match_type = "ternary"
     elif match_types.count("lpm") >= 2:  # pragma: no cover
@@ -518,7 +593,7 @@ def get_table_type(p4_table):
 @static_var("pipeline_id", 0)
 @static_var("table_id", 0)
 @static_var("condition_id", 0)
-def dump_one_pipeline(name, pipe_ptr, hlir):
+def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
     def get_table_name(p4_table):
         if not p4_table:
             return None
@@ -592,7 +667,7 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         key = []
         for field_ref, m_type, mask in table.match_fields:
             key_field = OrderedDict()
-            match_type = match_types_map[m_type]
+            match_type = match_type_to_str(m_type)
             key_field["match_type"] = match_type
             if(match_type == "valid"):
                 if isinstance(field_ref, p4.p4_field):
@@ -627,9 +702,7 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
         table_dict["actions"] = [a.name for a in table.actions]
 
         next_tables = OrderedDict()
-        if "hit" in table.next_:  # pragma: no cover
-            LOG_CRITICAL("hit/miss syntax not supported by bmv2, "
-                         "subsequent tables may be skipped")
+        if "hit" in table.next_:
             next_tables["__HIT__"] = get_table_name(table.next_["hit"])
             next_tables["__MISS__"] = get_table_name(table.next_["miss"])
         else:
@@ -637,7 +710,28 @@ def dump_one_pipeline(name, pipe_ptr, hlir):
                 next_tables[a.name] = get_table_name(nt)
         table_dict["next_tables"] = next_tables
 
-        table_dict["default_action"] = None
+        # temporarily not covered by tests, because not part of P4 spec
+        if hasattr(table, "default_action") and\
+           table.default_action is not None:  # pragma: no cover
+            LOG_INFO("you are using the default_entry table attribute, "
+                     "this is still an experimental feature")
+            action, data = table.default_action
+            default_entry = OrderedDict()
+            for j_action in json_dict["actions"]:
+                if j_action["name"] == action.name:
+                    default_entry["action_id"] = j_action["id"]
+            default_entry["action_const"] = True
+            if data is not None:
+                default_entry["action_data"] = [format_hexstr(i) for i in data]
+                default_entry["action_entry_const"] = False
+            table_dict["default_entry"] = default_entry
+
+        # TODO: temporary, to ensure backwards compatibility
+        if hasattr(table, "base_default_next"):
+            table_dict["base_default_next"] = get_table_name(
+                table.base_default_next)
+        else:  # pragma: no cover
+            LOG_WARNING("Your 'p4-hlir' is out-of-date, consider updating")
 
         tables.append(table_dict)
 
@@ -670,10 +764,10 @@ def dump_pipelines(json_dict, hlir):
     # 2 pipelines: ingress and egress
     assert(len(hlir.p4_ingress_ptr) == 1 and "only one ingress ptr supported")
     ingress_ptr = hlir.p4_ingress_ptr.keys()[0]
-    pipelines.append(dump_one_pipeline("ingress", ingress_ptr, hlir))
+    pipelines.append(dump_one_pipeline(json_dict, "ingress", ingress_ptr, hlir))
 
     egress_ptr = hlir.p4_egress_ptr
-    pipelines.append(dump_one_pipeline("egress", egress_ptr, hlir))
+    pipelines.append(dump_one_pipeline(json_dict, "egress", egress_ptr, hlir))
 
     json_dict["pipelines"] = pipelines
 
@@ -710,7 +804,7 @@ def field_list_to_id(p4_field_list):
     return idx
 
 
-def dump_actions(json_dict, hlir):
+def dump_actions(json_dict, hlir, p4_v1_1=False):
     actions = []
     action_id = 0
 
@@ -766,13 +860,20 @@ def dump_actions(json_dict, hlir):
                 arg_dict = OrderedDict()
                 if type(arg) is int or type(arg) is long:
                     arg_dict["type"] = "hexstr"
-                    arg_dict["value"] = hex(arg)
+                    arg_dict["value"] = format_hexstr(arg)
+                elif type(arg) is p4.p4_sized_integer:
+                    # TODO(antonin)
+                    arg_dict["type"] = "hexstr"
+                    arg_dict["value"] = format_hexstr(arg)
                 elif type(arg) is p4.p4_field:
                     arg_dict["type"] = "field"
                     arg_dict["value"] = format_field_ref(arg)
                 elif type(arg) is p4.p4_header_instance:
                     arg_dict["type"] = "header"
                     arg_dict["value"] = arg.name
+                elif p4_v1_1 and type(arg) is p4.p4_header_stack:
+                    arg_dict["type"] = "header_stack"
+                    arg_dict["value"] = re.sub(r'\[.*\]', '', arg.name)
                 elif type(arg) is p4.p4_signature_ref:
                     arg_dict["type"] = "runtime_data"
                     arg_dict["value"] = arg.idx
@@ -784,7 +885,7 @@ def dump_actions(json_dict, hlir):
                          primitive_name in {"resubmit", "recirculate"}:
                         id_ = field_list_to_id(arg)
                     arg_dict["type"] = "hexstr"
-                    arg_dict["value"] = hex(id_)
+                    arg_dict["value"] = format_hexstr(id_)
                 elif type(arg) is p4.p4_field_list_calculation:
                     arg_dict["type"] = "calculation"
                     arg_dict["value"] = arg.name
@@ -800,8 +901,11 @@ def dump_actions(json_dict, hlir):
                 elif type(arg) is p4.p4_expression:
                     arg_dict["type"] = "expression"
                     arg_dict["value"] = dump_expression(arg)
+                elif is_register_ref(arg):
+                    arg_dict["type"] = "register"
+                    arg_dict["value"] = format_register_ref(arg)
                 else:  # pragma: no cover
-                    LOG_CRITICAL("action arg type is not supported: ",
+                    LOG_CRITICAL("action arg type is not supported: %s",
                                  type(arg))
 
                 if primitive_name in {"push", "pop"} and\
@@ -893,15 +997,33 @@ def dump_checksums(json_dict, hlir):
             for calculation in field_instance.calculation:
                 checksum_dict = OrderedDict()
                 type_, calc, if_cond = calculation
-                assert(calc.output_width == field_instance.width)
-                checksum_dict["name"] = field_name
+                if type_ == "verify":  # pragma: no cover
+                    LOG_WARNING(
+                        "The P4 program defines a checksum verification on "
+                        "field '{}'; as of now bmv2 ignores all checksum "
+                        "verifications; checksum updates are processed "
+                        "correctly.".format(field_name))
+                    continue
+                different_width = (calc.output_width != field_instance.width)
+                if different_width:  # pragma: no cover
+                    LOG_CRITICAL(
+                        "For checksum on field '{}', the field width is "
+                        "different from the calulation output width."
+                        .format(field_name))
+                # if we want the name to be unique, it has to (at least) include
+                # the name of teh calculation; however do we really need the
+                # name to be unique
+                checksum_dict["name"] = "|".join([field_name, calc.name])
                 checksum_dict["id"] = id_
                 id_ += 1
                 checksum_dict["target"] = field_ref
                 checksum_dict["type"] = "generic"
                 checksum_dict["calculation"] = calc.name
+                checksum_dict["if_cond"] = None
+                if if_cond is not None:
+                    assert(type(if_cond) is p4.p4_expression)
+                    checksum_dict["if_cond"] = dump_expression(if_cond)
                 checksums.append(checksum_dict)
-                break
 
     json_dict["checksums"] = checksums
 
@@ -1004,6 +1126,7 @@ def dump_counters(json_dict, hlir):
         if p4_counter.binding and (p4_counter.binding[0] == p4.P4_DIRECT):
             counter_dict["is_direct"] = True
             counter_dict["binding"] = p4_counter.binding[1].name
+            counter_dict["size"] = p4_counter.binding[1].max_size
         else:
             counter_dict["is_direct"] = False
             counter_dict["size"] = p4_counter.instance_count
@@ -1048,17 +1171,63 @@ def dump_force_arith(json_dict, hlir):
     json_dict["force_arith"] = force_arith
 
 
-def json_dict_create(hlir):
+def dump_field_aliases(json_dict, hlir, path_field_aliases):
+    aliases_dict = OrderedDict()
+
+    with open(path_field_aliases, 'r') as f:
+        for l in f.readlines():
+            l = l.strip()  # remove new line character at the end
+            try:
+                alias, field = l.split()
+                header_name, field_name = field.split(".")
+            except:
+                LOG_CRITICAL(
+                    "invalid alias in '{}': '{}'".format(path_field_aliases, l))
+
+            if field not in hlir.p4_fields:
+                LOG_CRITICAL(
+                    "file '{}' defines an alias for '{}', "
+                    "which is not a valid field in the P4 program".format(
+                        path_field_aliases, field))
+
+            if alias in aliases_dict:
+                LOG_WARNING(
+                    "file '{}' contains a duplicate alias: '{}'; "
+                    "latest definition will be used".format(
+                        path_field_aliases, alias))
+
+            aliases_dict[alias] = [header_name, field_name]
+
+    # TODO: should I use the dictionary directly instead?
+    field_aliases = [[a, v] for a, v in aliases_dict.items()]
+    json_dict["field_aliases"] = field_aliases
+
+
+def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
+    # a bit hacky: import the correct HLIR based on the P4 version
+    import importlib
+    global p4
+    if p4_v1_1:
+        p4 = importlib.import_module("p4_hlir_v1_1.hlir.p4")
+    else:
+        p4 = importlib.import_module("p4_hlir.hlir.p4")
+
     # mostly needed for unit tests, I could write a more elegant solution...
     reset_static_vars()
     json_dict = OrderedDict()
+
+    if p4_v1_1 and hlir.p4_extern_instances:  # pragma: no cover
+        LOG_CRITICAL("no extern types supported by bmv2 yet")
+        return json_dict
+
     dump_header_types(json_dict, hlir)
     dump_headers(json_dict, hlir)
     dump_header_stacks(json_dict, hlir)
     dump_parsers(json_dict, hlir)
+    dump_parse_vsets(json_dict, hlir)
     dump_deparsers(json_dict, hlir)
     dump_meters(json_dict, hlir)
-    dump_actions(json_dict, hlir)
+    dump_actions(json_dict, hlir, p4_v1_1=p4_v1_1)
     dump_pipelines(json_dict, hlir)
     dump_calculations(json_dict, hlir)
     dump_checksums(json_dict, hlir)
@@ -1068,5 +1237,8 @@ def json_dict_create(hlir):
     dump_registers(json_dict, hlir)
 
     dump_force_arith(json_dict, hlir)
+
+    if path_field_aliases:
+        dump_field_aliases(json_dict, hlir, path_field_aliases)
 
     return json_dict

@@ -20,6 +20,10 @@
 
 # -*- coding: utf-8 -*-
 
+from version import get_version_str
+
 __author__ = 'Antonin Bas'
 __email__ = 'antonin@barefootnetworks.com'
-__version__ = '0.1.0'
+__version__ = get_version_str()
+
+del get_version_str

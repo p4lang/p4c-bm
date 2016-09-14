@@ -1,0 +1,1 @@
+-e git+https://github.com/p4lang/p4-hlir.git@p4v1.1#egg=p4-hlir-v1.1
