@@ -230,26 +230,31 @@ def get_match_value_width(widths):
     return sum([(width + 7) / 8 for width in widths])
 
 
-@static_var("vset_widths", {})
-def dump_parsers(json_dict, hlir):
-    parsers = []
-    parser_id = 0
-
-    # only one parser in P4 right now, choose name "parser" for it
+@static_var("parse_state_id", 0)
+def dump_one_parser(parser_name, parser_id, p4_start_state):
     parser_dict = OrderedDict()
-    parser_dict["name"] = "parser"
+    parser_dict["name"] = parser_name
     parser_dict["id"] = parser_id
-    parser_id += 1
-    # the init parse state is always "start"
-    parser_dict["init_state"] = "start"
+    parser_dict["init_state"] = p4_start_state.name
     parse_states = []
 
-    parse_state_id = 0
-    for name, p4_parse_state in hlir.p4_parse_states.items():
+    accessible_parse_states = set()
+
+    def find_accessible_parse_states(parse_state):
+        if parse_state in accessible_parse_states:
+            return
+        accessible_parse_states.add(parse_state)
+        for _, next_state in parse_state.branch_to.items():
+            if isinstance(next_state, p4.p4_parse_state):
+                find_accessible_parse_states(next_state)
+
+    find_accessible_parse_states(p4_start_state)
+
+    for p4_parse_state in accessible_parse_states:
         parse_state_dict = OrderedDict()
-        parse_state_dict["name"] = name
-        parse_state_dict["id"] = parse_state_id
-        parse_state_id += 1
+        parse_state_dict["name"] = p4_parse_state.name
+        parse_state_dict["id"] = dump_one_parser.parse_state_id
+        dump_one_parser.parse_state_id += 1
 
         parser_ops = []
         for parser_op in p4_parse_state.call_sequence:
@@ -370,7 +375,23 @@ def dump_parsers(json_dict, hlir):
 
     parser_dict["parse_states"] = parse_states
 
-    parsers.append(parser_dict)
+    return parser_dict
+
+
+@static_var("vset_widths", {})
+def dump_parsers(json_dict, hlir):
+    parsers = []
+    parser_id = 0
+
+    for name, p4_parse_state in hlir.p4_parse_states.items():
+        new_name = None
+        if name == "start":
+            new_name = "parser"
+        elif "packet_entry" in p4_parse_state._pragmas:
+            new_name = name
+        if new_name:
+            parsers.append(dump_one_parser(new_name, parser_id, p4_parse_state))
+            parser_id += 1
 
     json_dict["parsers"] = parsers
 
@@ -409,7 +430,7 @@ def process_forced_header_ordering(hlir, ordering):
     return p4_ordering
 
 
-def produce_parser_topo_sorting(hlir):
+def produce_parser_topo_sorting(hlir, p4_start_state):
     header_graph = Graph()
 
     def walk_rec(hlir, parse_state, prev_hdr_node, tag_stacks_index, visited):
@@ -449,8 +470,7 @@ def produce_parser_topo_sorting(hlir):
             walk_rec(hlir, next_state, prev_hdr_node,
                      tag_stacks_index.copy(), visited | {parse_state})
 
-    start_state = hlir.p4_parse_states["start"]
-    for pragma in start_state._pragmas:
+    for pragma in p4_start_state._pragmas:
         try:
             words = pragma.split()
             if words[0] != "header_ordering":
@@ -462,7 +482,7 @@ def produce_parser_topo_sorting(hlir):
             LOG_CRITICAL("invalid 'header_ordering' pragma")
         return sorting
 
-    walk_rec(hlir, start_state, None, defaultdict(int), set())
+    walk_rec(hlir, p4_start_state, None, defaultdict(int), set())
 
     header_topo_sorting = header_graph.produce_topo_sorting()
     if header_topo_sorting is None:  # pragma: no cover
@@ -471,22 +491,33 @@ def produce_parser_topo_sorting(hlir):
     return header_topo_sorting
 
 
+def dump_one_deparser(deparser_name, deparser_id, p4_start_state, hlir):
+    deparser_dict = OrderedDict()
+    deparser_dict["name"] = deparser_name
+    deparser_dict["id"] = deparser_id
+    deparser_id = deparser_id
+
+    header_topo_sorting = produce_parser_topo_sorting(hlir, p4_start_state)
+    deparser_order = [hdr.name for hdr in header_topo_sorting]
+    deparser_dict["order"] = deparser_order
+
+    return deparser_dict
+
+
 def dump_deparsers(json_dict, hlir):
     deparsers = []
     deparser_id = 0
 
-    # for now, only one deparser, called "deparser" and inferred from the one
-    # parser
-    deparser_dict = OrderedDict()
-    deparser_dict["name"] = "deparser"
-    deparser_dict["id"] = deparser_id
-    deparser_id += 1
-
-    header_topo_sorting = produce_parser_topo_sorting(hlir)
-    deparser_order = [hdr.name for hdr in header_topo_sorting]
-    deparser_dict["order"] = deparser_order
-
-    deparsers.append(deparser_dict)
+    for name, p4_parse_state in hlir.p4_parse_states.items():
+        new_name = None
+        if name == "start":
+            new_name = "deparser"
+        elif "packet_entry" in p4_parse_state._pragmas:
+            new_name = name
+        if new_name:
+            deparsers.append(
+                dump_one_deparser(new_name, deparser_id, p4_parse_state, hlir))
+            deparser_id += 1
 
     json_dict["deparsers"] = deparsers
 
@@ -964,7 +995,10 @@ def dump_calculations(json_dict, hlir):
                 # input. This is not exactly what is described in P4. This is
                 # obviously not optimal but payload needs to change in P4 anyway
                 # (it is incorrect).
-                topo_sorting = produce_parser_topo_sorting(hlir)
+                # for now we hard-code "start" here; it is unsure how we want to
+                # handle this in the multi-parser / deparser case
+                topo_sorting = produce_parser_topo_sorting(
+                    hlir, hlir.p4_parse_states["start"])
                 for i, h in enumerate(topo_sorting):
                     if h == last_header:
                         break

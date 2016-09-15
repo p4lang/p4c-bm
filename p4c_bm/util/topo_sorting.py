@@ -37,7 +37,6 @@ class Node(object):
 class Graph(object):
     def __init__(self):
         self.nodes = {}
-        self.root = None
 
     def add_node(self, node):
         assert(node not in self.nodes)
