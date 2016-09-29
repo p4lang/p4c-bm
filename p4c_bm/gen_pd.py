@@ -218,6 +218,9 @@ def load_json(json_str):
                 if match_type == MatchType.VALID:
                     field_name = target + "_valid"
                     bitwidth = 1
+                elif target[1] == "$valid$":  # pragma: no cover
+                    field_name = target[0] + "_valid"
+                    bitwidth = 1
                 else:
                     field_name = ".".join(target)
                     header_type = get_header_type(target[0],
