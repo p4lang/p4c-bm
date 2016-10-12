@@ -51,14 +51,19 @@ except ImportError:
     p4_v1_1_support = False
 
 
-def list_p4_programs():
+def list_p4_programs(with_negative=False):
     p4_programs_dir = "tests/p4_programs"
     files = os.listdir(p4_programs_dir)
-    return [os.path.join(p4_programs_dir, f)
-            for f in files if os.path.splitext(f)[1] == '.p4']
+    if with_negative:
+        return [os.path.join(p4_programs_dir, f)
+                for f in files if os.path.splitext(f)[1] == '.p4']
+    else:
+        return [os.path.join(p4_programs_dir, f)
+                for f in files
+                if os.path.splitext(f)[1] == '.p4' and "negative" not in f]
 
 
-@pytest.mark.parametrize("input_p4", list_p4_programs())
+@pytest.mark.parametrize("input_p4", list_p4_programs(with_negative=True))
 def test_gen_json(input_p4):
     assert os.path.exists(input_p4)
     h = HLIR(input_p4)
@@ -68,8 +73,12 @@ def test_gen_json(input_p4):
     )
     h.add_primitives(more_primitives)
     assert h.build()
-    json_dict = gen_json.json_dict_create(h)
-    assert json_dict
+    if "negative" in input_p4:  # negative test => compiler must exit
+        with pytest.raises(SystemExit):
+            gen_json.json_dict_create(h)
+    else:
+        json_dict = gen_json.json_dict_create(h)
+        assert json_dict
 
 
 def list_files(dirname, ext):

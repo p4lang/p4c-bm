@@ -623,6 +623,19 @@ def get_table_type(p4_table):
     return table_type
 
 
+@static_var("referenced", {})
+def check_act_prof_sharing(p4_table):
+    act_prof = p4_table.action_profile
+    if act_prof is None:
+        return
+    if act_prof in check_act_prof_sharing.referenced:
+        curr_table_name = check_act_prof_sharing.referenced[act_prof]
+        LOG_CRITICAL("action profile {} is shared by at least 2 tables, "
+                     "{} and {}, which is not supported in bmv2"
+                     .format(act_prof.name, curr_table_name, p4_table.name))
+    check_act_prof_sharing.referenced[act_prof] = p4_table.name
+
+
 @static_var("pipeline_id", 0)
 @static_var("table_id", 0)
 @static_var("condition_id", 0)
@@ -657,6 +670,10 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
     for name, table in hlir.p4_tables.items():
         if table not in node_set:
             continue
+
+        # action profile sharing is not supported yet in bmv2; if sharing is
+        # detected this function will print an error message and exit.
+        check_act_prof_sharing(table)
 
         table_dict = OrderedDict()
         table_dict["name"] = name
