@@ -229,8 +229,8 @@ p4_pd_status_t ${pd_prefix}learning_remove_device(int dev_id) {
 
 void ${pd_prefix}learning_notification_cb(const char *hdr, const char *data) {
   const learn_hdr_t *learn_hdr = reinterpret_cast<const learn_hdr_t *>(hdr);
-  std::cout << "I received " << learn_hdr->num_samples << " samples"
-            << std::endl;
+  // std::cout << "I received " << learn_hdr->num_samples << " samples"
+  //           << std::endl;
   switch(learn_hdr->list_id) {
 //:: for lq_name, lq in learn_quantas.items():
 //::   lq_name = get_c_name(lq_name)

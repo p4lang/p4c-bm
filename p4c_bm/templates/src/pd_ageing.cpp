@@ -77,8 +77,8 @@ p4_pd_status_t ${pd_prefix}ageing_remove_device(int dev_id) {
 
 void ${pd_prefix}ageing_notification_cb(const char *hdr, const char *data) {
   const ageing_hdr_t *ageing_hdr = reinterpret_cast<const ageing_hdr_t *>(hdr);
-  std::cout << "I received " << ageing_hdr->num_entries << " expired handles "
-            << "for table " << ageing_hdr->table_id << std::endl;
+  // std::cout << "I received " << ageing_hdr->num_entries << " expired handles "
+  //           << "for table " << ageing_hdr->table_id << std::endl;
     const AgeingState *state = device_state[ageing_hdr->switch_id];
     const auto it = state->cbs.find(ageing_hdr->table_id);
     if (it != state->cbs.end()) {
