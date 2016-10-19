@@ -997,6 +997,9 @@ def dump_calculations(json_dict, hlir):
         input_ = inputs[0]
         my_input = []
         last_header = None
+        sum_bitwidths = 0
+        with_payload = False
+        has_var_width = False
         for field in input_.fields:
             if type(field) is p4.p4_field:
                 field_dict = OrderedDict()
@@ -1004,20 +1007,26 @@ def dump_calculations(json_dict, hlir):
                 field_dict["value"] = format_field_ref(field)
                 last_header = field.instance
                 my_input.append(field_dict)
+                if field.width == p4.P4_AUTO_WIDTH:
+                    has_var_width = True
+                else:
+                    sum_bitwidths += field.width
             elif type(field) is p4.p4_sized_integer:
                 field_dict = OrderedDict()
                 if field.width % 8 != 0:  # pragma: no cover
-                    LOG_CRITICAL(
-                        "p4 sized integers' width needs to be a multiple of 8"
-                    )
+                    LOG_INFO("you are using a p4 sized integer in '{}' with a "
+                             "bitwidth which is not a multiple of 8, this is "
+                             "still an experimental feature".format(name))
                 # recycling function I wrote for parser
                 # TODO: find a better name for it
-                s = build_match_value([field.width / 8], field)
+                s = build_match_value([field.width], field)
                 field_dict["type"] = "hexstr"
                 field_dict["value"] = s
                 field_dict["bitwidth"] = field.width
                 my_input.append(field_dict)
+                sum_bitwidths += field.width
             elif field is p4.P4_PAYLOAD:
+                with_payload = True
                 # this case is treated in a somewhat special way. We look at the
                 # header topo sorting and add them to the calculation
                 # input. This is not exactly what is described in P4. This is
@@ -1040,8 +1049,24 @@ def dump_calculations(json_dict, hlir):
                 my_input.append(field_dict)
             else:  # pragma: no cover
                 LOG_CRITICAL("field lists can only include fields")
+
+        with_byte_boundary = (sum_bitwidths % 8) == 0
+        if (not has_var_width)\
+           and with_payload\
+           and (not with_byte_boundary):  # pragma: no cover
+            LOG_CRITICAL("Field list calculation '{}' is not correct; "
+                         "it includes the packet payload but the rest of the "
+                         "fields do not sum up to a bitwidth which is a "
+                         "multiple of 8".format(name))
+        if (not has_var_width) and (not with_byte_boundary):  # pragma: no cover
+            LOG_WARNING("Field list calculation '{}' computes over a field "
+                        "list whose total bitwidth is not a multiple of 8; "
+                        "this is not recommended as it can lead to undefined "
+                        "behavior; consider adding paddding".format(name))
+
         calc_dict["input"] = my_input
         calc_dict["algo"] = p4_calculation.algorithm
+        # ignored in bmv2, is it a good idea?
         # calc_dict["output_width"] = calculation.output_width
 
         calculations.append(calc_dict)
