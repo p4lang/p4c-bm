@@ -406,6 +406,7 @@ def dump_parse_vsets(json_dict, hlir):
         if name not in dump_parsers.vset_widths:  # pragma: no cover
             LOG_WARNING("Parser value set {} not used, cannot infer width; "
                         "removing it".format(name))
+            continue
         vset_dict = OrderedDict()
         vset_dict["name"] = name
         vset_dict["id"] = vset_id
