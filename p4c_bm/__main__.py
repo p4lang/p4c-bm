@@ -69,6 +69,9 @@ def get_parser():
                         help="Directory of openflow mapping files")
     parser.add_argument('--openflow-mapping-mod',
                         help="Openflow mapping module name -- not a file name")
+    parser.add_argument('--keep-pragmas', action='store_true',
+                        help="Propagate pragmas to JSON file when applicable",
+                        default=False)
     return parser
 
 
@@ -183,7 +186,8 @@ def main():
             print "Error while building HLIR"
             sys.exit(1)
 
-        json_dict = gen_json.json_dict_create(h, path_field_aliases, p4_v1_1)
+        json_dict = gen_json.json_dict_create(h, path_field_aliases, p4_v1_1,
+                                              args.keep_pragmas)
 
         if args.json:
             print "Generating json output to", path_json

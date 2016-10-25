@@ -88,7 +88,11 @@ def header_length_exp_format(p4_expression, fields):
         return p4_expression
 
 
-def dump_header_types(json_dict, hlir):
+def add_pragmas(json_item, p4_object):
+    json_item["pragmas"] = list(p4_object._pragmas)
+
+
+def dump_header_types(json_dict, hlir, keep_pragmas=False):
     header_types = []
     id_ = 0
     for name, p4_header in hlir.p4_headers.items():
@@ -122,12 +126,15 @@ def dump_header_types(json_dict, hlir):
         header_type_dict["length_exp"] = length_exp
         header_type_dict["max_length"] = max_length
 
+        if keep_pragmas:
+            add_pragmas(header_type_dict, p4_header)
+
         header_types.append(header_type_dict)
 
     json_dict["header_types"] = header_types
 
 
-def dump_headers(json_dict, hlir):
+def dump_headers(json_dict, hlir, keep_pragmas=False):
     headers = []
     id_ = 0
     for name, p4_header_instance in hlir.p4_header_instances.items():
@@ -140,12 +147,16 @@ def dump_headers(json_dict, hlir):
         header_instance_dict["header_type"] =\
             p4_header_instance.header_type.name
         header_instance_dict["metadata"] = p4_header_instance.metadata
+
+        if keep_pragmas:
+            add_pragmas(header_instance_dict, p4_header_instance)
+
         headers.append(header_instance_dict)
 
     json_dict["headers"] = headers
 
 
-def dump_header_stacks(json_dict, hlir):
+def dump_header_stacks(json_dict, hlir, keep_pragmas=False):
     header_stacks = []
 
     class HST:
@@ -171,6 +182,7 @@ def dump_header_stacks(json_dict, hlir):
             my_stacks[base_name] = HST(base_name,
                                        p4_header_instance.max_index + 1,
                                        p4_header_instance.header_type.name)
+            my_stacks[base_name]._pragmas = p4_header_instance._pragmas
         my_stacks[base_name].add_header_id(header_id - 1)
 
     id_ = 0
@@ -182,6 +194,10 @@ def dump_header_stacks(json_dict, hlir):
         header_stack_dict["size"] = hst.size
         header_stack_dict["header_type"] = hst.header_type
         header_stack_dict["header_ids"] = hst.ids
+
+        if keep_pragmas:
+            add_pragmas(header_stack_dict, hst)
+
         header_stacks.append(header_stack_dict)
 
     json_dict["header_stacks"] = header_stacks
@@ -233,7 +249,7 @@ def get_match_value_width(widths):
 
 
 @static_var("parse_state_id", 0)
-def dump_one_parser(parser_name, parser_id, p4_start_state):
+def dump_one_parser(parser_name, parser_id, p4_start_state, keep_pragmas=False):
     parser_dict = OrderedDict()
     parser_dict["name"] = parser_name
     parser_dict["id"] = parser_id
@@ -373,6 +389,9 @@ def dump_one_parser(parser_name, parser_id, p4_start_state):
 
         parse_state_dict["transitions"] = transitions
 
+        if keep_pragmas:
+            add_pragmas(parse_state_dict, p4_parse_state)
+
         parse_states.append(parse_state_dict)
 
     parser_dict["parse_states"] = parse_states
@@ -381,7 +400,7 @@ def dump_one_parser(parser_name, parser_id, p4_start_state):
 
 
 @static_var("vset_widths", {})
-def dump_parsers(json_dict, hlir):
+def dump_parsers(json_dict, hlir, keep_pragmas=False):
     parsers = []
     parser_id = 0
 
@@ -392,13 +411,14 @@ def dump_parsers(json_dict, hlir):
         elif "packet_entry" in p4_parse_state._pragmas:
             new_name = name
         if new_name:
-            parsers.append(dump_one_parser(new_name, parser_id, p4_parse_state))
+            parsers.append(dump_one_parser(
+                new_name, parser_id, p4_parse_state, keep_pragmas=keep_pragmas))
             parser_id += 1
 
     json_dict["parsers"] = parsers
 
 
-def dump_parse_vsets(json_dict, hlir):
+def dump_parse_vsets(json_dict, hlir, keep_pragmas=False):
     vsets = []
     vset_id = 0
 
@@ -412,6 +432,9 @@ def dump_parse_vsets(json_dict, hlir):
         vset_dict["id"] = vset_id
         vset_id += 1
         vset_dict["compressed_bitwidth"] = dump_parsers.vset_widths[name]
+
+        if keep_pragmas:
+            add_pragmas(vset_dict, vset)
 
         vsets.append(vset_dict)
 
@@ -640,7 +663,7 @@ def check_act_prof_sharing(p4_table):
 @static_var("pipeline_id", 0)
 @static_var("table_id", 0)
 @static_var("condition_id", 0)
-def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
+def dump_one_pipeline(json_dict, name, pipe_ptr, hlir, keep_pragmas=False):
     def get_table_name(p4_table):
         if not p4_table:
             return None
@@ -784,6 +807,9 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
         else:  # pragma: no cover
             LOG_WARNING("Your 'p4-hlir' is out-of-date, consider updating")
 
+        if keep_pragmas:
+            add_pragmas(table_dict, table)
+
         tables.append(table_dict)
 
     pipeline_dict["tables"] = tables
@@ -802,6 +828,9 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
         conditional_dict["true_next"] = get_table_name(cnode.next_[True])
         conditional_dict["false_next"] = get_table_name(cnode.next_[False])
 
+        if keep_pragmas:
+            add_pragmas(conditional_dict, cnode)
+
         conditionals.append(conditional_dict)
 
     pipeline_dict["conditionals"] = conditionals
@@ -809,16 +838,18 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir):
     return pipeline_dict
 
 
-def dump_pipelines(json_dict, hlir):
+def dump_pipelines(json_dict, hlir, keep_pragmas=False):
     pipelines = []
 
     # 2 pipelines: ingress and egress
     assert(len(hlir.p4_ingress_ptr) == 1 and "only one ingress ptr supported")
     ingress_ptr = hlir.p4_ingress_ptr.keys()[0]
-    pipelines.append(dump_one_pipeline(json_dict, "ingress", ingress_ptr, hlir))
+    pipelines.append(dump_one_pipeline(
+        json_dict, "ingress", ingress_ptr, hlir, keep_pragmas=keep_pragmas))
 
     egress_ptr = hlir.p4_egress_ptr
-    pipelines.append(dump_one_pipeline(json_dict, "egress", egress_ptr, hlir))
+    pipelines.append(dump_one_pipeline(
+        json_dict, "egress", egress_ptr, hlir, keep_pragmas=keep_pragmas))
 
     json_dict["pipelines"] = pipelines
 
@@ -855,7 +886,7 @@ def field_list_to_id(p4_field_list):
     return idx
 
 
-def dump_actions(json_dict, hlir, p4_v1_1=False):
+def dump_actions(json_dict, hlir, p4_v1_1=False, keep_pragmas=False):
     actions = []
     action_id = 0
 
@@ -980,12 +1011,15 @@ def dump_actions(json_dict, hlir, p4_v1_1=False):
 
         action_dict["primitives"] = primitives
 
+        if keep_pragmas:
+            add_pragmas(action_dict, action)
+
         actions.append(action_dict)
 
     json_dict["actions"] = actions
 
 
-def dump_calculations(json_dict, hlir):
+def dump_calculations(json_dict, hlir, keep_pragmas):
     calculations = []
     id_ = 0
     for name, p4_calculation in hlir.p4_field_list_calculations.items():
@@ -1069,6 +1103,9 @@ def dump_calculations(json_dict, hlir):
         calc_dict["algo"] = p4_calculation.algorithm
         # ignored in bmv2, is it a good idea?
         # calc_dict["output_width"] = calculation.output_width
+
+        if keep_pragmas:
+            add_pragmas(calc_dict, p4_calculation)
 
         calculations.append(calc_dict)
 
@@ -1173,7 +1210,7 @@ def dump_field_lists(json_dict, hlir):
     json_dict["field_lists"] = field_lists
 
 
-def dump_meters(json_dict, hlir):
+def dump_meters(json_dict, hlir, keep_pragmas=False):
     meters = []
     id_ = 0
     for name, p4_meter in hlir.p4_meters.items():
@@ -1198,12 +1235,15 @@ def dump_meters(json_dict, hlir):
             LOG_CRITICAL("invalid meter type")
         meter_dict["type"] = type_
 
+        if keep_pragmas:
+            add_pragmas(meter_dict, p4_meter)
+
         meters.append(meter_dict)
 
     json_dict["meter_arrays"] = meters
 
 
-def dump_counters(json_dict, hlir):
+def dump_counters(json_dict, hlir, keep_pragmas=False):
     counters = []
     id_ = 0
     for name, p4_counter in hlir.p4_counters.items():
@@ -1219,12 +1259,15 @@ def dump_counters(json_dict, hlir):
             counter_dict["is_direct"] = False
             counter_dict["size"] = p4_counter.instance_count
 
+        if keep_pragmas:
+            add_pragmas(counter_dict, p4_counter)
+
         counters.append(counter_dict)
 
     json_dict["counter_arrays"] = counters
 
 
-def dump_registers(json_dict, hlir):
+def dump_registers(json_dict, hlir, keep_pragmas=False):
     registers = []
     id_ = 0
     for name, p4_register in hlir.p4_registers.items():
@@ -1236,6 +1279,9 @@ def dump_registers(json_dict, hlir):
             LOG_CRITICAL("registers with layout not supported")
         register_dict["bitwidth"] = p4_register.width
         register_dict["size"] = p4_register.instance_count
+
+        if keep_pragmas:
+            add_pragmas(register_dict, p4_register)
 
         registers.append(register_dict)
 
@@ -1324,7 +1370,8 @@ def dump_extern_instances(json_dict, hlir):
     json_dict["extern_instances"] = extern_instances
 
 
-def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
+def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False,
+                     keep_pragmas=False):
     # a bit hacky: import the correct HLIR based on the P4 version
     import importlib
     global p4
@@ -1337,21 +1384,21 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False):
     reset_static_vars()
     json_dict = OrderedDict()
 
-    dump_header_types(json_dict, hlir)
-    dump_headers(json_dict, hlir)
-    dump_header_stacks(json_dict, hlir)
-    dump_parsers(json_dict, hlir)
-    dump_parse_vsets(json_dict, hlir)
+    dump_header_types(json_dict, hlir, keep_pragmas=keep_pragmas)
+    dump_headers(json_dict, hlir, keep_pragmas=keep_pragmas)
+    dump_header_stacks(json_dict, hlir, keep_pragmas=keep_pragmas)
+    dump_parsers(json_dict, hlir, keep_pragmas=keep_pragmas)
+    dump_parse_vsets(json_dict, hlir, keep_pragmas=keep_pragmas)
     dump_deparsers(json_dict, hlir)
-    dump_meters(json_dict, hlir)
-    dump_actions(json_dict, hlir, p4_v1_1=p4_v1_1)
-    dump_pipelines(json_dict, hlir)
-    dump_calculations(json_dict, hlir)
+    dump_meters(json_dict, hlir, keep_pragmas=keep_pragmas)
+    dump_actions(json_dict, hlir, p4_v1_1=p4_v1_1, keep_pragmas=keep_pragmas)
+    dump_pipelines(json_dict, hlir, keep_pragmas=keep_pragmas)
+    dump_calculations(json_dict, hlir, keep_pragmas=keep_pragmas)
     dump_checksums(json_dict, hlir)
     dump_learn_lists(json_dict, hlir)
     dump_field_lists(json_dict, hlir)
-    dump_counters(json_dict, hlir)
-    dump_registers(json_dict, hlir)
+    dump_counters(json_dict, hlir, keep_pragmas=keep_pragmas)
+    dump_registers(json_dict, hlir, keep_pragmas=keep_pragmas)
     dump_force_arith(json_dict, hlir)
 
     if p4_v1_1 and hlir.p4_extern_instances:

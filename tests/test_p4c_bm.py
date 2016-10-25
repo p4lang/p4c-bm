@@ -77,7 +77,8 @@ def test_gen_json(input_p4):
         with pytest.raises(SystemExit):
             gen_json.json_dict_create(h)
     else:
-        json_dict = gen_json.json_dict_create(h)
+        # using keep_pragmas == True to maximize coverage
+        json_dict = gen_json.json_dict_create(h, keep_pragmas=True)
         assert json_dict
 
 
