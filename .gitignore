@@ -94,3 +94,4 @@ build_setuptools
 install_files.txt
 
 p4c_bm/_version_str.py
+p4c-bmv2

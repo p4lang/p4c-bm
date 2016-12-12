@@ -1,4 +1,25 @@
 #!/usr/bin/env python
+
+# Copyright 2013-present Barefoot Networks, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
+# Antonin Bas (antonin@barefootnetworks.com)
+#
+#
+
 # -*- coding: utf-8 -*-
 
 import p4c_bm
@@ -9,6 +30,7 @@ SETUP_PY_PATH = os.path.dirname(__file__)
 SRC_PATH = os.path.relpath(os.path.join(os.path.dirname(__file__), "p4c_bm"))
 
 from setuptools import setup
+from setuptools.command.install import install
 
 with open(os.path.join(SETUP_PY_PATH, 'README.rst')) as readme_file:
     readme = readme_file.read()
@@ -26,6 +48,19 @@ requirements = [
     'Tenjin'
 ]
 
+# pre-install hook
+class CustomInstall(install):
+    def run(self):
+        in_path = os.path.join(SETUP_PY_PATH, 'p4c-bmv2.in')
+        out_path = os.path.join(SETUP_PY_PATH, 'p4c-bmv2')
+        with open(in_path, "r") as fin:
+            with open(out_path, "w") as fout:
+                for line in fin:
+                    # we use the platform-dependent install path computed by
+                    # setuptools
+                    fout.write(line.replace('@pythondir@', self.install_lib))
+        install.run(self)
+
 setup(
     name='p4c_bm',
     version=p4c_bm.__version__,
@@ -40,11 +75,12 @@ setup(
     package_dir={'p4c_bm': SRC_PATH},
     include_package_data=True,
     install_requires=requirements,
-    entry_points = {
-        'console_scripts': [
-            'p4c-bmv2=p4c_bm.__main__:main',
-        ],
-    },
+    # entry_points={
+    #     'console_scripts': [
+    #         'p4c-bmv2=p4c_bm.__main__:main',
+    #     ],
+    # },
+    scripts=['p4c-bmv2'],
     license="Apache",
     zip_safe=False,
     keywords='p4c_bm',
@@ -56,5 +92,6 @@ setup(
         "Programming Language :: Python :: 2",
         'Programming Language :: Python :: 2.7',
     ],
-    test_suite='tests'
+    test_suite='tests',
+    cmdclass={'install': CustomInstall},
 )
