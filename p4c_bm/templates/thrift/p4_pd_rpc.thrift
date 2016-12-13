@@ -232,6 +232,19 @@ service ${p4_prefix} {
 //::   #endfor
 //:: #endfor
 
+    # Table clear default action functions
+//:: for t_name, t in tables.items():
+//::   t_type = t.type_
+//::   if t_type != TableType.SIMPLE: continue
+//::   t_name = get_c_name(t_name)
+//::   params = ["res.SessionHandle_t sess_hdl",
+//::             "res.DevTarget_t dev_tgt"]
+//::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
+//::   param_str = ", ".join(param_list)
+//::   name = t_name + "_table_reset_default_entry"
+    void ${name}(${param_str});
+//:: #endfor
+
     # INDIRECT ACTION DATA AND MATCH SELECT
 
 //:: for t_name, t in tables.items():

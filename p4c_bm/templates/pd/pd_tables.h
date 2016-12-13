@@ -219,6 +219,23 @@ ${name}
 
 //:: #endfor
 
+/* CLEAR DEFAULT_ACTION */
+
+//:: for t_name, t in tables.items():
+//::   t_type = t.type_
+//::   if t_type != TableType.SIMPLE: continue
+//::   t_name = get_c_name(t_name)
+//::   name = pd_prefix + t_name + "_table_reset_default_entry"
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt
+);
+
+//:: #endfor
+
+
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type == TableType.SIMPLE: continue

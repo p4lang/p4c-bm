@@ -342,6 +342,30 @@ public:
 //::   #endfor
 //:: #endfor
 
+    // clear default action
+
+//:: for t_name, t in tables.items():
+//::   t_type = t.type_
+//::   if t_type != TableType.SIMPLE: continue
+//::   t_name = get_c_name(t_name)
+//::   params = ["const SessionHandle_t sess_hdl",
+//::             "const DevTarget_t &dev_tgt"]
+//::   param_str = ", ".join(params)
+//::   name = t_name + "_table_reset_default_entry"
+//::   pd_name = pd_prefix + name
+    void ${name}(${param_str}) {
+        std::cerr << "In ${name}\n";
+
+        p4_pd_dev_target_t pd_dev_tgt;
+        pd_dev_tgt.device_id = dev_tgt.dev_id;
+        pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
+
+        ${pd_name}(sess_hdl, pd_dev_tgt);
+    }
+
+//:: #endfor
+
+
 //:: name = "clean_all"
 //:: pd_name = pd_prefix + name
   int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
