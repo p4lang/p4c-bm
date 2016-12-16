@@ -31,6 +31,7 @@ SRC_PATH = os.path.relpath(os.path.join(os.path.dirname(__file__), "p4c_bm"))
 
 from setuptools import setup
 from setuptools.command.install import install
+from setuptools.command.install_scripts import install_scripts
 
 with open(os.path.join(SETUP_PY_PATH, 'README.rst')) as readme_file:
     readme = readme_file.read()
@@ -48,18 +49,34 @@ requirements = [
     'Tenjin'
 ]
 
-# pre-install hook
+install_lib = None
+
 class CustomInstall(install):
     def run(self):
-        in_path = os.path.join(SETUP_PY_PATH, 'p4c-bmv2.in')
-        out_path = os.path.join(SETUP_PY_PATH, 'p4c-bmv2')
+        # in this step we simply retrieve the installation path that we need to
+        # append to the PYTHONPATH dynamically
+        global install_lib
+        assert(install_lib is None)
+        install_lib = os.path.abspath(self.install_lib)
+        install.run(self)
+
+class CustomInstallScripts(install_scripts):
+    def run(self):
+        # in this second step we edit the script in the build directory to
+        # replace @pythondir@ with the value of install_lib and we rename the
+        # script; the modified script will be copied to the installation
+        # directory by setuptools
+        assert(install_lib is not None)
+        in_path = os.path.join(self.build_dir, 'p4c-bmv2.in')
+        out_path = os.path.join(self.build_dir, 'p4c-bmv2')
         with open(in_path, "r") as fin:
             with open(out_path, "w") as fout:
                 for line in fin:
                     # we use the platform-dependent install path computed by
                     # setuptools
-                    fout.write(line.replace('@pythondir@', self.install_lib))
-        install.run(self)
+                    fout.write(line.replace('@pythondir@', install_lib))
+        os.remove(os.path.join(self.build_dir, 'p4c-bmv2.in'))
+        install_scripts.run(self)
 
 setup(
     name='p4c_bm',
@@ -80,7 +97,9 @@ setup(
     #         'p4c-bmv2=p4c_bm.__main__:main',
     #     ],
     # },
-    scripts=['p4c-bmv2'],
+    # we use the "template" here, because it is better if this script exists
+    # (otherwise I need to provide a custom command for the build step as well
+    scripts=['p4c-bmv2.in'],
     license="Apache",
     zip_safe=False,
     keywords='p4c_bm',
@@ -93,5 +112,6 @@ setup(
         'Programming Language :: Python :: 2.7',
     ],
     test_suite='tests',
-    cmdclass={'install': CustomInstall},
+    cmdclass={'install': CustomInstall,
+              'install_scripts': CustomInstallScripts},
 )
