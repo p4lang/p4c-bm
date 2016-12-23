@@ -724,6 +724,23 @@ public:
     }
 //:: #endfor
 
+//:: for t_name, t in tables.items():
+//::   t_name = get_c_name(t_name)
+//::   name = t_name + "_get_entry_count"
+//::   pd_name = pd_prefix + name
+//::   params = ["const SessionHandle_t sess_hdl",
+//::             "const int8_t dev_id"]
+//::   param_str = ", ".join(params)
+    int32_t ${name}(${param_str}) {
+        uint32_t count = 0;
+
+        int status = ${pd_name}(sess_hdl, dev_id, &count);
+        if(status != 0) return -1;
+        return static_cast<int32_t>(count);
+    }
+
+//:: #endfor
+
     // COUNTERS
 
 //:: for ca_name, ca in counter_arrays.items():

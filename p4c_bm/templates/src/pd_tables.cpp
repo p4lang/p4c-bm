@@ -1025,6 +1025,34 @@ ${name}
 
 //:: #endfor
 
+//:: for t_name, t in tables.items():
+//::   t_name = get_c_name(t_name)
+//::   name = pd_prefix + t_name + "_get_entry_count"
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ uint8_t dev_id,
+ uint32_t *count
+) {
+  assert(my_devices[dev_id]);
+  auto client = pd_client(dev_id);
+  *count = 0;
+  try {
+    *count = static_cast<uint32_t>(
+        client.c->bm_mt_get_num_entries(0, "${t_name}"));
+  } catch (InvalidTableOperation &ito) {
+    const char *what =
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
+    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
+  }
+  return 0;
+}
+
+//:: #endfor
+
 /* DIRECT COUNTERS */
 
 /* legacy code, to be removed at some point */

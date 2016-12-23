@@ -392,6 +392,15 @@ service ${p4_prefix} {
     EntryHandle_t ${name}(${param_str});
 //:: #endfor
 
+//:: for t_name, t in tables.items():
+//::   t_name = get_c_name(t_name)
+//::   name = t_name + "_get_entry_count"
+//::   params = ["res.SessionHandle_t sess_hdl",
+//::             "byte dev_id"]
+//::   param_list = [str(count + 1) + ":" + p for count, p in enumerate(params)]
+//::   param_str = ", ".join(param_list)
+    i32 ${name}(${param_str});
+//:: #endfor
 
 
     # clean all state

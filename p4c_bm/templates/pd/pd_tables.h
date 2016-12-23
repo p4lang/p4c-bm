@@ -398,6 +398,19 @@ ${name}
 
 //:: #endfor
 
+//:: for t_name, t in tables.items():
+//::   t_name = get_c_name(t_name)
+//::   name = pd_prefix + t_name + "_get_entry_count"
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ uint8_t dev_id,
+ uint32_t *count
+);
+
+//:: #endfor
+
 
 /* DIRECT COUNTERS */
 
