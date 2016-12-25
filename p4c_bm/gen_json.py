@@ -1376,6 +1376,14 @@ def dump_extern_instances(json_dict, hlir):
     json_dict["extern_instances"] = extern_instances
 
 
+def add_meta(json_dict):
+    meta_dict = OrderedDict()
+    # major and minor version numbers, a change in minor version number does not
+    # break backward-compatibility
+    meta_dict["version"] = [2, 0]
+    json_dict["__meta__"] = meta_dict
+
+
 def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False,
                      keep_pragmas=False):
     # a bit hacky: import the correct HLIR based on the P4 version
@@ -1389,6 +1397,8 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False,
     # mostly needed for unit tests, I could write a more elegant solution...
     reset_static_vars()
     json_dict = OrderedDict()
+
+    add_meta(json_dict)
 
     dump_header_types(json_dict, hlir, keep_pragmas=keep_pragmas)
     dump_headers(json_dict, hlir, keep_pragmas=keep_pragmas)
