@@ -638,14 +638,9 @@ ${name}
 //:: #endfor
 
 
-//:: for t_name, t in tables.items():
-//::   t_type = t.type_
-//::   if t_type == TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
-//::   act_prof_name = get_c_name(t.act_prof)
-//::   match_type = t.match_type
-//::   has_match_spec = len(t.key) > 0
-//::   for a_name, a in t.actions.items():
+//:: for ap_name, act_prof in action_profs.items():
+//::   act_prof_name = get_c_name(ap_name)
+//::   for a_name, a in act_prof.actions.items():
 //::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["p4_pd_sess_hdl_t sess_hdl",
@@ -669,12 +664,12 @@ ${name}
 //::     #endif
   auto client = pd_client(dev_tgt.device_id);
   try {
-    *mbr_hdl = client.c->bm_mt_indirect_add_member(
-        0, "${t_name}", "${a_name}", action_data);
+    *mbr_hdl = client.c->bm_mt_act_prof_add_member(
+        0, "${act_prof_name}", "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
@@ -702,12 +697,12 @@ ${name}
 //::     #endif
   auto client = pd_client(dev_id);
   try {
-    client.c->bm_mt_indirect_modify_member(
-        0, "${t_name}", mbr_hdl, "${a_name}", action_data);
+    client.c->bm_mt_act_prof_modify_member(
+        0, "${act_prof_name}", mbr_hdl, "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
@@ -729,18 +724,18 @@ ${name}
   assert(my_devices[dev_id]);
   auto client = pd_client(dev_id);
   try {
-    client.c->bm_mt_indirect_delete_member(0, "${t_name}", mbr_hdl);
+    client.c->bm_mt_act_prof_delete_member(0, "${act_prof_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
   return 0;
 }
 
-//::   if t.type_ != TableType.INDIRECT_WS: continue
+//::   if not act_prof.with_selection: continue
 //::
 //::   params = ["p4_pd_sess_hdl_t sess_hdl",
 //::             "p4_pd_dev_target_t dev_tgt",
@@ -757,11 +752,11 @@ ${name}
   assert(my_devices[dev_tgt.device_id]);
   auto client = pd_client(dev_tgt.device_id);
   try {
-    *grp_hdl = client.c->bm_mt_indirect_ws_create_group(0, "${t_name}");
+    *grp_hdl = client.c->bm_mt_act_prof_create_group(0, "${act_prof_name}");
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
@@ -781,11 +776,11 @@ ${name}
   assert(my_devices[dev_id]);
   auto client = pd_client(dev_id);
   try {
-    client.c->bm_mt_indirect_ws_delete_group(0, "${t_name}", grp_hdl);
+    client.c->bm_mt_act_prof_delete_group(0, "${act_prof_name}", grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
@@ -806,12 +801,12 @@ ${name}
   assert(my_devices[dev_id]);
   auto client = pd_client(dev_id);
   try {
-    client.c->bm_mt_indirect_ws_add_member_to_group(
-        0, "${t_name}", mbr_hdl, grp_hdl);
+    client.c->bm_mt_act_prof_add_member_to_group(
+        0, "${act_prof_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
@@ -832,12 +827,12 @@ ${name}
   assert(my_devices[dev_id]);
   auto client = pd_client(dev_id);
   try {
-    client.c->bm_mt_indirect_ws_remove_member_from_group(
-        0, "${t_name}", mbr_hdl, grp_hdl);
+    client.c->bm_mt_act_prof_remove_member_from_group(
+        0, "${act_prof_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
 	      << ito.code << "): " << what << std::endl;
     return ito.code;
   }
@@ -950,14 +945,16 @@ ${name}
     *mbr_hdls = action_entry.mbr_handle;
   } else {
     assert(action_entry.action_type == BmActionEntryType::GRP_HANDLE);
-    BmMtIndirectWsGroup group;
+    BmMtActProfGroup group;
     try {
-      pd_client(dev_id).c->bm_mt_indirect_ws_get_group(group, 0, "${t_name}",
-                                                       action_entry.grp_handle);
+//::     ap_name = t.action_prof.name
+//::     act_prof_name = get_c_name(ap_name)
+      pd_client(dev_id).c->bm_mt_act_prof_get_group(
+          group, 0, "${act_prof_name}", action_entry.grp_handle);
     } catch (InvalidTableOperation &ito) {
       const char *what =
           _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-      std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+      std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
                 << ito.code << "): " << what << std::endl;
       return ito.code;
     }
@@ -973,11 +970,8 @@ ${name}
 
 //:: #endfor
 
-//:: for t_name, t in tables.items():
-//::   t_type = t.type_
-//::   if t_type == TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
-//::   act_prof_name = get_c_name(t.act_prof)
+//:: for ap_name, act_prof in action_profs.items():
+//::   act_prof_name = get_c_name(ap_name)
 //::   params = ["p4_pd_sess_hdl_t sess_hdl", "uint8_t dev_id",
 //::             "p4_pd_mbr_hdl_t mbr_hdl", "bool read_from_hw",
 //::             "char **action_name",
@@ -991,21 +985,21 @@ ${name}
  ${param_str}
 ) {
   assert(my_devices[dev_id]);
-  BmMtIndirectMember member;
+  BmMtActProfMember member;
   try {
-    pd_client(dev_id).c->bm_mt_indirect_get_member(member, 0, "${t_name}",
-                                                   mbr_hdl);
+    pd_client(dev_id).c->bm_mt_act_prof_get_member(
+        member, 0, "${act_prof_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
         _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
-    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+    std::cout << "Invalid action profile (" << "${ap_name}" << ") operation ("
               << ito.code << "): " << what << std::endl;
     return ito.code;
   }
 
   *num_action_bytes = 0;
   // not efficient, but who cares
-//::   for a_name, a in t.actions.items():
+//::   for a_name, a in act_prof.actions.items():
 //::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     if not has_action_spec: continue
