@@ -649,7 +649,8 @@ def get_table_type(p4_table):
 
 @static_var("referenced", {})
 @static_var("act_prof_id", 0)
-def dump_action_profile(pipe_name, action_profiles, p4_action_profile):
+def dump_action_profile(pipe_name, action_profiles, p4_action_profile,
+                        keep_pragmas=False):
     # check that the same action profile is not referenced across multiple
     # control flows. This is somewhat of an artifical restriction imposed by the
     # pipeline abstraction in the JSON
@@ -679,6 +680,10 @@ def dump_action_profile(pipe_name, action_profiles, p4_action_profile):
                 elements.append(element_dict)
             selector["input"] = elements
             act_prof_dict["selector"] = selector
+
+        if keep_pragmas:
+            add_pragmas(act_prof_dict, p4_action_profile)
+
         action_profiles.append(act_prof_dict)
 
 
@@ -731,7 +736,7 @@ def dump_one_pipeline(json_dict, pipe_name, pipe_ptr, hlir, keep_pragmas=False):
            table_dict["type"] == "indirect_ws":
             table_dict["action_profile"] = table.action_profile.name
             dump_action_profile(pipe_name, action_profiles,
-                                table.action_profile)
+                                table.action_profile, keep_pragmas=keep_pragmas)
 
         table_dict["max_size"] = table.max_size if table.max_size else 16384
 
