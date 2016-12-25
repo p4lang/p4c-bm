@@ -58,4 +58,13 @@ action a() { }
 table t { actions { a; } }
 
 @pragma my_pragma v1
-control ingress { apply(t); }
+table t2 { action_profile: ap; }
+
+@pragma my_pragma v1
+action_profile ap {
+    actions { a; }
+    size : 128;
+}
+
+@pragma my_pragma v1
+control ingress { apply(t); apply(t2); }
