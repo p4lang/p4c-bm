@@ -648,22 +648,44 @@ def get_table_type(p4_table):
 
 
 @static_var("referenced", {})
-def check_act_prof_sharing(p4_table):
-    act_prof = p4_table.action_profile
-    if act_prof is None:
-        return
-    if act_prof in check_act_prof_sharing.referenced:
-        curr_table_name = check_act_prof_sharing.referenced[act_prof]
-        LOG_CRITICAL("action profile {} is shared by at least 2 tables, "
-                     "{} and {}, which is not supported in bmv2"
-                     .format(act_prof.name, curr_table_name, p4_table.name))
-    check_act_prof_sharing.referenced[act_prof] = p4_table.name
+@static_var("act_prof_id", 0)
+def dump_action_profile(pipe_name, action_profiles, p4_action_profile):
+    # check that the same action profile is not referenced across multiple
+    # control flows. This is somewhat of an artifical restriction imposed by the
+    # pipeline abstraction in the JSON
+    if p4_action_profile in dump_action_profile.referenced:
+        if dump_action_profile.referenced[p4_action_profile] != pipe_name:
+            LOG_CRITICAL("action profile {} cannot be referenced in different "
+                         "control flows".format(p4_action_profile.name))
+    else:
+        dump_action_profile.referenced[p4_action_profile] = pipe_name
+        act_prof_dict = OrderedDict()
+        act_prof_dict["name"] = p4_action_profile.name
+        act_prof_dict["id"] = dump_action_profile.act_prof_id
+        dump_action_profile.act_prof_id += 1
+        act_prof_dict["max_size"] = p4_action_profile.size
+        if p4_action_profile.selector is not None:
+            p4_selector = p4_action_profile.selector
+            selector = OrderedDict()
+            selector["algo"] = p4_selector.selection_key.algorithm
+            elements = []
+            assert(len(p4_selector.selection_key.input) == 1)
+            for field in p4_selector.selection_key.input[0].fields:
+                element_dict = OrderedDict()
+                if type(field) is not p4.p4_field:  # pragma: no cover
+                    LOG_CRITICAL("only fields supported in field lists")
+                element_dict["type"] = "field"
+                element_dict["value"] = format_field_ref(field)
+                elements.append(element_dict)
+            selector["input"] = elements
+            act_prof_dict["selector"] = selector
+        action_profiles.append(act_prof_dict)
 
 
 @static_var("pipeline_id", 0)
 @static_var("table_id", 0)
 @static_var("condition_id", 0)
-def dump_one_pipeline(json_dict, name, pipe_ptr, hlir, keep_pragmas=False):
+def dump_one_pipeline(json_dict, pipe_name, pipe_ptr, hlir, keep_pragmas=False):
     def get_table_name(p4_table):
         if not p4_table:
             return None
@@ -682,7 +704,7 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir, keep_pragmas=False):
         return None
 
     pipeline_dict = OrderedDict()
-    pipeline_dict["name"] = name
+    pipeline_dict["name"] = pipe_name
     pipeline_dict["id"] = dump_one_pipeline.pipeline_id
     dump_one_pipeline.pipeline_id += 1
     pipeline_dict["init_table"] = get_table_name(pipe_ptr)
@@ -691,13 +713,10 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir, keep_pragmas=False):
     get_nodes(pipe_ptr, node_set)
 
     tables = []
+    action_profiles = []
     for name, table in hlir.p4_tables.items():
         if table not in node_set:
             continue
-
-        # action profile sharing is not supported yet in bmv2; if sharing is
-        # detected this function will print an error message and exit.
-        check_act_prof_sharing(table)
 
         table_dict = OrderedDict()
         table_dict["name"] = name
@@ -710,23 +729,9 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir, keep_pragmas=False):
         table_dict["type"] = get_table_type(table)
         if table_dict["type"] == "indirect" or\
            table_dict["type"] == "indirect_ws":
-            # name needed for PD generation
-            table_dict["act_prof_name"] = table.action_profile.name
-        if table_dict["type"] == "indirect_ws":
-            p4_selector = table.action_profile.selector
-            selector = OrderedDict()
-            selector["algo"] = p4_selector.selection_key.algorithm
-            elements = []
-            assert(len(p4_selector.selection_key.input) == 1)
-            for field in p4_selector.selection_key.input[0].fields:
-                element_dict = OrderedDict()
-                if type(field) is not p4.p4_field:  # pragma: no cover
-                    LOG_CRITICAL("only fields supported in field lists")
-                element_dict["type"] = "field"
-                element_dict["value"] = format_field_ref(field)
-                elements.append(element_dict)
-            selector["input"] = elements
-            table_dict["selector"] = selector
+            table_dict["action_profile"] = table.action_profile.name
+            dump_action_profile(pipe_name, action_profiles,
+                                table.action_profile)
 
         table_dict["max_size"] = table.max_size if table.max_size else 16384
 
@@ -813,6 +818,7 @@ def dump_one_pipeline(json_dict, name, pipe_ptr, hlir, keep_pragmas=False):
         tables.append(table_dict)
 
     pipeline_dict["tables"] = tables
+    pipeline_dict["action_profiles"] = action_profiles
 
     conditionals = []
     for name, cnode in hlir.p4_conditional_nodes.items():

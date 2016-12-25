@@ -394,14 +394,9 @@ public:
 
     // INDIRECT ACTION DATA AND MATCH SELECT
 
-//:: for t_name, t in tables.items():
-//::   t_type = t.type_
-//::   if t_type == TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
-//::   act_prof_name = get_c_name(t.act_prof)
-//::   match_type = t.match_type
-//::   has_match_spec = len(t.key) > 0
-//::   for a_name, a in t.actions.items():
+//:: for ap_name, act_prof in action_profs.items():
+//::   act_prof_name = get_c_name(ap_name)
+//::   for a_name, a in act_prof.actions.items():
 //::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["const SessionHandle_t sess_hdl",
@@ -492,7 +487,7 @@ public:
         return ${pd_name}(sess_hdl, dev_id, mbr);
     }
 
-//::   if t.type_ != TableType.INDIRECT_WS: continue
+//::   if not act_prof.with_selection: continue
 //::
 //::   params = ["const SessionHandle_t sess_hdl",
 //::             "const DevTarget_t &dev_tgt",

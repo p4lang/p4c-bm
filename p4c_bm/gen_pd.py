@@ -35,6 +35,7 @@ _TEMPLATES_DIR = os.path.join(_THIS_DIR, "templates")
 _PLUGIN_BASE_DIR = os.path.join(_THIS_DIR, "plugin")
 
 TABLES = {}
+ACTION_PROFS = {}
 ACTIONS = {}
 LEARN_QUANTAS = {}
 METER_ARRAYS = {}
@@ -92,6 +93,20 @@ class Table:
 
     def table_str(self):
         return "{0:30} [{1}]".format(self.name, self.key_str())
+
+
+class ActionProf:
+    def __init__(self, name, id_):
+        self.name = name
+        self.id_ = id_
+        self.with_selection = False
+        self.actions = {}
+        self.ref_cnt = 0
+
+        ACTION_PROFS[name] = self
+
+    def action_prof_str(self):
+        return "{0:30} [{1}]".format(self.name, self.with_selection)
 
 
 class Action:
@@ -201,6 +216,11 @@ def load_json(json_str):
             action.runtime_data += [(j_param["name"], j_param["bitwidth"])]
 
     for j_pipeline in json_["pipelines"]:
+        if "action_profiles" in j_pipeline:  # new JSON format
+            for j_aprof in j_pipeline["action_profiles"]:
+                action_prof = ActionProf(j_aprof["name"], j_aprof["id"])
+                action_prof.with_selection = "selector" in j_aprof
+
         for j_table in j_pipeline["tables"]:
             table = Table(j_table["name"], j_table["id"])
             table.match_type = MatchType.from_str(j_table["match_type"])
@@ -229,14 +249,17 @@ def load_json(json_str):
                                                   json_["header_types"])
                 table.key += [(field_name, match_type, bitwidth)]
 
-            if table.type_ == TableType.INDIRECT or\
-               table.type_ == TableType.INDIRECT_WS:
-                if "act_prof_name" not in j_table:
-                    print "WARNING: no action profile name found for table",\
-                        table.name, "; using the table name by default"
-                    table.act_prof = table.name
-                else:
-                    table.act_prof = j_table["act_prof_name"]
+            if table.type_ in {TableType.INDIRECT, TableType.INDIRECT_WS}:
+                if "action_profile" in j_table:
+                    action_prof = ACTION_PROFS[j_table["action_profile"]]
+                # for backward compatibility
+                else:  # pragma: no cover
+                    assert("act_prof_name" in j_table)
+                    action_prof = ActionProf(j_table["act_prof_name"],
+                                             table.id_)
+                    action_prof.with_selection = "selector" in j_table
+                action_prof.actions.update(table.actions)
+                table.action_prof = action_prof
 
     for j_learn_quanta in json_["learn_lists"]:
         learn_quanta = LearnQuanta(j_learn_quanta["name"],
@@ -415,6 +438,7 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix, args=None):
     render_dict["get_c_name"] = get_c_name
     render_dict["get_thrift_type"] = get_thrift_type
     render_dict["tables"] = TABLES
+    render_dict["action_profs"] = ACTION_PROFS
     render_dict["actions"] = ACTIONS
     render_dict["learn_quantas"] = LEARN_QUANTAS
     render_dict["meter_arrays"] = METER_ARRAYS

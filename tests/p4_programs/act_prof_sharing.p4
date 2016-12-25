@@ -61,9 +61,13 @@ table Indirect2 {
 }
 
 control ingress {
-    apply(Indirect1);
+    if (header_test.f0 == 0) {
+        apply(Indirect1);
+    } else {
+        apply(Indirect2);
+    }
 }
 
 control egress {
-    apply(Indirect2);
+
 }
