@@ -429,7 +429,8 @@ ${name}
 //:: #endfor
 
 //:: for t_name, t in tables.items():
-//:: if not t.support_timeout: continue
+//::   t_name = get_c_name(t_name)
+//::   if not t.support_timeout: continue
 //::   p4_pd_enable_hit_state_scan = "_".join([pd_prefix[:-1], t_name, "enable_hit_state_scan"])
 //::   p4_pd_get_hit_state = "_".join([pd_prefix[:-1], t_name, "get_hit_state"])
 //::   p4_pd_set_entry_ttl = "_".join([pd_prefix[:-1], t_name, "set_entry_ttl"])
