@@ -58,6 +58,10 @@ class CustomInstall(install):
         global install_lib
         assert(install_lib is None)
         install_lib = os.path.abspath(self.install_lib)
+        # if a root was specified we remove it from the install path
+        if self.root is not None:
+            assert(install_lib.startswith(self.root))
+            install_lib = install_lib[len(self.root):]
         install.run(self)
 
 class CustomInstallScripts(install_scripts):
