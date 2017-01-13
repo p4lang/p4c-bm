@@ -33,10 +33,9 @@ extern int *my_devices;
 namespace {
 
 //:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
 
-struct ${lq_name}Client {
-  ${pd_prefix}${lq_name}_digest_notify_cb cb_fn;
+struct ${lq.cname}Client {
+  ${pd_prefix}${lq.cname}_digest_notify_cb cb_fn;
   void *cb_cookie;
 };
 
@@ -44,9 +43,8 @@ struct ${lq_name}Client {
 
 struct LearnState {
 //:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
-  std::map<p4_pd_sess_hdl_t, ${lq_name}Client> ${lq_name}_clients;
-  std::mutex ${lq_name}_mutex;
+  std::map<p4_pd_sess_hdl_t, ${lq.cname}Client> ${lq.cname}_clients;
+  std::mutex ${lq.cname}_mutex;
 //:: #endfor
 };
 
@@ -110,15 +108,14 @@ typedef struct {
 
 
 //:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
-void ${lq_name}_handle_learn_msg(const learn_hdr_t *hdr, const char *data) {
+void ${lq.cname}_handle_learn_msg(const learn_hdr_t *hdr, const char *data) {
   LearnState *state = device_state[hdr->switch_id];
-  auto lock = std::unique_lock<std::mutex>(state->${lq_name}_mutex);
-  ${pd_prefix}${lq_name}_digest_msg_t msg;
+  auto lock = std::unique_lock<std::mutex>(state->${lq.cname}_mutex);
+  ${pd_prefix}${lq.cname}_digest_msg_t msg;
   msg.dev_tgt.device_id = static_cast<uint8_t>(hdr->switch_id);
   msg.num_entries = hdr->num_samples;
-  std::unique_ptr<${pd_prefix}${lq_name}_digest_entry_t []> buf(
-      new ${pd_prefix}${lq_name}_digest_entry_t[hdr->num_samples]);
+  std::unique_ptr<${pd_prefix}${lq.cname}_digest_entry_t []> buf(
+      new ${pd_prefix}${lq.cname}_digest_entry_t[hdr->num_samples]);
   const char *data_ = data;
   char *buf_;
   for(size_t i = 0; i < hdr->num_samples; i++){
@@ -136,7 +133,7 @@ void ${lq_name}_handle_learn_msg(const learn_hdr_t *hdr, const char *data) {
   }
   msg.entries = buf.get();
   msg.buffer_id = hdr->buffer_id;
-  for(const auto &it : state->${lq_name}_clients) {
+  for(const auto &it : state->${lq.cname}_clients) {
     it.second.cb_fn(it.first, &msg, it.second.cb_cookie);
   }
 }
@@ -173,40 +170,39 @@ p4_pd_status_t ${pd_prefix}set_learning_timeout
 }
 
 //:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
 
-p4_pd_status_t ${pd_prefix}${lq_name}_register
+p4_pd_status_t ${pd_prefix}${lq.cname}_register
 (
  p4_pd_sess_hdl_t sess_hdl,
  uint8_t device_id,
- ${pd_prefix}${lq_name}_digest_notify_cb cb_fn,
+ ${pd_prefix}${lq.cname}_digest_notify_cb cb_fn,
  void *cb_fn_cookie
 ) {
   LearnState *state = device_state[device_id];
-  auto &clients = state->${lq_name}_clients;
-  std::unique_lock<std::mutex> lock(state->${lq_name}_mutex);
-  ${lq_name}Client new_client = {cb_fn, cb_fn_cookie};
+  auto &clients = state->${lq.cname}_clients;
+  std::unique_lock<std::mutex> lock(state->${lq.cname}_mutex);
+  ${lq.cname}Client new_client = {cb_fn, cb_fn_cookie};
   const auto &ret = clients.insert(std::make_pair(sess_hdl, new_client));
   assert(ret.second); // no duplicates
   return 0;
 }
 
-p4_pd_status_t ${pd_prefix}${lq_name}_deregister
+p4_pd_status_t ${pd_prefix}${lq.cname}_deregister
 (
  p4_pd_sess_hdl_t sess_hdl,
  uint8_t device_id
 ) {
   LearnState *state = device_state[device_id];
-  auto &clients = state->${lq_name}_clients;
-  std::unique_lock<std::mutex> lock(state->${lq_name}_mutex);
+  auto &clients = state->${lq.cname}_clients;
+  std::unique_lock<std::mutex> lock(state->${lq.cname}_mutex);
   assert(clients.erase(sess_hdl) == 1);
   return 0;
 }
 
-p4_pd_status_t ${pd_prefix}${lq_name}_notify_ack
+p4_pd_status_t ${pd_prefix}${lq.cname}_notify_ack
 (
  p4_pd_sess_hdl_t sess_hdl,
- ${pd_prefix}${lq_name}_digest_msg_t *msg
+ ${pd_prefix}${lq.cname}_digest_msg_t *msg
 ) {
   assert(my_devices[msg->dev_tgt.device_id]);
   pd_client(msg->dev_tgt.device_id).c->bm_learning_ack_buffer(
@@ -233,9 +229,8 @@ void ${pd_prefix}learning_notification_cb(const char *hdr, const char *data) {
   //           << std::endl;
   switch(learn_hdr->list_id) {
 //:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
   case ${lq.id_}:
-    ${lq_name}_handle_learn_msg(learn_hdr, data);
+    ${lq.cname}_handle_learn_msg(learn_hdr, data);
     break;
 //:: #endfor
   default:

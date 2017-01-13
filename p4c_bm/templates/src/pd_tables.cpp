@@ -125,10 +125,9 @@ void string_to_field<4>(const std::string &s, char *field) {
 }
 
 //:: for t_name, t in tables.items():
-//::   t_name = get_c_name(t_name)
 //::   if not t.key: continue
-std::vector<BmMatchParam> build_key_${t_name} (
-    ${pd_prefix}${t_name}_match_spec_t *match_spec
+std::vector<BmMatchParam> build_key_${t.cname} (
+    ${pd_prefix}${t.cname}_match_spec_t *match_spec
 ) {
   std::vector<BmMatchParam> key;
   key.reserve(${len(t.key)});
@@ -184,9 +183,9 @@ std::vector<BmMatchParam> build_key_${t_name} (
   return key;
 }
 
-void unbuild_key_${t_name} (
+void unbuild_key_${t.cname} (
     const std::vector<BmMatchParam> &key,
-    ${pd_prefix}${t_name}_match_spec_t *match_spec
+    ${pd_prefix}${t.cname}_match_spec_t *match_spec
 ) {
   size_t i = 0;
 //::   for field_name, field_match_type, field_bw in t.key:
@@ -224,11 +223,10 @@ void unbuild_key_${t_name} (
 //::
 
 //:: for a_name, a in actions.items():
-//::   a_name = get_c_name(a_name)
 //::   if not a.runtime_data: continue
 //::   action_params = gen_action_params(a.runtime_data)
-std::vector<std::string> build_action_data_${a_name} (
-    ${pd_prefix}${a_name}_action_spec_t *action_spec
+std::vector<std::string> build_action_data_${a.cname} (
+    ${pd_prefix}${a.cname}_action_spec_t *action_spec
 ) {
   std::vector<std::string> action_data;
 //::   for name, width in action_params:
@@ -238,9 +236,9 @@ std::vector<std::string> build_action_data_${a_name} (
   return action_data;
 }
 
-void unbuild_action_data_${a_name} (
+void unbuild_action_data_${a.cname} (
     const std::vector<std::string> &action_data,
-    ${pd_prefix}${a_name}_action_spec_t *action_spec
+    ${pd_prefix}${a.cname}_action_spec_t *action_spec
 ) {
   size_t i = 0;
 //::   for name, width in action_params:
@@ -261,9 +259,9 @@ void unbuild_action_data_${a_name} (
 //::     m_name = t.direct_meters
 //::     m = meter_arrays[m_name]
 //::     if m.type_ == MeterType.PACKETS:
-//::       specs += ["p4_pd_packets_meter_spec_t *" + m_name + "_spec"]
+//::       specs += ["p4_pd_packets_meter_spec_t *" + m.cname + "_spec"]
 //::     else:
-//::       specs += ["p4_pd_bytes_meter_spec_t *" + m_name + "_spec"]
+//::       specs += ["p4_pd_bytes_meter_spec_t *" + m.cname + "_spec"]
 //::     #endif
 //::   #endif
 //::   return specs
@@ -276,22 +274,20 @@ extern "C" {
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   match_type = t.match_type
 //::   has_match_spec = len(t.key) > 0
 //::   for a_name, a in t.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["p4_pd_sess_hdl_t sess_hdl",
 //::               "p4_pd_dev_target_t dev_tgt"]
 //::     if has_match_spec:
-//::       params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
+//::       params += [pd_prefix + t.cname + "_match_spec_t *match_spec"]
 //::     #endif
 //::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["int priority"]
 //::     #endif
 //::     if has_action_spec:
-//::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
+//::       params += [pd_prefix + a.cname + "_action_spec_t *action_spec"]
 //::     #endif
 //::     if t.support_timeout:
 //::       params += ["uint32_t ttl"]
@@ -299,7 +295,7 @@ extern "C" {
 //::     params += get_direct_parameter_specs(render_dict, t)
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
-//::     name = pd_prefix + t_name + "_table_add_with_" + a_name
+//::     name = pd_prefix + t.cname + "_table_add_with_" + a.cname
 p4_pd_status_t
 ${name}
 (
@@ -309,12 +305,12 @@ ${name}
 //::     if not has_match_spec:
   std::vector<BmMatchParam> match_key;
 //::     else:
-  std::vector<BmMatchParam> match_key = build_key_${t_name}(match_spec);
+  std::vector<BmMatchParam> match_key = build_key_${t.cname}(match_spec);
 //::     #endif
 //::     if not has_action_spec:
   std::vector<std::string> action_data;
 //::     else:
-  std::vector<std::string> action_data = build_action_data_${a_name}(action_spec);
+  std::vector<std::string> action_data = build_action_data_${a.cname}(action_spec);
 //::     #endif
   BmAddEntryOptions options;
 //::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
@@ -332,10 +328,11 @@ ${name}
 //::     if t.direct_meters:
 
 //::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
 //::       type_name = MeterType.to_str(meter_arrays[m_name].type_)
     pd_client(dev_tgt.device_id).c->bm_mt_set_meter_rates(
         0, "${t_name}", *entry_hdl,
-        pd_${type_name}_meter_spec_to_rates(${m_name}_spec));
+        pd_${type_name}_meter_spec_to_rates(${m.cname}_spec));
 //::     #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
@@ -353,13 +350,12 @@ ${name}
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type == TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   match_type = t.match_type
 //::   has_match_spec = len(t.key) > 0
 //::   params = ["p4_pd_sess_hdl_t sess_hdl",
 //::             "p4_pd_dev_target_t dev_tgt"]
 //::   if has_match_spec:
-//::     params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
+//::     params += [pd_prefix + t.cname + "_match_spec_t *match_spec"]
 //::   #endif
 //::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["int priority"]
@@ -367,7 +363,7 @@ ${name}
 //::
 //::   params_indirect = params + ["p4_pd_mbr_hdl_t mbr_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_indirect)
-//::   name = pd_prefix + t_name + "_add_entry"
+//::   name = pd_prefix + t.cname + "_add_entry"
 p4_pd_status_t
 ${name}
 (
@@ -377,7 +373,7 @@ ${name}
 //::   if not has_match_spec:
   std::vector<BmMatchParam> match_key;
 //::   else:
-  std::vector<BmMatchParam> match_key = build_key_${t_name}(match_spec);
+  std::vector<BmMatchParam> match_key = build_key_${t.cname}(match_spec);
 //::   #endif
   BmAddEntryOptions options;
 //::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
@@ -399,7 +395,7 @@ ${name}
 //::   if t_type != TableType.INDIRECT_WS: continue
 //::   params_indirect_ws = params + ["p4_pd_grp_hdl_t grp_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_indirect_ws)
-//::   name = pd_prefix + t_name + "_add_entry_with_selector"
+//::   name = pd_prefix + t.cname + "_add_entry_with_selector"
 p4_pd_status_t
 ${name}
 (
@@ -409,7 +405,7 @@ ${name}
 //::   if not has_match_spec:
   std::vector<BmMatchParam> match_key;
 //::   else:
-  std::vector<BmMatchParam> match_key = build_key_${t_name}(match_spec);
+  std::vector<BmMatchParam> match_key = build_key_${t.cname}(match_spec);
 //::   #endif
   BmAddEntryOptions options;
 //::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
@@ -434,8 +430,7 @@ ${name}
 
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
-//::   t_name = get_c_name(t_name)
-//::   name = pd_prefix + t_name + "_table_delete"
+//::   name = pd_prefix + t.cname + "_table_delete"
 p4_pd_status_t
 ${name}
 (
@@ -468,19 +463,17 @@ ${name}
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   for a_name, a in t.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["p4_pd_sess_hdl_t sess_hdl",
 //::               "uint8_t dev_id",
 //::               "p4_pd_entry_hdl_t entry_hdl"]
 //::     if has_action_spec:
-//::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
+//::       params += [pd_prefix + a.cname + "_action_spec_t *action_spec"]
 //::     #endif
 //::     params += get_direct_parameter_specs(render_dict, t)
 //::     param_str = ",\n ".join(params)
-//::     name = pd_prefix + t_name + "_table_modify_with_" + a_name
+//::     name = pd_prefix + t.cname + "_table_modify_with_" + a.cname
 p4_pd_status_t
 ${name}
 (
@@ -490,7 +483,7 @@ ${name}
 //::     if not has_action_spec:
   std::vector<std::string> action_data;
 //::     else:
-  std::vector<std::string> action_data = build_action_data_${a_name}(action_spec);
+  std::vector<std::string> action_data = build_action_data_${a.cname}(action_spec);
 //::     #endif
   try {
     pd_client(dev_id).c->bm_mt_modify_entry(
@@ -498,10 +491,11 @@ ${name}
 //::     if t.direct_meters:
 
 //::       m_name = t.direct_meters
+//::       m = meter_arrays[m_name]
 //::       type_name = MeterType.to_str(meter_arrays[m_name].type_)
     pd_client(dev_id).c->bm_mt_set_meter_rates(
         0, "${t_name}", entry_hdl,
-        pd_${type_name}_meter_spec_to_rates(${m_name}_spec));
+        pd_${type_name}_meter_spec_to_rates(${m.cname}_spec));
 //::     #endif
   } catch (InvalidTableOperation &ito) {
     const char *what =
@@ -522,19 +516,17 @@ ${name}
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   for a_name, a in t.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["p4_pd_sess_hdl_t sess_hdl",
 //::               "p4_pd_dev_target_t dev_tgt"]
 //::     if has_action_spec:
-//::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
+//::       params += [pd_prefix + a.cname + "_action_spec_t *action_spec"]
 //::     #endif
 //::     params += get_direct_parameter_specs(render_dict, t)
 //::     params += ["p4_pd_entry_hdl_t *entry_hdl"]
 //::     param_str = ",\n ".join(params)
-//::     name = pd_prefix + t_name + "_set_default_action_" + a_name
+//::     name = pd_prefix + t.cname + "_set_default_action_" + a.cname
 p4_pd_status_t
 ${name}
 (
@@ -544,7 +536,7 @@ ${name}
 //::     if not has_action_spec:
   std::vector<std::string> action_data;
 //::     else:
-  std::vector<std::string> action_data = build_action_data_${a_name}(action_spec);
+  std::vector<std::string> action_data = build_action_data_${a.cname}(action_spec);
 //::     #endif
   try {
     pd_client(dev_tgt.device_id).c->bm_mt_set_default_action(
@@ -565,13 +557,12 @@ ${name}
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type == TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   params = ["p4_pd_sess_hdl_t sess_hdl",
 //::             "p4_pd_dev_target_t dev_tgt"]
 //::
 //::   params_indirect = params + ["p4_pd_mbr_hdl_t mbr_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_indirect)
-//::   name = pd_prefix + t_name + "_set_default_entry"
+//::   name = pd_prefix + t.cname + "_set_default_entry"
 p4_pd_status_t
 ${name}
 (
@@ -594,7 +585,7 @@ ${name}
 //::   if t_type != TableType.INDIRECT_WS: continue
 //::   params_indirect_ws = params + ["p4_pd_grp_hdl_t grp_hdl", "p4_pd_entry_hdl_t *entry_hdl"]
 //::   param_str = ",\n ".join(params_indirect_ws)
-//::   name = pd_prefix + t_name + "_set_default_entry_with_selector"
+//::   name = pd_prefix + t.cname + "_set_default_entry_with_selector"
 p4_pd_status_t
 ${name}
 (
@@ -622,8 +613,7 @@ ${name}
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
-//::   name = pd_prefix + t_name + "_table_reset_default_entry"
+//::   name = pd_prefix + t.cname + "_table_reset_default_entry"
 p4_pd_status_t
 ${name}
 (
@@ -639,18 +629,16 @@ ${name}
 
 
 //:: for ap_name, act_prof in action_profs.items():
-//::   act_prof_name = get_c_name(ap_name)
 //::   for a_name, a in act_prof.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["p4_pd_sess_hdl_t sess_hdl",
 //::               "p4_pd_dev_target_t dev_tgt"]
 //::     if has_action_spec:
-//::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
+//::       params += [pd_prefix + a.cname + "_action_spec_t *action_spec"]
 //::     #endif
 //::     params += ["p4_pd_mbr_hdl_t *mbr_hdl"]
 //::     param_str = ",\n ".join(params)
-//::     name = pd_prefix + act_prof_name + "_add_member_with_" + a_name
+//::     name = pd_prefix + act_prof.cname + "_add_member_with_" + a.cname
 p4_pd_status_t
 ${name}
 (
@@ -660,12 +648,12 @@ ${name}
 //::     if not has_action_spec:
   std::vector<std::string> action_data;
 //::     else:
-  std::vector<std::string> action_data = build_action_data_${a_name}(action_spec);
+  std::vector<std::string> action_data = build_action_data_${a.cname}(action_spec);
 //::     #endif
   auto client = pd_client(dev_tgt.device_id);
   try {
     *mbr_hdl = client.c->bm_mt_act_prof_add_member(
-        0, "${act_prof_name}", "${a_name}", action_data);
+        0, "${ap_name}", "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -680,10 +668,10 @@ ${name}
 //::               "uint8_t dev_id",
 //::               "p4_pd_mbr_hdl_t mbr_hdl"]
 //::     if has_action_spec:
-//::       params += [pd_prefix + a_name + "_action_spec_t *action_spec"]
+//::       params += [pd_prefix + a.cname + "_action_spec_t *action_spec"]
 //::     #endif
 //::     param_str = ",\n ".join(params)
-//::     name = pd_prefix + act_prof_name + "_modify_member_with_" + a_name
+//::     name = pd_prefix + act_prof.cname + "_modify_member_with_" + a.cname
 p4_pd_status_t
 ${name}
 (
@@ -693,12 +681,12 @@ ${name}
 //::     if not has_action_spec:
   std::vector<std::string> action_data;
 //::     else:
-  std::vector<std::string> action_data = build_action_data_${a_name}(action_spec);
+  std::vector<std::string> action_data = build_action_data_${a.cname}(action_spec);
 //::     #endif
   auto client = pd_client(dev_id);
   try {
     client.c->bm_mt_act_prof_modify_member(
-        0, "${act_prof_name}", mbr_hdl, "${a_name}", action_data);
+        0, "${ap_name}", mbr_hdl, "${a_name}", action_data);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -715,7 +703,7 @@ ${name}
 //::             "uint8_t dev_id",
 //::             "p4_pd_mbr_hdl_t mbr_hdl"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + act_prof_name + "_del_member"
+//::   name = pd_prefix + act_prof.cname + "_del_member"
 p4_pd_status_t
 ${name}
 (
@@ -724,7 +712,7 @@ ${name}
   assert(my_devices[dev_id]);
   auto client = pd_client(dev_id);
   try {
-    client.c->bm_mt_act_prof_delete_member(0, "${act_prof_name}", mbr_hdl);
+    client.c->bm_mt_act_prof_delete_member(0, "${ap_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -742,7 +730,7 @@ ${name}
 //::             "uint16_t max_grp_size",
 //::             "p4_pd_grp_hdl_t *grp_hdl"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + act_prof_name + "_create_group"
+//::   name = pd_prefix + act_prof.cname + "_create_group"
 p4_pd_status_t
 ${name}
 (
@@ -752,7 +740,7 @@ ${name}
   assert(my_devices[dev_tgt.device_id]);
   auto client = pd_client(dev_tgt.device_id);
   try {
-    *grp_hdl = client.c->bm_mt_act_prof_create_group(0, "${act_prof_name}");
+    *grp_hdl = client.c->bm_mt_act_prof_create_group(0, "${ap_name}");
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -767,7 +755,7 @@ ${name}
 //::             "uint8_t dev_id",
 //::             "p4_pd_grp_hdl_t grp_hdl"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + act_prof_name + "_del_group"
+//::   name = pd_prefix + act_prof.cname + "_del_group"
 p4_pd_status_t
 ${name}
 (
@@ -776,7 +764,7 @@ ${name}
   assert(my_devices[dev_id]);
   auto client = pd_client(dev_id);
   try {
-    client.c->bm_mt_act_prof_delete_group(0, "${act_prof_name}", grp_hdl);
+    client.c->bm_mt_act_prof_delete_group(0, "${ap_name}", grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -792,7 +780,7 @@ ${name}
 //::             "p4_pd_grp_hdl_t grp_hdl",
 //::             "p4_pd_mbr_hdl_t mbr_hdl"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + act_prof_name + "_add_member_to_group"
+//::   name = pd_prefix + act_prof.cname + "_add_member_to_group"
 p4_pd_status_t
 ${name}
 (
@@ -802,7 +790,7 @@ ${name}
   auto client = pd_client(dev_id);
   try {
     client.c->bm_mt_act_prof_add_member_to_group(
-        0, "${act_prof_name}", mbr_hdl, grp_hdl);
+        0, "${ap_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -818,7 +806,7 @@ ${name}
 //::             "p4_pd_grp_hdl_t grp_hdl",
 //::             "p4_pd_mbr_hdl_t mbr_hdl"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + act_prof_name + "_del_member_from_group"
+//::   name = pd_prefix + act_prof.cname + "_del_member_from_group"
 p4_pd_status_t
 ${name}
 (
@@ -828,7 +816,7 @@ ${name}
   auto client = pd_client(dev_id);
   try {
     client.c->bm_mt_act_prof_remove_member_from_group(
-        0, "${act_prof_name}", mbr_hdl, grp_hdl);
+        0, "${ap_name}", mbr_hdl, grp_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
       _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -844,14 +832,13 @@ ${name}
 /* ENTRY RETRIEVAL */
 
 //:: for t_name, t in tables.items():
-//::   t_name = get_c_name(t_name)
 //::   match_type = t.match_type
-//::   name = pd_prefix + t_name + "_get_entry"
+//::   name = pd_prefix + t.cname + "_get_entry"
 //::   common_params = ["p4_pd_sess_hdl_t sess_hdl", "uint8_t dev_id",
 //::                    "p4_pd_entry_hdl_t entry_hdl", "bool read_from_hw"]
 //::   has_match_spec = len(t.key) > 0
 //::   if has_match_spec:
-//::     common_params += [pd_prefix + t_name + "_match_spec_t *match_spec"]
+//::     common_params += [pd_prefix + t.cname + "_match_spec_t *match_spec"]
 //::   #endif
 //::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     common_params += ["int *priority"]
@@ -878,7 +865,7 @@ ${name}
     return ito.code;
   }
 //::     if has_match_spec:
-  unbuild_key_${t_name}(entry.match_key, match_spec);
+  unbuild_key_${t.cname}(entry.match_key, match_spec);
 //::     #endif
 
   const BmActionEntry &action_entry = entry.action_entry;
@@ -886,14 +873,13 @@ ${name}
   *num_action_bytes = 0;
   // not efficient, but who cares
 //::     for a_name, a in t.actions.items():
-//::       a_name = get_c_name(a_name)
 //::       has_action_spec = len(a.runtime_data) > 0
 //::       if not has_action_spec: continue
   if (action_entry.action_name == "${a_name}") {
-    unbuild_action_data_${a_name}(
+    unbuild_action_data_${a.cname}(
         action_entry.action_data,
-        (${pd_prefix}${a_name}_action_spec_t *) action_data);
-    *num_action_bytes = sizeof(${pd_prefix}${a_name}_action_spec_t);
+        (${pd_prefix}${a.cname}_action_spec_t *) action_data);
+    *num_action_bytes = sizeof(${pd_prefix}${a.cname}_action_spec_t);
     // not valid in C++, hence the cast, but I have no choice (can't change the
     // signature of the method)
     *action_name = (char *) "${a_name}";
@@ -928,7 +914,7 @@ ${name}
     return ito.code;
   }
 //::     if has_match_spec:
-  unbuild_key_${t_name}(entry.match_key, match_spec);
+  unbuild_key_${t.cname}(entry.match_key, match_spec);
 //::     #endif
 
 //::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
@@ -948,9 +934,8 @@ ${name}
     BmMtActProfGroup group;
     try {
 //::     ap_name = t.action_prof.name
-//::     act_prof_name = get_c_name(ap_name)
       pd_client(dev_id).c->bm_mt_act_prof_get_group(
-          group, 0, "${act_prof_name}", action_entry.grp_handle);
+          group, 0, "${ap_name}", action_entry.grp_handle);
     } catch (InvalidTableOperation &ito) {
       const char *what =
           _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -971,14 +956,13 @@ ${name}
 //:: #endfor
 
 //:: for ap_name, act_prof in action_profs.items():
-//::   act_prof_name = get_c_name(ap_name)
 //::   params = ["p4_pd_sess_hdl_t sess_hdl", "uint8_t dev_id",
 //::             "p4_pd_mbr_hdl_t mbr_hdl", "bool read_from_hw",
 //::             "char **action_name",
 //::             "uint8_t *action_data", # has to be large enough
 //::             "int *num_action_bytes"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + act_prof_name + "_get_member"
+//::   name = pd_prefix + act_prof.cname + "_get_member"
 p4_pd_status_t
 ${name}
 (
@@ -988,7 +972,7 @@ ${name}
   BmMtActProfMember member;
   try {
     pd_client(dev_id).c->bm_mt_act_prof_get_member(
-        member, 0, "${act_prof_name}", mbr_hdl);
+        member, 0, "${ap_name}", mbr_hdl);
   } catch (InvalidTableOperation &ito) {
     const char *what =
         _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
@@ -1000,14 +984,13 @@ ${name}
   *num_action_bytes = 0;
   // not efficient, but who cares
 //::   for a_name, a in act_prof.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     if not has_action_spec: continue
   if (member.action_name == "${a_name}") {
-    unbuild_action_data_${a_name}(
+    unbuild_action_data_${a.cname}(
         member.action_data,
-        (${pd_prefix}${a_name}_action_spec_t *) action_data);
-    *num_action_bytes = sizeof(${pd_prefix}${a_name}_action_spec_t);
+        (${pd_prefix}${a.cname}_action_spec_t *) action_data);
+    *num_action_bytes = sizeof(${pd_prefix}${a.cname}_action_spec_t);
     // not valid in C++, hence the cast, but I have no choice (can't change the
     // signature of the method)
     *action_name = (char *) "${a_name}";
@@ -1020,8 +1003,7 @@ ${name}
 //:: #endfor
 
 //:: for t_name, t in tables.items():
-//::   t_name = get_c_name(t_name)
-//::   name = pd_prefix + t_name + "_get_entry_count"
+//::   name = pd_prefix + t.cname + "_get_entry_count"
 p4_pd_status_t
 ${name}
 (
@@ -1053,8 +1035,7 @@ ${name}
 
 //:: for t_name, t in tables.items():
 //::   if not t.with_counters: continue
-//::   t_name = get_c_name(t_name)
-//::   name = pd_prefix + t_name + "_read_counter"
+//::   name = pd_prefix + t.cname + "_read_counter"
 p4_pd_status_t
 ${name}
 (
@@ -1074,7 +1055,7 @@ ${name}
   return 0;
 }
 
-//::   name = pd_prefix + t_name + "_reset_counters"
+//::   name = pd_prefix + t.cname + "_reset_counters"
 p4_pd_status_t
 ${name}
 (
@@ -1090,12 +1071,11 @@ ${name}
 //:: #endfor
 
 //:: for t_name, t in tables.items():
-//::   t_name = get_c_name(t_name)
 //::   if not t.support_timeout: continue
-//::   p4_pd_enable_hit_state_scan = "_".join([pd_prefix[:-1], t_name, "enable_hit_state_scan"])
-//::   p4_pd_get_hit_state = "_".join([pd_prefix[:-1], t_name, "get_hit_state"])
-//::   p4_pd_set_entry_ttl = "_".join([pd_prefix[:-1], t_name, "set_entry_ttl"])
-//::   p4_pd_enable_entry_timeout = "_".join([pd_prefix[:-1], t_name, "enable_entry_timeout"])
+//::   p4_pd_enable_hit_state_scan = "_".join([pd_prefix[:-1], t.cname, "enable_hit_state_scan"])
+//::   p4_pd_get_hit_state = "_".join([pd_prefix[:-1], t.cname, "get_hit_state"])
+//::   p4_pd_set_entry_ttl = "_".join([pd_prefix[:-1], t.cname, "set_entry_ttl"])
+//::   p4_pd_enable_entry_timeout = "_".join([pd_prefix[:-1], t.cname, "enable_entry_timeout"])
 p4_pd_status_t
 ${p4_pd_enable_hit_state_scan}(p4_pd_sess_hdl_t sess_hdl, uint32_t scan_interval) {
   // This function is a no-op. Needed for real hardware.

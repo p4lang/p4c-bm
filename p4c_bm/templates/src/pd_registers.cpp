@@ -27,7 +27,7 @@ extern int *my_devices;
 extern "C" {
 
 //:: for ra_name, ra in register_arrays.items():
-//::   name = pd_prefix + "register_reset_" + ra_name
+//::   name = pd_prefix + "register_reset_" + ra.cname
 p4_pd_status_t
 ${name}
 (

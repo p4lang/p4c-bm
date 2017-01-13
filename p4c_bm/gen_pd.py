@@ -65,10 +65,24 @@ TableType = enum('TableType', 'SIMPLE', 'INDIRECT', 'INDIRECT_WS')
 MeterType = enum('MeterType', 'PACKETS', 'BYTES')
 
 
-class Table:
+def get_c_name(name):
+    # TODO: improve
+    n = name.replace(".", "_")
+    n = n.replace("[", "_")
+    n = n.replace("]", "_")
+    return n
+
+
+class P4Object(object):
     def __init__(self, name, id_):
         self.name = name
         self.id_ = id_
+        self.cname = get_c_name(name)
+
+
+class Table(P4Object):
+    def __init__(self, name, id_):
+        super(Table, self).__init__(name, id_)
         self.match_type = None
         self.type_ = None
         self.act_prof = None  # for indirect tables only
@@ -95,10 +109,9 @@ class Table:
         return "{0:30} [{1}]".format(self.name, self.key_str())
 
 
-class ActionProf:
+class ActionProf(P4Object):
     def __init__(self, name, id_):
-        self.name = name
-        self.id_ = id_
+        super(ActionProf, self).__init__(name, id_)
         self.with_selection = False
         self.actions = {}
         self.ref_cnt = 0
@@ -109,10 +122,9 @@ class ActionProf:
         return "{0:30} [{1}]".format(self.name, self.with_selection)
 
 
-class Action:
+class Action(P4Object):
     def __init__(self, name, id_):
-        self.name = name
-        self.id_ = id_
+        super(Action, self).__init__(name, id_)
         self.runtime_data = []
 
         ACTIONS[name] = self
@@ -128,10 +140,9 @@ class Action:
         return "{0:30} [{1}]".format(self.name, self.runtime_data_str())
 
 
-class LearnQuanta:
+class LearnQuanta(P4Object):
     def __init__(self, name, id_):
-        self.name = name
-        self.id_ = id_
+        super(LearnQuanta, self).__init__(name, id_)
         self.fields = []
 
         LEARN_QUANTAS[name] = self
@@ -144,10 +155,9 @@ class LearnQuanta:
         return "{0:30} [{1}]".format(self.name, self.fields_str())
 
 
-class MeterArray:
+class MeterArray(P4Object):
     def __init__(self, name, id_):
-        self.name = name
-        self.id_ = id_
+        super(MeterArray, self).__init__(name, id_)
         self.type_ = None
         self.is_direct = None
         self.size = None
@@ -162,10 +172,9 @@ class MeterArray:
                                                MeterType.to_str(self.type_))
 
 
-class CounterArray:
+class CounterArray(P4Object):
     def __init__(self, name, id_):
-        self.name = name
-        self.id_ = id_
+        super(CounterArray, self).__init__(name, id_)
         self.is_direct = None
         self.size = None
         self.table = None
@@ -176,10 +185,9 @@ class CounterArray:
         return "{0:30} [{1}, {2}]".format(self.name, self.is_direct)
 
 
-class RegisterArray:
+class RegisterArray(P4Object):
     def __init__(self, name, id_):
-        self.name = name
-        self.id_ = id_
+        super(RegisterArray, self).__init__(name, id_)
         self.bitwidth = None
         self.size = None
 
@@ -391,14 +399,6 @@ def gen_action_params(runtime_data):
 
 def bits_to_bytes(bw):
     return (bw + 7) / 8
-
-
-def get_c_name(name):
-    # TODO: improve
-    n = name.replace(".", "_")
-    n = n.replace("[", "_")
-    n = n.replace("]", "_")
-    return n
 
 
 def get_thrift_type(byte_width):
