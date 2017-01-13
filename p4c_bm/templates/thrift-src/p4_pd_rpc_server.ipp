@@ -53,9 +53,9 @@ void packets_meter_spec_thrift_to_pd(
 //::     m_name = t.direct_meters
 //::     m = meter_arrays[m_name]
 //::     if m.type_ == MeterType.PACKETS:
-//::       specs += ["const " + api_prefix + "packets_meter_spec_t &" + m_name + "_spec"]
+//::       specs += ["const " + api_prefix + "packets_meter_spec_t &" + m.cname + "_spec"]
 //::     else:
-//::       specs += ["const " + api_prefix + "bytes_meter_spec_t &" + m_name + "_spec"]
+//::       specs += ["const " + api_prefix + "bytes_meter_spec_t &" + m.cname + "_spec"]
 //::     #endif
 //::   #endif
 //::   return specs
@@ -102,8 +102,7 @@ private:
 public:
     ${p4_prefix}Handler() {
 //:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
-      pthread_mutex_init(&${lq_name}_mutex, NULL);
+      pthread_mutex_init(&${lq.cname}_mutex, NULL);
 //:: #endfor
     }
 
@@ -112,29 +111,27 @@ public:
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   match_type = t.match_type
 //::   has_match_spec = len(t.key) > 0
 //::   for a_name, a in t.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["const SessionHandle_t sess_hdl",
 //::               "const DevTarget_t &dev_tgt"]
 //::     if has_match_spec:
-//::       params += ["const " + api_prefix + t_name + "_match_spec_t &match_spec"]
+//::       params += ["const " + api_prefix + t.cname + "_match_spec_t &match_spec"]
 //::     #endif
 //::     if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::       params += ["const int32_t priority"]
 //::     #endif
 //::     if has_action_spec:
-//::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
+//::       params += ["const " + api_prefix + a.cname + "_action_spec_t &action_spec"]
 //::     #endif
 //::     if t.support_timeout:
 //::       params += ["const int32_t ttl"]
 //::     #endif
 //::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
-//::     name = t_name + "_table_add_with_" + a_name
+//::     name = t.cname + "_table_add_with_" + a.cname
 //::     pd_name = pd_prefix + name
     EntryHandle_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -144,7 +141,7 @@ public:
         pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::     if has_match_spec:
-        ${pd_prefix}${t_name}_match_spec_t pd_match_spec;
+        ${pd_prefix}${t.cname}_match_spec_t pd_match_spec;
 //::       match_params = gen_match_params(t.key)
 //::       for name, width in match_params:
 //::         name = get_c_name(name)
@@ -157,7 +154,7 @@ public:
 
 //::     #endif
 //::     if has_action_spec:
-        ${pd_prefix}${a_name}_action_spec_t pd_action_spec;
+        ${pd_prefix}${a.cname}_action_spec_t pd_action_spec;
 //::       action_params = gen_action_params(a.runtime_data)
 //::       for name, width in action_params:
 //::         name = get_c_name(name)
@@ -189,9 +186,9 @@ public:
 //::       m_name = t.direct_meters
 //::       m = meter_arrays[m_name]
 //::       type_name = MeterType.to_str(m.type_)
-        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
-        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
-//::       pd_params += ["&pd_" + m_name + "_spec"]
+        p4_pd_${type_name}_meter_spec_t pd_${m.cname}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m.cname}_spec, &pd_${m.cname}_spec);
+//::       pd_params += ["&pd_" + m.cname + "_spec"]
 //::     #endif
 //::     pd_params += ["&pd_entry"]
 //::     pd_param_str = ", ".join(pd_params)
@@ -208,25 +205,23 @@ public:
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   for a_name, a in t.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["const SessionHandle_t sess_hdl",
 //::               "const int8_t dev_id",
 //::               "const EntryHandle_t entry"]
 //::     if has_action_spec:
-//::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
+//::       params += ["const " + api_prefix + a.cname + "_action_spec_t &action_spec"]
 //::     #endif
 //::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
-//::     name = t_name + "_table_modify_with_" + a_name
+//::     name = t.cname + "_table_modify_with_" + a.cname
 //::     pd_name = pd_prefix + name
     EntryHandle_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
 
 //::     if has_action_spec:
-        ${pd_prefix}${a_name}_action_spec_t pd_action_spec;
+        ${pd_prefix}${a.cname}_action_spec_t pd_action_spec;
 //::       action_params = gen_action_params(a.runtime_data)
 //::       for name, width in action_params:
 //::         name = get_c_name(name)
@@ -248,9 +243,9 @@ public:
 //::       m_name = t.direct_meters
 //::       m = meter_arrays[m_name]
 //::       type_name = MeterType.to_str(m.type_)
-        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
-        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
-//::       pd_params += ["&pd_" + m_name + "_spec"]
+        p4_pd_${type_name}_meter_spec_t pd_${m.cname}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m.cname}_spec, &pd_${m.cname}_spec);
+//::       pd_params += ["&pd_" + m.cname + "_spec"]
 //::     #endif
 //::     pd_param_str = ", ".join(pd_params)
         return ${pd_name}(${pd_param_str});
@@ -264,8 +259,7 @@ public:
 
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
-//::   t_name = get_c_name(t_name)
-//::   name = t_name + "_table_delete"
+//::   name = t.cname + "_table_delete"
 //::   pd_name = pd_prefix + name
 //::   params = ["const SessionHandle_t sess_hdl",
 //::             "const int8_t dev_id",
@@ -284,18 +278,16 @@ public:
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   for a_name, a in t.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["const SessionHandle_t sess_hdl",
 //::               "const DevTarget_t &dev_tgt"]
 //::     if has_action_spec:
-//::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
+//::       params += ["const " + api_prefix + a.cname + "_action_spec_t &action_spec"]
 //::     #endif
 //::     params += get_direct_parameter_specs(render_dict, t, api_prefix)
 //::     param_str = ", ".join(params)
-//::     name = t_name + "_set_default_action_" + a_name
+//::     name = t.cname + "_set_default_action_" + a.cname
 //::     pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -305,7 +297,7 @@ public:
         pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::     if has_action_spec:
-        ${pd_prefix}${a_name}_action_spec_t pd_action_spec;
+        ${pd_prefix}${a.cname}_action_spec_t pd_action_spec;
 //::       action_params = gen_action_params(a.runtime_data)
 //::       for name, width in action_params:
 //::         name = get_c_name(name)
@@ -328,9 +320,9 @@ public:
 //::       m_name = t.direct_meters
 //::       m = meter_arrays[m_name]
 //::       type_name = MeterType.to_str(m.type_)
-        p4_pd_${type_name}_meter_spec_t pd_${m_name}_spec;
-        ${type_name}_meter_spec_thrift_to_pd(${m_name}_spec, &pd_${m_name}_spec);
-//::       pd_params += ["&pd_" + m_name + "_spec"]
+        p4_pd_${type_name}_meter_spec_t pd_${m.cname}_spec;
+        ${type_name}_meter_spec_thrift_to_pd(${m.cname}_spec, &pd_${m.cname}_spec);
+//::       pd_params += ["&pd_" + m.cname + "_spec"]
 //::     #endif
 //::     pd_params += ["&pd_entry"]
 //::     pd_param_str = ", ".join(pd_params)
@@ -347,11 +339,10 @@ public:
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type != TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   params = ["const SessionHandle_t sess_hdl",
 //::             "const DevTarget_t &dev_tgt"]
 //::   param_str = ", ".join(params)
-//::   name = t_name + "_table_reset_default_entry"
+//::   name = t.cname + "_table_reset_default_entry"
 //::   pd_name = pd_prefix + name
     void ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -395,17 +386,15 @@ public:
     // INDIRECT ACTION DATA AND MATCH SELECT
 
 //:: for ap_name, act_prof in action_profs.items():
-//::   act_prof_name = get_c_name(ap_name)
 //::   for a_name, a in act_prof.actions.items():
-//::     a_name = get_c_name(a_name)
 //::     has_action_spec = len(a.runtime_data) > 0
 //::     params = ["const SessionHandle_t sess_hdl",
 //::               "const DevTarget_t &dev_tgt"]
 //::     if has_action_spec:
-//::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
+//::       params += ["const " + api_prefix + a.cname + "_action_spec_t &action_spec"]
 //::     #endif
 //::     param_str = ", ".join(params)
-//::     name = act_prof_name + "_add_member_with_" + a_name
+//::     name = act_prof.cname + "_add_member_with_" + a.cname
 //::     pd_name = pd_prefix + name
     EntryHandle_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -415,7 +404,7 @@ public:
         pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::     if has_action_spec:
-        ${pd_prefix}${a_name}_action_spec_t pd_action_spec;
+        ${pd_prefix}${a.cname}_action_spec_t pd_action_spec;
 //::       action_params = gen_action_params(a.runtime_data)
 //::       for name, width in action_params:
 //::         name = get_c_name(name)
@@ -443,16 +432,16 @@ public:
 //::               "const int8_t dev_id",
 //::               "const MemberHandle_t mbr"]
 //::     if has_action_spec:
-//::       params += ["const " + api_prefix + a_name + "_action_spec_t &action_spec"]
+//::       params += ["const " + api_prefix + a.cname + "_action_spec_t &action_spec"]
 //::     #endif
 //::     param_str = ", ".join(params)
-//::     name = act_prof_name + "_modify_member_with_" + a_name
+//::     name = act_prof.cname + "_modify_member_with_" + a.cname
 //::     pd_name = pd_prefix + name
     EntryHandle_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
 
 //::     if has_action_spec:
-        ${pd_prefix}${a_name}_action_spec_t pd_action_spec;
+        ${pd_prefix}${a.cname}_action_spec_t pd_action_spec;
 //::       action_params = gen_action_params(a.runtime_data)
 //::       for name, width in action_params:
 //::         name = get_c_name(name)
@@ -479,7 +468,7 @@ public:
 //::             "const int8_t dev_id",
 //::             "const MemberHandle_t mbr"]
 //::   param_str = ", ".join(params)
-//::   name = act_prof_name + "_del_member"
+//::   name = act_prof.cname + "_del_member"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -493,7 +482,7 @@ public:
 //::             "const DevTarget_t &dev_tgt",
 //::             "const int16_t max_grp_size"]
 //::   param_str = ", ".join(params)
-//::   name = act_prof_name + "_create_group"
+//::   name = act_prof.cname + "_create_group"
 //::   pd_name = pd_prefix + name
     GroupHandle_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -512,7 +501,7 @@ public:
 //::             "const int8_t dev_id",
 //::             "const GroupHandle_t grp"]
 //::   param_str = ", ".join(params)
-//::   name = act_prof_name + "_del_group"
+//::   name = act_prof.cname + "_del_group"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -525,7 +514,7 @@ public:
 //::             "const GroupHandle_t grp",
 //::             "const MemberHandle_t mbr"]
 //::   param_str = ", ".join(params)
-//::   name = act_prof_name + "_add_member_to_group"
+//::   name = act_prof.cname + "_add_member_to_group"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -538,7 +527,7 @@ public:
 //::             "const GroupHandle_t grp",
 //::             "const MemberHandle_t mbr"]
 //::   param_str = ", ".join(params)
-//::   name = act_prof_name + "_del_member_from_group"
+//::   name = act_prof.cname + "_del_member_from_group"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -551,7 +540,7 @@ public:
 //::             "const GroupHandle_t grp",
 //::             "const MemberHandle_t mbr"]
 //::   param_str = ", ".join(params)
-//::   name = act_prof_name + "_deactivate_group_member"
+//::   name = act_prof.cname + "_deactivate_group_member"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -564,7 +553,7 @@ public:
 //::             "const GroupHandle_t grp",
 //::             "const MemberHandle_t mbr"]
 //::   param_str = ", ".join(params)
-//::   name = act_prof_name + "_reactivate_group_member"
+//::   name = act_prof.cname + "_reactivate_group_member"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -577,20 +566,19 @@ public:
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type == TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   match_type = t.match_type
 //::   has_match_spec = len(t.key) > 0
 //::   params = ["const SessionHandle_t sess_hdl",
 //::             "const DevTarget_t &dev_tgt"]
 //::   if has_match_spec:
-//::     params += ["const " + api_prefix + t_name + "_match_spec_t &match_spec"]
+//::     params += ["const " + api_prefix + t.cname + "_match_spec_t &match_spec"]
 //::   #endif
 //::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
 //::     params += ["const int32_t priority"]
 //::   #endif
 //::   params_wo = params + ["const MemberHandle_t mbr"]
 //::   param_str = ", ".join(params_wo)
-//::   name = t_name + "_add_entry"
+//::   name = t.cname + "_add_entry"
 //::   pd_name = pd_prefix + name
     EntryHandle_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -600,7 +588,7 @@ public:
         pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::   if has_match_spec:
-        ${pd_prefix}${t_name}_match_spec_t pd_match_spec;
+        ${pd_prefix}${t.cname}_match_spec_t pd_match_spec;
 //::     match_params = gen_match_params(t.key)
 //::     for name, width in match_params:
 //::       name = get_c_name(name)
@@ -630,7 +618,7 @@ public:
 //::   if t_type != TableType.INDIRECT_WS: continue
 //::   params_w = params + ["const GroupHandle_t grp"]
 //::   param_str = ", ".join(params_w)
-//::   name = t_name + "_add_entry_with_selector"
+//::   name = t.cname + "_add_entry_with_selector"
 //::   pd_name = pd_prefix + name
     EntryHandle_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -640,7 +628,7 @@ public:
         pd_dev_tgt.dev_pipe_id = dev_tgt.dev_pipe_id;
 
 //::   if has_match_spec:
-        ${pd_prefix}${t_name}_match_spec_t pd_match_spec;
+        ${pd_prefix}${t.cname}_match_spec_t pd_match_spec;
 //::     match_params = gen_match_params(t.key)
 //::     for name, width in match_params:
 //::       name = get_c_name(name)
@@ -672,12 +660,11 @@ public:
 //:: for t_name, t in tables.items():
 //::   t_type = t.type_
 //::   if t_type == TableType.SIMPLE: continue
-//::   t_name = get_c_name(t_name)
 //::   params = ["const SessionHandle_t sess_hdl",
 //::             "const DevTarget_t &dev_tgt"]
 //::   params_wo = params + ["const MemberHandle_t mbr"]
 //::   param_str = ", ".join(params_wo)
-//::   name = t_name + "_set_default_entry"
+//::   name = t.cname + "_set_default_entry"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -699,7 +686,7 @@ public:
 //::   if t_type != TableType.INDIRECT_WS: continue
 //::   params_w = params + ["const GroupHandle_t grp"]
 //::   param_str = ", ".join(params_w)
-//::   name = t_name + "_set_default_entry_with_selector"
+//::   name = t.cname + "_set_default_entry_with_selector"
 //::   pd_name = pd_prefix + name
     int32_t ${name}(${param_str}) {
         std::cerr << "In ${name}\n";
@@ -720,8 +707,7 @@ public:
 //:: #endfor
 
 //:: for t_name, t in tables.items():
-//::   t_name = get_c_name(t_name)
-//::   name = t_name + "_get_entry_count"
+//::   name = t.cname + "_get_entry_count"
 //::   pd_name = pd_prefix + name
 //::   params = ["const SessionHandle_t sess_hdl",
 //::             "const int8_t dev_id"]
@@ -740,7 +726,7 @@ public:
 
 //:: for ca_name, ca in counter_arrays.items():
 //::   if ca.is_direct == "direct":
-//::     name = "counter_read_" + ca_name
+//::     name = "counter_read_" + ca.cname
 //::     pd_name = pd_prefix + name
     void ${name}(${api_prefix}counter_value_t &counter_value, const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const EntryHandle_t entry, const ${api_prefix}counter_flags_t &flags) {
       std::cerr << "In ${name}\n";
@@ -757,7 +743,7 @@ public:
       counter_value.bytes = value.bytes;
     }
 
-//::     name = "counter_write_" + ca_name
+//::     name = "counter_write_" + ca.cname
 //::     pd_name = pd_prefix + name
     int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const EntryHandle_t entry, const ${api_prefix}counter_value_t &counter_value) {
       std::cerr << "In ${name}\n";
@@ -774,7 +760,7 @@ public:
     }
 
 //::   else:
-//::     name = "counter_read_" + ca_name
+//::     name = "counter_read_" + ca.cname
 //::     pd_name = pd_prefix + name
     void ${name}(${api_prefix}counter_value_t &counter_value, const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const int32_t index, const ${api_prefix}counter_flags_t &flags) {
       std::cerr << "In ${name}\n";
@@ -791,7 +777,7 @@ public:
       counter_value.bytes = value.bytes;
     }
 
-//::     name = "counter_write_" + ca_name
+//::     name = "counter_write_" + ca.cname
 //::     pd_name = pd_prefix + name
     int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, const int32_t index, const ${api_prefix}counter_value_t &counter_value) {
       std::cerr << "In ${name}\n";
@@ -811,7 +797,7 @@ public:
 //:: #endfor
 
 //:: for ca_name, ca in counter_arrays.items():
-//::   name = "counter_hw_sync_" + ca_name
+//::   name = "counter_hw_sync_" + ca.cname
 //::   pd_name = pd_prefix + name
     int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
       return 0;
@@ -842,7 +828,7 @@ public:
 //::
 //::   pd_param_str = ", ".join(pd_params)
 //::
-//::   name = "meter_set_" + ma_name
+//::   name = "meter_set_" + ma.cname
 //::   pd_name = pd_prefix + name
   int32_t ${name}(${param_str}) {
       std::cerr << "In ${name}\n";
@@ -867,7 +853,7 @@ public:
   // REGISTERS
 
 //:: for ra_name, ra in register_arrays.items():
-//::   name = "register_reset_" + ra_name
+//::   name = "register_reset_" + ra.cname
 //::   pd_name = pd_prefix + name
     int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
       std::cerr << "In ${name}\n";
@@ -886,29 +872,28 @@ public:
   }
 
 //:: for lq_name, lq in learn_quantas.items():
-//::   lq_name = get_c_name(lq_name)
-//::   rpc_msg_type = api_prefix + lq_name + "_digest_msg_t"
-//::   rpc_entry_type = api_prefix + lq_name + "_digest_entry_t"
-  std::map<SessionHandle_t, std::list<${rpc_msg_type}> > ${lq_name}_digest_queues;
-  pthread_mutex_t ${lq_name}_mutex;
+//::   rpc_msg_type = api_prefix + lq.cname + "_digest_msg_t"
+//::   rpc_entry_type = api_prefix + lq.cname + "_digest_entry_t"
+  std::map<SessionHandle_t, std::list<${rpc_msg_type}> > ${lq.cname}_digest_queues;
+  pthread_mutex_t ${lq.cname}_mutex;
 
   p4_pd_status_t
-  ${lq_name}_receive(const SessionHandle_t sess_hdl,
+  ${lq.cname}_receive(const SessionHandle_t sess_hdl,
                         const ${rpc_msg_type} &msg) {
-    pthread_mutex_lock(&${lq_name}_mutex);
-    assert(${lq_name}_digest_queues.find(sess_hdl) != ${lq_name}_digest_queues.end());
-    std::map<SessionHandle_t, std::list<${rpc_msg_type}> >::iterator digest_queue = ${lq_name}_digest_queues.find(sess_hdl);
+    pthread_mutex_lock(&${lq.cname}_mutex);
+    assert(${lq.cname}_digest_queues.find(sess_hdl) != ${lq.cname}_digest_queues.end());
+    std::map<SessionHandle_t, std::list<${rpc_msg_type}> >::iterator digest_queue = ${lq.cname}_digest_queues.find(sess_hdl);
     digest_queue->second.push_back(msg);
-    pthread_mutex_unlock(&${lq_name}_mutex);
+    pthread_mutex_unlock(&${lq.cname}_mutex);
 
     return 0;
   }
 
   static p4_pd_status_t
-  ${p4_prefix}_${lq_name}_cb(p4_pd_sess_hdl_t sess_hdl,
-                             ${pd_prefix}${lq_name}_digest_msg_t *msg,
+  ${p4_prefix}_${lq.cname}_cb(p4_pd_sess_hdl_t sess_hdl,
+                              ${pd_prefix}${lq.cname}_digest_msg_t *msg,
                              void *cookie) {
-    ${pd_prefix}${lq_name}_digest_msg_t *msg_ = new ${pd_prefix}${lq_name}_digest_msg_t();
+    ${pd_prefix}${lq.cname}_digest_msg_t *msg_ = new ${pd_prefix}${lq.cname}_digest_msg_t();
     *msg_ = *msg;
     ${rpc_msg_type} rpc_msg;
     rpc_msg.msg_ptr = (int64_t)msg_;
@@ -927,42 +912,42 @@ public:
 //::   #endfor
       rpc_msg.msg.push_back(entry);
     }
-    return ((${p4_prefix}Handler*)cookie)->${lq_name}_receive((SessionHandle_t)sess_hdl, rpc_msg);
+    return ((${p4_prefix}Handler*)cookie)->${lq.cname}_receive((SessionHandle_t)sess_hdl, rpc_msg);
   }
 
-  void ${lq_name}_register( const SessionHandle_t sess_hdl, const int8_t dev_id) {
-    ${pd_prefix}${lq_name}_register(sess_hdl, dev_id, ${p4_prefix}_${lq_name}_cb, this);
-    pthread_mutex_lock(&${lq_name}_mutex);
-    ${lq_name}_digest_queues.insert(std::pair<SessionHandle_t, std::list<${rpc_msg_type}> >(sess_hdl, std::list<${rpc_msg_type}>()));
-    pthread_mutex_unlock(&${lq_name}_mutex);
+  void ${lq.cname}_register( const SessionHandle_t sess_hdl, const int8_t dev_id) {
+    ${pd_prefix}${lq.cname}_register(sess_hdl, dev_id, ${p4_prefix}_${lq.cname}_cb, this);
+    pthread_mutex_lock(&${lq.cname}_mutex);
+    ${lq.cname}_digest_queues.insert(std::pair<SessionHandle_t, std::list<${rpc_msg_type}> >(sess_hdl, std::list<${rpc_msg_type}>()));
+    pthread_mutex_unlock(&${lq.cname}_mutex);
   }
 
-  void ${lq_name}_deregister(const SessionHandle_t sess_hdl, const int8_t dev_id) {
-    ${pd_prefix}${lq_name}_deregister(sess_hdl, dev_id);
-    pthread_mutex_lock(&${lq_name}_mutex);
-    ${lq_name}_digest_queues.erase(sess_hdl);
-    pthread_mutex_unlock(&${lq_name}_mutex);
+  void ${lq.cname}_deregister(const SessionHandle_t sess_hdl, const int8_t dev_id) {
+    ${pd_prefix}${lq.cname}_deregister(sess_hdl, dev_id);
+    pthread_mutex_lock(&${lq.cname}_mutex);
+    ${lq.cname}_digest_queues.erase(sess_hdl);
+    pthread_mutex_unlock(&${lq.cname}_mutex);
   }
 
-  void ${lq_name}_get_digest(${rpc_msg_type} &msg, const SessionHandle_t sess_hdl) {
+  void ${lq.cname}_get_digest(${rpc_msg_type} &msg, const SessionHandle_t sess_hdl) {
     msg.msg_ptr = 0;
     msg.msg.clear();
 
-    pthread_mutex_lock(&${lq_name}_mutex);
-    std::map<SessionHandle_t, std::list<${rpc_msg_type}> >::iterator digest_queue = ${lq_name}_digest_queues.find(sess_hdl);
-    if (digest_queue != ${lq_name}_digest_queues.end()) {
+    pthread_mutex_lock(&${lq.cname}_mutex);
+    std::map<SessionHandle_t, std::list<${rpc_msg_type}> >::iterator digest_queue = ${lq.cname}_digest_queues.find(sess_hdl);
+    if (digest_queue != ${lq.cname}_digest_queues.end()) {
       if (digest_queue->second.size() > 0) {
         msg = digest_queue->second.front();
         digest_queue->second.pop_front();
       }
     }
 
-    pthread_mutex_unlock(&${lq_name}_mutex);
+    pthread_mutex_unlock(&${lq.cname}_mutex);
   }
 
-  void ${lq_name}_digest_notify_ack(const SessionHandle_t sess_hdl, const int64_t msg_ptr) {
-    ${pd_prefix}${lq_name}_digest_msg_t *msg = (${pd_prefix}${lq_name}_digest_msg_t *) msg_ptr;
-    ${pd_prefix}${lq_name}_notify_ack((p4_pd_sess_hdl_t)sess_hdl, msg);
+  void ${lq.cname}_digest_notify_ack(const SessionHandle_t sess_hdl, const int64_t msg_ptr) {
+    ${pd_prefix}${lq.cname}_digest_msg_t *msg = (${pd_prefix}${lq.cname}_digest_msg_t *) msg_ptr;
+    ${pd_prefix}${lq.cname}_notify_ack((p4_pd_sess_hdl_t)sess_hdl, msg);
     delete msg;
   }
 //:: #endfor

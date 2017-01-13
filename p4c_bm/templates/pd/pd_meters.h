@@ -39,7 +39,7 @@ extern "C" {
 //::     params += ["p4_pd_bytes_meter_spec_t *meter_spec"]
 //::   #endif
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + "meter_set_" + ma_name
+//::   name = pd_prefix + "meter_set_" + ma.cname
 p4_pd_status_t
 ${name}
 (

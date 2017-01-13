@@ -38,7 +38,7 @@ extern "C" {
 //::   #endif
 //::   params += ["int flags"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + "counter_read_" + ca_name
+//::   name = pd_prefix + "counter_read_" + ca.cname
 p4_pd_counter_value_t
 ${name}
 (
@@ -72,7 +72,7 @@ ${name}
 //::   #endif
 //::   params += ["p4_pd_counter_value_t counter_value"]
 //::   param_str = ",\n ".join(params)
-//::   name = pd_prefix + "counter_write_" + ca_name
+//::   name = pd_prefix + "counter_write_" + ca.cname
 p4_pd_status_t
 ${name}
 (
@@ -95,7 +95,7 @@ ${name}
   return 0;
 }
 
-//::   name = pd_prefix + "counter_hw_sync_" + ca_name
+//::   name = pd_prefix + "counter_hw_sync_" + ca.cname
 p4_pd_status_t
 ${name}
 (
