@@ -257,18 +257,20 @@ def dump_one_parser(parser_name, parser_id, p4_start_state, keep_pragmas=False):
     parse_states = []
 
     accessible_parse_states = set()
+    accessible_parse_states_ordered = []
 
     def find_accessible_parse_states(parse_state):
         if parse_state in accessible_parse_states:
             return
         accessible_parse_states.add(parse_state)
+        accessible_parse_states_ordered.append(parse_state)
         for _, next_state in parse_state.branch_to.items():
             if isinstance(next_state, p4.p4_parse_state):
                 find_accessible_parse_states(next_state)
 
     find_accessible_parse_states(p4_start_state)
 
-    for p4_parse_state in accessible_parse_states:
+    for p4_parse_state in accessible_parse_states_ordered:
         parse_state_dict = OrderedDict()
         parse_state_dict["name"] = p4_parse_state.name
         parse_state_dict["id"] = dump_one_parser.parse_state_id
@@ -459,8 +461,39 @@ def process_forced_header_ordering(hlir, ordering):
 def produce_parser_topo_sorting(hlir, p4_start_state):
     header_graph = Graph()
 
-    def walk_rec(hlir, parse_state, prev_hdr_node, tag_stacks_index, visited):
+    # Helps reduce the running time of this function by caching visited
+    # states. I claim that new edges cannot be added to the graph if I end up at
+    # the same parse state, with the same previous node and the same tag stacks
+    # indices.
+    class State:
+        def __init__(self, parse_state, prev_hdr_node, tag_stacks_index):
+            self.current_state = parse_state
+            self.prev_hdr_node = prev_hdr_node
+            self.stacks = frozenset(tag_stacks_index.items())
+
+        def __eq__(self, other):
+            return (self.current_state == other.current_state)\
+                and (self.prev_hdr_node == other.prev_hdr_node)\
+                and (self.stacks == other.stacks)
+
+        def __hash__(self):
+            return hash((self.current_state, self.prev_hdr_node, self.stacks))
+
+        def __ne__(self, other):  # pragma: no cover
+            return not (self == other)
+
+        def __str__(self):  # pragma: no cover
+            return "{}, {}, {}".format(
+                self.current_state, self.prev_hdr_node, self.stacks)
+
+    # Now that I have recursion_states, do I still need visited?
+    def walk_rec(hlir, parse_state, prev_hdr_node, tag_stacks_index, visited,
+                 recursion_states):
         assert(isinstance(parse_state, p4.p4_parse_state))
+        rec_state = State(parse_state, prev_hdr_node, tag_stacks_index)
+        if rec_state in recursion_states:
+            return
+        recursion_states.add(rec_state)
         for call in parse_state.call_sequence:
             call_type = call[0]
             if call_type == p4.parse_call.extract:
@@ -494,7 +527,8 @@ def produce_parser_topo_sorting(hlir, p4_start_state):
             if not isinstance(next_state, p4.p4_parse_state):
                 continue
             walk_rec(hlir, next_state, prev_hdr_node,
-                     tag_stacks_index.copy(), visited | {parse_state})
+                     tag_stacks_index.copy(), visited | {parse_state},
+                     recursion_states)
 
     for pragma in p4_start_state._pragmas:
         try:
@@ -508,7 +542,7 @@ def produce_parser_topo_sorting(hlir, p4_start_state):
             LOG_CRITICAL("invalid 'header_ordering' pragma")
         return sorting
 
-    walk_rec(hlir, p4_start_state, None, defaultdict(int), set())
+    walk_rec(hlir, p4_start_state, None, defaultdict(int), set(), set())
 
     header_topo_sorting = header_graph.produce_topo_sorting()
     if header_topo_sorting is None:  # pragma: no cover
