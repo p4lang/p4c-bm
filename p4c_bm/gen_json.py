@@ -215,6 +215,55 @@ def format_field_ref(p4_field):
     return [prefix, suffix]
 
 
+def header_type_field_offset(p4_header_type, fname):
+    for idx, f in enumerate(p4_header_type.layout):
+        if f == fname:
+            return idx
+    LOG_CRITICAL("No field {} in header type {}".format(  # pragma: no cover
+        fname, p4_header_type.name))
+
+
+def format_field_ref_expression(p4_field, in_expression=True):
+    header = p4_field.instance
+    suffix = p4_field.name
+    # not handled by compiler frontend (HLIR) yet
+    if suffix == "valid":  # pragma: no cover
+        suffix = "$valid$"
+    expr = OrderedDict()
+    # support for hs[last].f in expressions
+    if header.virtual:
+        assert(header.index in {p4.P4_NEXT, p4.P4_LAST})
+        if header.index == p4.P4_NEXT:  # pragma: no cover
+            LOG_CRITICAL(
+                "'next' is not supported as a stack index in expressions")
+
+        def make_expression(op, L, R):
+            e = OrderedDict(
+                [("type", "expression"), ("value", OrderedDict(
+                    [("op", op), ("left", L), ("right", R)]))])
+            return e
+
+        hs = OrderedDict(
+            [("type", "header_stack"), ("value", header.base_name)])
+
+        e = make_expression(
+            "access_field",
+            make_expression(
+                "dereference_stack",
+                hs,
+                make_expression("last_stack_index", None, hs)),
+            header_type_field_offset(header.header_type, suffix))
+        if not in_expression:
+            expr["type"] = "expression"
+            expr["value"] = e
+        else:
+            expr = e
+    else:
+        expr["type"] = "field"
+        expr["value"] = format_field_ref(p4_field)
+    return expr
+
+
 def format_hexstr(i):
     # Python appends a L at the end of a long number representation, which we
     # need to remove
@@ -306,8 +355,7 @@ def dump_one_parser(parser_name, parser_id, p4_start_state, keep_pragmas=False):
                     src_dict["type"] = "hexstr"
                     src_dict["value"] = format_hexstr(src)
                 elif type(src) is p4.p4_field:
-                    src_dict["type"] = "field"
-                    src_dict["value"] = format_field_ref(src)
+                    src_dict = format_field_ref_expression(src, False)
                 elif type(src) is tuple:
                     src_dict["type"] = "lookahead"
                     src_dict["value"] = list(src)
@@ -599,8 +647,7 @@ def dump_expression(p4_expression):
         expression_dict["type"] = "header"
         expression_dict["value"] = p4_expression.name
     elif type(p4_expression) is p4.p4_field:
-        expression_dict["type"] = "field"
-        expression_dict["value"] = format_field_ref(p4_expression)
+        expression_dict = format_field_ref_expression(p4_expression, True)
     elif type(p4_expression) is p4.p4_signature_ref:
         expression_dict["type"] = "local"
         expression_dict["value"] = p4_expression.idx
@@ -1419,7 +1466,8 @@ def add_meta(json_dict):
     meta_dict = OrderedDict()
     # major and minor version numbers, a change in minor version number does not
     # break backward-compatibility
-    meta_dict["version"] = [2, 0]
+    meta_dict["version"] = [2, 5]
+    meta_dict["compiler"] = "https://github.com/p4lang/p4c-bm"
     json_dict["__meta__"] = meta_dict
 
 
