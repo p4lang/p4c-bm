@@ -599,6 +599,7 @@ def produce_parser_topo_sorting(hlir, p4_start_state):
     return header_topo_sorting
 
 
+@static_var("header_set", set())
 def dump_one_deparser(deparser_name, deparser_id, p4_start_state, hlir):
     deparser_dict = OrderedDict()
     deparser_dict["name"] = deparser_name
@@ -608,11 +609,37 @@ def dump_one_deparser(deparser_name, deparser_id, p4_start_state, hlir):
     header_topo_sorting = produce_parser_topo_sorting(hlir, p4_start_state)
     deparser_order = [hdr.name for hdr in header_topo_sorting]
     deparser_dict["order"] = deparser_order
+    dump_one_deparser.header_set.update(set(header_topo_sorting))
 
     return deparser_dict
 
 
-def dump_deparsers(json_dict, hlir):
+def check_added_headers_in_parse_graph(hlir, parsed_header_set, p4_v1_1=False):
+    # In P4 v1.1 the push primitive is handled a little differently; since that
+    # version is deprecated, it is not worth implementing that check for it.
+    if p4_v1_1:
+        return
+
+    table_actions_set = get_p4_action_set(hlir)
+
+    for action in table_actions_set:
+        for call in action.flat_call_sequence:
+            primitive_name = call[0].name
+            # In the HLIR, the first argument to 'push' which is a header stack
+            # in the P4 program is replaced by a reference to the first header
+            # instance in the stack, which is why we can use the same code for
+            # add_header and push
+            if primitive_name not in {"add_header", "push"}:
+                continue
+            hdr = call[1][0]
+            assert(isinstance(hdr, p4.p4_header_instance))
+            if hdr not in parsed_header_set:
+                LOG_WARNING("Header '{}' is added by the control flow but "
+                            "is not part of any parse graph, so it cannot be "
+                            "deparsed".format(hdr.name))
+
+
+def dump_deparsers(json_dict, hlir, p4_v1_1=False):
     deparsers = []
     deparser_id = 0
 
@@ -626,6 +653,9 @@ def dump_deparsers(json_dict, hlir):
             deparsers.append(
                 dump_one_deparser(new_name, deparser_id, p4_parse_state, hlir))
             deparser_id += 1
+
+    check_added_headers_in_parse_graph(hlir, dump_one_deparser.header_set,
+                                       p4_v1_1=p4_v1_1)
 
     json_dict["deparsers"] = deparsers
 
@@ -978,14 +1008,19 @@ def field_list_to_id(p4_field_list):
     return idx
 
 
-def dump_actions(json_dict, hlir, p4_v1_1=False, keep_pragmas=False):
-    actions = []
-    action_id = 0
-
+def get_p4_action_set(hlir):
     table_actions_set = set()
     for _, table in hlir.p4_tables.items():
         for action in table.actions:
             table_actions_set.add(action)
+    return table_actions_set
+
+
+def dump_actions(json_dict, hlir, p4_v1_1=False, keep_pragmas=False):
+    actions = []
+    action_id = 0
+
+    table_actions_set = get_p4_action_set(hlir)
 
     for action in table_actions_set:
         action_dict = OrderedDict()
@@ -1492,7 +1527,7 @@ def json_dict_create(hlir, path_field_aliases=None, p4_v1_1=False,
     dump_header_stacks(json_dict, hlir, keep_pragmas=keep_pragmas)
     dump_parsers(json_dict, hlir, keep_pragmas=keep_pragmas)
     dump_parse_vsets(json_dict, hlir, keep_pragmas=keep_pragmas)
-    dump_deparsers(json_dict, hlir)
+    dump_deparsers(json_dict, hlir, p4_v1_1=p4_v1_1)
     dump_meters(json_dict, hlir, keep_pragmas=keep_pragmas)
     dump_actions(json_dict, hlir, p4_v1_1=p4_v1_1, keep_pragmas=keep_pragmas)
     dump_pipelines(json_dict, hlir, keep_pragmas=keep_pragmas)
