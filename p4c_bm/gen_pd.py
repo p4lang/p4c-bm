@@ -20,6 +20,7 @@
 
 # -*- coding: utf-8 -*-
 
+import collections
 import os
 import sys
 # import json
@@ -43,6 +44,11 @@ COUNTER_ARRAYS = {}
 REGISTER_ARRAYS = {}
 
 
+def sort_dict(unsorted_dict):
+    return collections.OrderedDict(sorted(unsorted_dict.items(),
+                                          key=lambda item: item[0]))
+
+
 def enum(type_name, *sequential, **named):
     enums = dict(zip(sequential, range(len(sequential))), **named)
     reverse = dict((value, key) for key, value in enums.iteritems())
@@ -59,6 +65,7 @@ def enum(type_name, *sequential, **named):
 
     enums['from_str'] = from_str
     return type(type_name, (), enums)
+
 
 MatchType = enum('MatchType', 'EXACT', 'LPM', 'TERNARY', 'VALID', 'RANGE')
 TableType = enum('TableType', 'SIMPLE', 'INDIRECT', 'INDIRECT_WS')
@@ -425,6 +432,12 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix, args=None):
     REGISTER_ARRAYS.clear()
 
     load_json(json_dict)
+
+    for table in TABLES.itervalues():
+        table.actions = sort_dict(table.actions)
+    for profile in ACTION_PROFS.itervalues():
+        profile.actions = sort_dict(profile.actions)
+
     render_dict = {}
     render_dict["p4_prefix"] = p4_prefix
     render_dict["pd_prefix"] = "p4_pd_" + p4_prefix + "_"
@@ -437,13 +450,13 @@ def generate_pd_source(json_dict, dest_dir, p4_prefix, args=None):
     render_dict["get_c_type"] = get_c_type
     render_dict["get_c_name"] = get_c_name
     render_dict["get_thrift_type"] = get_thrift_type
-    render_dict["tables"] = TABLES
-    render_dict["action_profs"] = ACTION_PROFS
-    render_dict["actions"] = ACTIONS
-    render_dict["learn_quantas"] = LEARN_QUANTAS
-    render_dict["meter_arrays"] = METER_ARRAYS
-    render_dict["counter_arrays"] = COUNTER_ARRAYS
-    render_dict["register_arrays"] = REGISTER_ARRAYS
+    render_dict["tables"] = sort_dict(TABLES)
+    render_dict["action_profs"] = sort_dict(ACTION_PROFS)
+    render_dict["actions"] = sort_dict(ACTIONS)
+    render_dict["learn_quantas"] = sort_dict(LEARN_QUANTAS)
+    render_dict["meter_arrays"] = sort_dict(METER_ARRAYS)
+    render_dict["counter_arrays"] = sort_dict(COUNTER_ARRAYS)
+    render_dict["register_arrays"] = sort_dict(REGISTER_ARRAYS)
     render_dict["render_dict"] = render_dict
 
     plugin_list = []
