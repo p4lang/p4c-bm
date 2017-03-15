@@ -203,15 +203,19 @@ def dump_header_stacks(json_dict, hlir, keep_pragmas=False):
     json_dict["header_stacks"] = header_stacks
 
 
+def field_suffix(p4_field):
+    suffix = p4_field.name
+    if suffix == "valid":
+        suffix = "$valid$"
+    return suffix
+
+
 def format_field_ref(p4_field):
     header = p4_field.instance
-    suffix = p4_field.name
     prefix = header.name
     if header.virtual:
         prefix = header.base_name
-    # not handled by compiler frontend (HLIR) yet
-    if suffix == "valid":  # pragma: no cover
-        suffix = "$valid$"
+    suffix = field_suffix(p4_field)
     return [prefix, suffix]
 
 
@@ -225,10 +229,7 @@ def header_type_field_offset(p4_header_type, fname):
 
 def format_field_ref_expression(p4_field, in_expression=True):
     header = p4_field.instance
-    suffix = p4_field.name
-    # not handled by compiler frontend (HLIR) yet
-    if suffix == "valid":  # pragma: no cover
-        suffix = "$valid$"
+    suffix = field_suffix(p4_field)
     expr = OrderedDict()
     # support for hs[last].f in expressions
     if header.virtual:

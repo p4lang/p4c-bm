@@ -20,6 +20,7 @@ table t1 {
     reads {
 	    ethernet : valid;
 	    ethernet.dst_addr : valid;
+        ethernet.valid : ternary;
     }
     actions {
 	    noop;
