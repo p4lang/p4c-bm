@@ -1042,8 +1042,15 @@ def dump_actions(json_dict, hlir, p4_v1_1=False, keep_pragmas=False):
             runtime_data.append(param_dict)
         action_dict["runtime_data"] = runtime_data
 
+        def is_stack_ref(call_idx, arg_idx, primitive_name):
+            # legacy case
+            if not hasattr(action, "stack_indices"):  # pragma: no cover
+                return (primitive_name in {"push", "pop"} and arg_idx == 0)
+            stack_indices = action.stack_indices[call_idx]
+            return (arg_idx in stack_indices)
+
         primitives = []
-        for call in action.flat_call_sequence:
+        for call_idx, call in enumerate(action.flat_call_sequence):
             primitive_dict = OrderedDict()
 
             if p4_v1_1 and type(call[0]) is p4.p4_extern_method:
@@ -1071,7 +1078,7 @@ def dump_actions(json_dict, hlir, p4_v1_1=False, keep_pragmas=False):
                 args = [args[0], new_arg]
 
             primitive_args = []
-            for arg in args:
+            for arg_idx, arg in enumerate(args):
                 arg_dict = OrderedDict()
                 if type(arg) is int or type(arg) is long:
                     arg_dict["type"] = "hexstr"
@@ -1127,8 +1134,9 @@ def dump_actions(json_dict, hlir, p4_v1_1=False, keep_pragmas=False):
                     LOG_CRITICAL("action arg type is not supported: %s",
                                  type(arg))
 
-                if primitive_name in {"push", "pop"} and\
-                   arg_dict["type"] == "header":
+                if (not p4_v1_1)\
+                   and is_stack_ref(call_idx, arg_idx, primitive_name):
+                    assert(arg_dict["type"] == "header")
                     arg_dict["type"] = "header_stack"
                     arg_dict["value"] = re.sub(r'\[.*\]', '', arg_dict["value"])
 
