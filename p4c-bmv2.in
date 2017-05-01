@@ -27,7 +27,7 @@
 # the package in installed.
 
 import sys
-sys.path.append("@pythondir@")
+sys.path.insert(0, "@pythondir@")
 
 def main():
     import p4c_bm.__main__ as p4c_bm
