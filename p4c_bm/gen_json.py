@@ -1407,6 +1407,9 @@ def dump_registers(json_dict, hlir, keep_pragmas=False):
     registers = []
     id_ = 0
     for name, p4_register in hlir.p4_registers.items():
+        if p4_register.binding and (p4_register.binding[0] == p4.P4_DIRECT):
+            LOG_CRITICAL("'{}' is a direct register; direct registers are not "
+                         "supported by bmv2".format(name))
         register_dict = OrderedDict()
         register_dict["name"] = name
         register_dict["id"] = id_
