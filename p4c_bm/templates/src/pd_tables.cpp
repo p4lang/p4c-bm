@@ -458,6 +458,60 @@ ${name}
 
 //:: #endfor
 
+namespace {
+
+p4_pd_status_t retrieve_entry_wkey(uint8_t dev_id, const std::string &t_name,
+                                   const BmMatchParams &mkey,
+                                   const BmAddEntryOptions &options,
+                                   BmMtEntry *entry) {
+  assert(my_devices[dev_id]);
+  auto client = pd_client(dev_id);
+
+  try {
+    client.c->bm_mt_get_entry_from_key(*entry, 0, t_name, mkey, options);
+  } catch (InvalidTableOperation &ito) {
+    const char *what =
+        _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
+    std::cout << "Invalid table (" << t_name << ") operation ("
+              << ito.code << "): " << what << std::endl;
+    return ito.code;
+  }
+  return 0;
+}
+
+}  // namespace
+
+//:: for t_name, t in tables.items():
+//::   has_match_spec = len(t.key) > 0
+//::   if not has_match_spec: continue
+//::   params = ["p4_pd_sess_hdl_t sess_hdl", "p4_pd_dev_target_t dev_tgt"]
+//::   params += [pd_prefix + t.cname + "_match_spec_t *match_spec"]
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
+//::     params += ["int priority"]
+//::   #endif
+//::   param_str = ",\n ".join(params)
+//::   name = pd_prefix + t.cname + "_table_delete_by_match_spec"
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+) {
+  BmMtEntry entry;
+  auto match_key = build_key_${t.cname}(match_spec);
+  BmAddEntryOptions options;
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
+  options.__set_priority(priority);
+//::   #endif
+  auto status = retrieve_entry_wkey(
+      dev_tgt.device_id, std::string("${t.cname}"),
+      match_key, options, &entry);
+  if (status) return status;
+  return ${pd_prefix + t.cname + "_table_delete"}(
+      sess_hdl, dev_tgt.device_id, entry.entry_handle);
+}
+
+//:: #endfor
+
 /* MODIFY ENTRIES */
 
 //:: for t_name, t in tables.items():
@@ -1110,6 +1164,31 @@ ${p4_pd_enable_entry_timeout}(p4_pd_sess_hdl_t sess_hdl,
   // TODO: use max_ttl to set up sweep interval
   return ${pd_prefix}ageing_set_cb(0, ${t.id_}, cb_fn, client_data);
 }
+//:: #endfor
+
+//:: for t_name, t in tables.items():
+//::   name = pd_prefix + t.cname + "_clear_entries"
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt
+)
+{
+  assert(my_devices[dev_tgt.device_id]);
+  auto client = pd_client(dev_tgt.device_id);
+  try {
+    client.c->bm_mt_clear_entries(0, "${t_name}", false);
+  } catch (InvalidTableOperation &ito) {
+    const char *what =
+      _TableOperationErrorCode_VALUES_TO_NAMES.find(ito.code)->second;
+    std::cout << "Invalid table (" << "${t_name}" << ") operation ("
+	      << ito.code << "): " << what << std::endl;
+    return ito.code;
+  }
+  return 0;
+}
+
 //:: #endfor
 
 /* Clean all state */

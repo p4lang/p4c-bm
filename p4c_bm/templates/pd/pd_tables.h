@@ -131,6 +131,24 @@ ${name}
 
 //:: #endfor
 
+//:: for t_name, t in tables.items():
+//::   has_match_spec = len(t.key) > 0
+//::   if not has_match_spec: continue
+//::   params = ["p4_pd_sess_hdl_t sess_hdl", "p4_pd_dev_target_t dev_tgt"]
+//::   params += [pd_prefix + t.cname + "_match_spec_t *match_spec"]
+//::   if match_type in {MatchType.TERNARY, MatchType.RANGE}:
+//::     params += ["int priority"]
+//::   #endif
+//::   param_str = ",\n ".join(params)
+//::   name = pd_prefix + t.cname + "_table_delete_by_match_spec"
+p4_pd_status_t
+${name}
+(
+ ${param_str}
+);
+
+//:: #endfor
+
 /* MODIFY ENTRIES */
 
 //:: for t_name, t in tables.items():
@@ -432,6 +450,17 @@ ${p4_pd_enable_entry_timeout}(p4_pd_sess_hdl_t sess_hdl,
 			      p4_pd_notify_timeout_cb cb_fn,
 			      uint32_t max_ttl,
 			      void *client_data);
+//:: #endfor
+
+//:: for t_name, t in tables.items():
+//::   name = pd_prefix + t.cname + "_clear_entries"
+p4_pd_status_t
+${name}
+(
+ p4_pd_sess_hdl_t sess_hdl,
+ p4_pd_dev_target_t dev_tgt
+);
+
 //:: #endfor
 
 /* Clean all state */
