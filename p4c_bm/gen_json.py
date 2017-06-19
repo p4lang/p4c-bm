@@ -110,7 +110,13 @@ def dump_header_types(json_dict, hlir, keep_pragmas=False):
         for field, bit_width in p4_header.layout.items():
             if bit_width == p4.P4_AUTO_WIDTH:
                 bit_width = "*"
-            fields.append([field, bit_width])
+            signed = False
+            saturating = p4.P4_SATURATING in p4_header.attributes[field]
+            # to avoid too many differences with previous JSON outputs
+            if saturating:
+                fields.append([field, bit_width, signed, saturating])
+            else:
+                fields.append([field, bit_width])
         header_type_dict["fields"] = fields
 
         length_exp = None
