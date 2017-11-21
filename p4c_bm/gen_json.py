@@ -871,7 +871,17 @@ def dump_one_pipeline(json_dict, pipe_name, pipe_ptr, hlir, keep_pragmas=False):
             key_field = OrderedDict()
             match_type = match_type_to_str(m_type)
             key_field["match_type"] = match_type
-            if(match_type == "valid"):
+
+            if match_type != "valid":
+                assert(isinstance(field_ref, p4.p4_field))
+                field_width = field_ref.width
+                if field_width == p4.P4_AUTO_WIDTH:
+                    LOG_CRITICAL(
+                        "Cannot match on field '{}' as matching on "
+                        "variable-length fields is not supported".format(
+                            field_ref))
+
+            if match_type == "valid":
                 if isinstance(field_ref, p4.p4_field):
                     header_ref = field_ref.instance
                 else:
