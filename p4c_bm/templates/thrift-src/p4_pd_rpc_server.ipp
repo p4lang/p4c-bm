@@ -799,7 +799,7 @@ public:
 //:: for ca_name, ca in counter_arrays.items():
 //::   name = "counter_hw_sync_" + ca.cname
 //::   pd_name = pd_prefix + name
-    int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt) {
+    int32_t ${name}(const SessionHandle_t sess_hdl, const DevTarget_t &dev_tgt, bool blocking) {
       return 0;
     }
 

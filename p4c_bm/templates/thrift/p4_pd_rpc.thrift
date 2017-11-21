@@ -410,7 +410,7 @@ service ${p4_prefix} {
 
 //:: for ca_name, ca in counter_arrays.items():
 //::   name = "counter_hw_sync_" + ca.cname
-    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt);
+    i32 ${name}(1:res.SessionHandle_t sess_hdl, 2:res.DevTarget_t dev_tgt, 3:bool blocking);
 //:: #endfor
 
     # meters
