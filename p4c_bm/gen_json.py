@@ -1180,7 +1180,13 @@ def dump_calculations(json_dict, hlir, keep_pragmas):
         calc_dict["id"] = id_
         id_ += 1
         inputs = p4_calculation.input
-        assert(len(inputs) == 1)
+        assert(len(inputs) > 0)
+        if len(inputs) > 1:
+            LOG_WARNING(
+                "Your P4 program defines several possible inputs for field "
+                "list calculation '{}' but bmv2 only supports a single input "
+                "(there is no runtime API to dynamically choose the input); "
+                "the first input will be used.".format(name))
         input_ = inputs[0]
         my_input = []
         last_header = None
