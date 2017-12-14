@@ -12,7 +12,7 @@ field_list flist2 { h.f16; }
 @pragma dont_trim
 field_list_calculation calc {
     input { flist1; flist2; }
-    algorithm : csum16;
+    algorithm { csum16; crc16; }
     output_width : 16;
 }
 

@@ -1258,7 +1258,16 @@ def dump_calculations(json_dict, hlir, keep_pragmas):
                         "behavior; consider adding paddding".format(name))
 
         calc_dict["input"] = my_input
-        calc_dict["algo"] = p4_calculation.algorithm
+        algo = p4_calculation.algorithm
+        if type(algo) is list:
+            assert(len(algo) > 1)
+            LOG_WARNING(
+                "Your P4 program defines several possible algorithms for field "
+                "list calculation '{}' but bmv2 only supports a single one "
+                "(there is no runtime API to dynamically choose the algo); "
+                "the first one will be used.".format(name))
+            algo = algo[0]
+        calc_dict["algo"] = algo
         # ignored in bmv2, is it a good idea?
         # calc_dict["output_width"] = calculation.output_width
 
