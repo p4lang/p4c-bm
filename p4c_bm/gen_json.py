@@ -157,6 +157,15 @@ def dump_headers(json_dict, hlir, keep_pragmas=False):
         if keep_pragmas:
             add_pragmas(header_instance_dict, p4_header_instance)
 
+        for p4_field in p4_header_instance.fields:
+            if p4_field.default is not None and p4_field.default != 0:
+                LOG_CRITICAL(
+                    "In file '{}' at line {}: "
+                    "non-zero metadata initialization is not supported by this "
+                    "backend; field '{}' cannot be initialized to {}".format(
+                        p4_header_instance.filename, p4_header_instance.lineno,
+                        str(p4_field), p4_field.default))
+
         headers.append(header_instance_dict)
 
     json_dict["headers"] = headers
