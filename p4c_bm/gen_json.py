@@ -1058,7 +1058,9 @@ def dump_actions(json_dict, hlir, p4_v1_1=False, keep_pragmas=False):
         param_with_bit_widths = OrderedDict()
         for param, width in zip(action.signature, action.signature_widths):
             if not width:  # pragma: no cover
-                LOG_CRITICAL("unused parameter in action def")
+                LOG_CRITICAL(
+                    "unused parameter '{}' in action '{}' definition".format(
+                        param, action.name))
             param_with_bit_widths[param] = width
 
             param_dict = OrderedDict()
