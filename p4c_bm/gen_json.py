@@ -795,7 +795,11 @@ def dump_action_profile(pipe_name, action_profiles, p4_action_profile,
         if p4_action_profile.selector is not None:
             p4_selector = p4_action_profile.selector
             selector = OrderedDict()
-            selector["algo"] = p4_selector.selection_key.algorithm
+            if type(p4_selector.selection_key.algorithm) is list:
+                # we already print a warning for this case in dump_calculations
+                selector["algo"] = p4_selector.selection_key.algorithm[0]
+            else:
+                selector["algo"] = p4_selector.selection_key.algorithm
             elements = []
             assert(len(p4_selector.selection_key.input) == 1)
             for field in p4_selector.selection_key.input[0].fields:
