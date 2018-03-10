@@ -1008,11 +1008,11 @@ p4_pd_status_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
- uint8_t dev_id,
+ p4_pd_dev_target_t dev_tgt,
  uint32_t *count
 ) {
-  assert(my_devices[dev_id]);
-  auto client = pd_client(dev_id);
+  assert(my_devices[dev_tgt.device_id]);
+  auto client = pd_client(dev_tgt.device_id);
   *count = 0;
   try {
     *count = static_cast<uint32_t>(
