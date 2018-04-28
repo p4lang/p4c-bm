@@ -117,6 +117,23 @@ def dump_header_types(json_dict, hlir, keep_pragmas=False):
                 fields.append([field, bit_width, signed, saturating])
             else:
                 fields.append([field, bit_width])
+        # do not rely on HLIR to always introduce padding
+        if (not p4_header.flex_width)\
+           and fixed_width % 8 != 0:  # pragma: no cover
+            field_names = set(zip(*fields)[0])
+
+            def get_padding_name(i):
+                return "_padding_{}".format(i)
+
+            padding_cntr = 0
+            while get_padding_name(padding_cntr) in field_names:
+                padding_cntr += 1
+            padding_name = get_padding_name(padding_cntr)
+            # Generating a warning for standard_metadata_t just confused users
+            if name != "standard_metadata_t":
+                LOG_INFO("Header type '{}' is not byte-aligned, adding padding "
+                         "field '{}'".format(name, padding_name))
+            fields.append([padding_name, 8 - fixed_width % 8])
         header_type_dict["fields"] = fields
 
         length_exp = None
