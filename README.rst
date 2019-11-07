@@ -9,6 +9,12 @@ p4c-bm
 Generates the JSON configuration for the `behavioral-model (bmv2)
 <https://github.com/p4lang/behavioral-model>`_.
 
+NOTE: This repository is no longer under active development or
+maintenance.  We recommend that you instead consider using the
+currently developed open source P4 tools, which are
+[`p4c`](https://github.com/p4lang/p4c) and
+[`behavioral-model`](https://github.com/p4lang/behavioral-model).
+
 Important: the PD has been moved out of this repository and split between the
 `bmv2 repository <https://github.com/p4lang/behavioral-model>`_ (for fixed part
 of the PD) and the new `p4-build repository
