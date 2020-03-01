@@ -381,7 +381,7 @@ p4_pd_status_t
 ${name}
 (
  p4_pd_sess_hdl_t sess_hdl,
- uint8_t dev_id,
+ p4_pd_dev_target_t dev_tgt,
  uint32_t *count
 );
 
